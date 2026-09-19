@@ -7,7 +7,8 @@ export const heroSlides: HeroSlide[] = [
     title: 'El verano que',
     highlightedTitle: 'tu negocio necesita.',
     description: 'Bikinis para todos los estilos, con precios pensados para revendedoras.',
-    mediaType: 'placeholder',
+    mediaType: 'image',
+    mediaUrl: '/images/home/bikinis-carousel.webp',
     theme: 'summer',
   },
   {
@@ -16,7 +17,8 @@ export const heroSlides: HeroSlide[] = [
     title: 'Pijamas para',
     highlightedTitle: 'cada temporada.',
     description: 'Modelos cómodos y actuales para completar la propuesta de tu tienda.',
-    mediaType: 'placeholder',
+    mediaType: 'image',
+    mediaUrl: '/images/home/pijama-carousel.webp',
     theme: 'night',
   },
   {
@@ -25,7 +27,8 @@ export const heroSlides: HeroSlide[] = [
     title: 'Lencería pensada para',
     highlightedTitle: 'sentirse increíble.',
     description: 'Diseños delicados, variedad de talles y condiciones mayoristas.',
-    mediaType: 'placeholder',
+    mediaType: 'image',
+    mediaUrl: '/images/home/lenceria-carousel.webp',
     theme: 'soft',
   },
 ]

@@ -8,9 +8,12 @@ const navigation = [
   { to: '/admin', label: 'Resumen', icon: '⌂', end: true },
   { to: '/admin/pedidos', label: 'Pedidos', icon: '▤' },
   { to: '/admin/confirmaciones', label: 'Confirmaciones', icon: '✓' },
+  { to: '/admin/notificaciones', label: 'Notificaciones', icon: '●' },
   { to: '/admin/productos', label: 'Productos', icon: '◇' },
+  { to: '/admin/stock-talles', label: 'Stock por talles', icon: '▦' },
   { to: '/admin/analitica', label: 'Analítica', icon: '↗' },
   { to: '/admin/clientes', label: 'Clientes', icon: '♙' },
+  { to: '/admin/materiales', label: 'Material para clientes', icon: '▧' },
   { to: '/admin/configuracion', label: 'Configuración', icon: '⚙' },
 ]
 
@@ -20,7 +23,7 @@ export function AdminLayout() {
   return (
     <div className={adminStyles}>
       <aside className="admin-sidebar">
-        <Brand />
+        <Brand/>
         <span className="admin-role">Panel administrativo</span>
         <nav>
           {navigation.map((item) => (

@@ -3,6 +3,7 @@ import type { Product } from './catalog'
 export type CartItem = {
   product: Product
   quantity: number
+  talle: number
 }
 
 export type CartCalculationItem = {
@@ -12,6 +13,7 @@ export type CartCalculationItem = {
   slug: string
   imagen_url: string | null
   cantidad: number
+  talle: number
   precio_mayorista: string
   precio_unitario: string
   subtotal_sin_descuento: string
@@ -28,4 +30,7 @@ export type CartCalculation = {
   subtotal_sin_descuento: string
   descuento_aplicado: string
   total: string
+  compra_minima_unidades: number
+  faltantes_para_compra_minima: number
+  cumple_compra_minima: boolean
 }

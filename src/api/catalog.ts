@@ -1,5 +1,5 @@
 import { apiGet } from './client'
-import type { CatalogFilters, ProductPage, ProductQuery } from '../types/catalog'
+import type { CatalogFilters, Product, ProductPage, ProductQuery } from '../types/catalog'
 
 export function getCatalogFilters() {
   return apiGet<CatalogFilters>('/api/catalogo/filtros')
@@ -18,3 +18,4 @@ export function getProducts(query: ProductQuery) {
   if (query.marcaId) params.set('marca_id', query.marcaId)
   return apiGet<ProductPage>(`/api/productos/?${params}`)
 }
+export const getProduct=(id:number)=>apiGet<Product>(`/api/productos/${id}`)

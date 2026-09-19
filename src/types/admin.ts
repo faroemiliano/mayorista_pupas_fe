@@ -7,6 +7,8 @@ export type AdminDashboardData = {
   categories: number
   brands: number
   recentProducts: ProductPage['items']
+  pendingOrders: number
+  pendingConfirmations: number
 }
 
 export type AdminProductsData = ProductPage
@@ -35,6 +37,16 @@ export type ProductAnalytics = {
     productos_con_ventas: number
     productos_sin_ventas: number
   }
+  agrupacion: 'dia' | 'semana' | 'mes' | 'anio'
+  serie_ventas: Array<{
+    clave: string
+    etiqueta: string
+    inicio: string
+    pedidos: number
+    unidades: number
+    importe: string
+    variacion_porcentual: number | null
+  }>
   mas_vendidos: ProductSalesRanking[]
   menos_vendidos: ProductSalesRanking[]
   sin_ventas: ProductSalesRanking[]

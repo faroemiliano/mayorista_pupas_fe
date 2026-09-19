@@ -1,6 +1,8 @@
 export type CatalogOption = { id: number; nombre: string; slug: string }
 export type CatalogCategory = CatalogOption & { subcategorias: CatalogOption[] }
 export type CatalogFilters = { categorias: CatalogCategory[]; marcas: CatalogOption[] }
+export type ProductImage = { id: number; url: string; orden: number; principal: boolean }
+export type ProductSizeStock = { talle:number; cantidad:number; disponible:number }
 
 export type Product = {
   id: number
@@ -13,11 +15,14 @@ export type Product = {
   stock_disponible: string
   tiene_stock: boolean
   imagen_url: string | null
+  imagenes?: ProductImage[]
+  talles: ProductSizeStock[]
   categoria: CatalogOption | null
   subcategoria: CatalogOption | null
   marca: CatalogOption | null
   cantidad_unidades_por_bulto: string | null
   habilitado: boolean
+  visible_tienda: boolean
 }
 
 export type ProductPage = {

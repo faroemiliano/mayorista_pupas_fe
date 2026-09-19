@@ -58,3 +58,17 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
 
   return response.json() as Promise<T>
 }
+
+export async function apiDelete(path: string): Promise<void> {
+  const response = await fetch(`${API_URL}${path}`, { method: 'DELETE', headers: authHeaders() })
+  if (!response.ok) {
+    const error = await response.json().catch(() => null) as { detail?: string } | null
+    throw new Error(error?.detail || `No se pudo eliminar (${response.status})`)
+  }
+}
+
+export async function apiGetBlob(path: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}${path}`, { headers: authHeaders() })
+  if (!response.ok) throw new Error(`No se pudo cargar la imagen (${response.status})`)
+  return response.blob()
+}

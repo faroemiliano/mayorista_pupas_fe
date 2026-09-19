@@ -18,7 +18,7 @@ export function AdminDashboard() {
   return (
     <div className="admin-page">
       <header className="admin-page-header">
-        <div><p className="eyebrow">PUPAS MAYORISTA</p><h1>Resumen general</h1><span>Estado actual del catálogo sincronizado con Dux.</span></div>
+        <div><p className="eyebrow">TIENDA MAYORISTA</p><h1>Resumen general</h1><span>Estado actual del catálogo sincronizado con Dux.</span></div>
         <span className="sync-pill">● Dux conectado</span>
       </header>
 
@@ -44,8 +44,8 @@ export function AdminDashboard() {
       </section>
 
       <section className="admin-coming-grid">
-        <article><span>▤</span><div><strong>Pedidos</strong><p>La bandeja se habilitará cuando implementemos el registro de pedidos.</p></div></article>
-        <article><span>♙</span><div><strong>Clientes</strong><p>Se conectará con autenticación, perfiles y permisos.</p></div></article>
+        <Link className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 text-inherit no-underline shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to="/admin/pedidos"><span className="grid size-12 shrink-0 place-items-center rounded-full bg-neutral-50 text-2xl text-[#111111]">▤</span><div className="grow"><span className="text-xs font-bold uppercase tracking-wider text-gray-500">Pedidos pendientes</span><strong className="mt-1 block text-3xl">{data.pendingOrders}</strong><p className="mt-1 text-sm text-gray-500">{data.pendingOrders===1?'Pedido esperando revisión':'Pedidos esperando revisión'}</p></div><span className="font-bold text-[#111111]">→</span></Link>
+        <Link className="flex items-center gap-5 rounded-xl border border-gray-200 bg-white p-5 text-inherit no-underline shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to="/admin/confirmaciones"><span className="grid size-12 shrink-0 place-items-center rounded-full bg-amber-50 text-2xl text-amber-700">✓</span><div className="grow"><span className="text-xs font-bold uppercase tracking-wider text-gray-500">Confirmaciones pendientes</span><strong className="mt-1 block text-3xl">{data.pendingConfirmations}</strong><p className="mt-1 text-sm text-gray-500">{data.pendingConfirmations===1?'Cliente esperando aprobación':'Clientes esperando aprobación'}</p></div><span className="font-bold text-[#111111]">→</span></Link>
       </section>
     </div>
   )

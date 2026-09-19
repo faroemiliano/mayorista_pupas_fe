@@ -7,15 +7,23 @@ export function createOrder(data: OrderCreateData, items: CartItem[]) {
     ...data,
     items: items.map((item) => ({
       producto_id: item.product.id,
+      talle: item.talle,
       cantidad: item.quantity,
     })),
   })
 }
 
-export function getAdminOrders(status: string, page: number) {
+export function getAdminOrders(status: string, page: number, buscar = '', fechaDesde = '', fechaHasta = '') {
   const params = new URLSearchParams({ page: String(page), limit: '20' })
   if (status) params.set('estado', status)
+  if (buscar.trim()) params.set('buscar', buscar.trim())
+  if (fechaDesde) params.set('fecha_desde', fechaDesde)
+  if (fechaHasta) params.set('fecha_hasta', fechaHasta)
   return apiGet<OrderPage>(`/api/admin/pedidos/?${params}`)
+}
+
+export function getAdminOrder(orderId:number){
+  return apiGet<Order>(`/api/admin/pedidos/${orderId}`)
 }
 
 export function getMyOrders(page: number) {

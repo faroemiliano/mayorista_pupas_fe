@@ -6,9 +6,10 @@ import { AuthProvider } from './context/AuthContext.tsx'
 import { CartProvider } from './context/CartContext.tsx'
 import './index.css'
 import App from './App.tsx'
+import { ShoppingToolsProvider } from './context/ShoppingToolsContext.tsx'
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode><BrowserRouter><QueryClientProvider client={queryClient}><AuthProvider><CartProvider><App /></CartProvider></AuthProvider></QueryClientProvider></BrowserRouter></StrictMode>,
+  <StrictMode><BrowserRouter><QueryClientProvider client={queryClient}><AuthProvider><CartProvider><ShoppingToolsProvider><App /></ShoppingToolsProvider></CartProvider></AuthProvider></QueryClientProvider></BrowserRouter></StrictMode>,
 )
