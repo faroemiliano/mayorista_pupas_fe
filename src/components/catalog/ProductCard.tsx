@@ -19,6 +19,8 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
   const [imageIndex, setImageIndex] = useState(0)
   const price = Number(product.precio_mayorista ?? 0)
   const maxStock = product.talles?.find(item=>item.talle===selectedSize)?.disponible ?? 0
+  const creationTime = product.fecha_creacion_dux ? new Date(`${product.fecha_creacion_dux}T00:00:00`).getTime() : 0
+  const isNew = creationTime > 0 && Date.now() - creationTime <= 60 * 24 * 60 * 60 * 1000
 
   const images = useMemo(() => {
     if (product.imagenes?.length) {
@@ -51,6 +53,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
     <article className="group flex h-full min-w-0 flex-col overflow-hidden border border-neutral-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_35px_rgba(0,0,0,0.1)]">
       <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-neutral-100">
         <button className="absolute inset-0 z-[5] cursor-pointer" type="button" aria-label={`Ver información de ${product.nombre}`} onClick={openProduct}/>
+        {isNew && <span className="absolute left-3 top-3 z-20 bg-black px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[.18em] text-white shadow-md">Nuevo</span>}
         {user && <button className="absolute right-3 top-3 z-20 grid size-9 place-items-center rounded-full bg-white/95 text-xl text-neutral-900 shadow-md transition hover:scale-105" type="button" aria-label={tools.isFavorite(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'} onClick={() => tools.toggleFavorite(product)}>{tools.isFavorite(product.id) ? '♥' : '♡'}</button>}
 
         {images.length ? (
@@ -59,7 +62,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
           <div className="grid h-full place-items-center bg-gradient-to-b from-neutral-50 to-neutral-200 text-6xl" aria-hidden="true">👙</div>
         )}
 
-        {user && <span className={`absolute left-3 top-3 z-10 rounded-sm px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-sm ${product.tiene_stock ? 'bg-white/95 text-emerald-800' : 'bg-neutral-800 text-white'}`}>
+        {user && <span className={`absolute left-3 z-10 rounded-sm px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-sm ${isNew ? 'top-12' : 'top-3'} ${product.tiene_stock ? 'bg-white/95 text-emerald-800' : 'bg-neutral-800 text-white'}`}>
           {product.tiene_stock ? `${maxStock} disponibles` : 'Sin stock'}
         </span>}
 

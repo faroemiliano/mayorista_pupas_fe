@@ -48,7 +48,7 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
   const [category, setCategory] = useState(""),
     [subcategory, setSubcategory] = useState(""),
     [brand, setBrand] = useState(""),
-    [order, setOrder] = useState("nombre_asc"),
+    [order, setOrder] = useState("recientes"),
     [page, setPage] = useState(1);
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const [quickMode, setQuickMode] = useState(false);
@@ -227,6 +227,7 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
                     update(() => setOrder(event.target.value))
                   }
                 >
+                  <option value="recientes">Más nuevos</option>
                   <option value="nombre_asc">Nombre A–Z</option>
                   <option value="nombre_desc">Nombre Z–A</option>
                   <option value="precio_asc">Menor precio</option>

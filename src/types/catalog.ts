@@ -23,6 +23,9 @@ export type Product = {
   cantidad_unidades_por_bulto: string | null
   habilitado: boolean
   visible_tienda: boolean
+  fecha_creacion_dux: string | null
+  creado_en?: string
+  actualizado_en?: string
 }
 
 export type ProductPage = {
