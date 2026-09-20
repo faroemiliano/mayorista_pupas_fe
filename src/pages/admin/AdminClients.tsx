@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getDuxClients, getDuxClientSyncStatus, getWebClients, syncDuxClients } from '../../api/admin'
+import { getDuxClients, getDuxClientSyncStatus, getWebClients, makeWebUserAdmin, syncDuxClients } from '../../api/admin'
 
 
 export function AdminClients() {
@@ -19,6 +19,10 @@ export function AdminClients() {
     refetchInterval: (query) => query.state.data?.estado === 'en_progreso' ? 2000 : false,
   })
   const webClients = useQuery({ queryKey: ['admin-web-clients'], queryFn: getWebClients })
+  const promote = useMutation({
+    mutationFn: makeWebUserAdmin,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-web-clients'] }),
+  })
   const normalizedSearch = submittedSearch.toLocaleLowerCase('es')
   const filteredWebClients = (webClients.data || []).filter(client => !normalizedSearch || [client.nombre, client.apellido, client.email, client.telefono, client.documento, client.localidad_partido, client.provincia].some(value => value?.toLocaleLowerCase('es').includes(normalizedSearch)))
   const sync = useMutation({
@@ -48,7 +52,7 @@ export function AdminClients() {
       {view === 'web' ? webClients.isLoading ? <div className="admin-status"><span className="loader"/><p>Cargando clientes registrados…</p></div>
         : webClients.isError ? <div className="admin-status"><strong>No se pudieron cargar las cuentas web</strong><button onClick={() => webClients.refetch()}>Reintentar</button></div>
         : !filteredWebClients.length ? <div className="admin-status"><strong>{submittedSearch ? 'No se encontraron clientes' : 'Todavía no hay clientes registrados en la página'}</strong></div>
-        : <div className="admin-table-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Ubicación</th><th>Canal de venta</th><th>Estado</th><th>Dux</th></tr></thead><tbody>{filteredWebClients.map(client => <tr key={client.id}><td><strong>{client.nombre} {client.apellido}</strong><small>Cuenta web #{client.id} · {new Date(client.creado_en).toLocaleDateString('es-AR')}</small></td><td>{client.email}<small>{client.telefono || 'Sin teléfono'}</small></td><td>{client.localidad_partido || '—'}<small>{client.provincia || ''}</small></td><td>{client.canal_venta === 'ambos' ? 'Local y tienda online' : client.canal_venta === 'tienda_online' ? 'Tienda online' : client.canal_venta === 'local_fisico' ? 'Local físico' : '—'}{client.tienda_online_url && <small>{client.tienda_online_url}</small>}</td><td><span className={`admin-state ${client.estado_registro === 'aprobado' ? 'active' : ''}`}>{client.estado_registro}</span></td><td>{client.dux_id_cliente ? <><span className="admin-state active">Vinculado</span><small>Dux #{client.dux_id_cliente}</small></> : <span className="admin-state">Pendiente de vincular</span>}</td></tr>)}</tbody></table></div>
+        : <div className="admin-table-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Ubicación</th><th>Canal de venta</th><th>Estado</th><th>Dux</th><th>Permisos</th></tr></thead><tbody>{filteredWebClients.map(client => <tr key={client.id}><td><strong>{client.nombre} {client.apellido}</strong><small>Cuenta web #{client.id} · {new Date(client.creado_en).toLocaleDateString('es-AR')}</small></td><td>{client.email}<small>{client.telefono || 'Sin teléfono'}</small></td><td>{client.localidad_partido || '—'}<small>{client.provincia || ''}</small></td><td>{client.canal_venta === 'ambos' ? 'Local y tienda online' : client.canal_venta === 'tienda_online' ? 'Tienda online' : client.canal_venta === 'local_fisico' ? 'Local físico' : '—'}{client.tienda_online_url && <small>{client.tienda_online_url}</small>}</td><td><span className={`admin-state ${client.estado_registro === 'aprobado' ? 'active' : ''}`}>{client.estado_registro}</span></td><td>{client.dux_id_cliente ? <><span className="admin-state active">Vinculado</span><small>Dux #{client.dux_id_cliente}</small></> : <span className="admin-state">Pendiente de vincular</span>}</td><td><button className="rounded-md border border-neutral-300 px-3 py-2 text-[10px] font-bold uppercase disabled:cursor-not-allowed disabled:opacity-40" type="button" disabled={client.estado_registro !== 'aprobado' || promote.isPending} onClick={() => { if (window.confirm(`¿Convertir a ${client.email} en administrador? Tendrá acceso completo al panel.`)) promote.mutate(client.id) }}>{promote.isPending ? 'Actualizando…' : 'Hacer admin'}</button></td></tr>)}</tbody></table>{promote.isError && <p className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{promote.error.message}</p>}</div>
       : <>
       {clients.isLoading ? <div className="admin-status"><span className="loader"/><p>Cargando clientes…</p></div>
         : clients.isError ? <div className="admin-status"><strong>No se pudieron cargar los clientes</strong><button onClick={() => clients.refetch()}>Reintentar</button></div>
