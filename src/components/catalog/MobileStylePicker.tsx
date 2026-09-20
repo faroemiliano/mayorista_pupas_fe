@@ -64,7 +64,8 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
       </div>
       <div className="grid grid-cols-3 gap-2.5">
         {featured.map((style, index) => {
-          const product = products[index].data?.items.find(item => Boolean(item.imagenes?.length || item.imagen_url))
+          const productQuery = products[index]
+          const product = productQuery.data?.items.find(item => Boolean(item.imagenes?.length || item.imagen_url))
           const imageUrl = productImage(product) || style.fallbackImage
           const isSelected = style.category && String(style.category.id) === selectedCategory
           return (
@@ -76,7 +77,11 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
               className={`group overflow-hidden border bg-white text-left transition active:scale-95 disabled:opacity-55 ${isSelected ? 'border-black ring-1 ring-black' : 'border-neutral-200'}`}
             >
               <div className="flex aspect-[3/4] items-center justify-center overflow-hidden bg-neutral-100">
-                {imageUrl ? <img className="h-full w-full object-cover" src={imageUrl} alt={product?.nombre || style.label}/> : <span className="text-4xl grayscale" aria-hidden="true">{style.fallback}</span>}
+                {productQuery.isLoading
+                  ? <span className="h-full w-full animate-pulse bg-neutral-200" aria-label={`Cargando imagen de ${style.label}`}/>
+                  : imageUrl
+                    ? <img className="h-full w-full object-cover" src={imageUrl} alt={product?.nombre || style.label}/>
+                    : <span className="text-4xl grayscale" aria-hidden="true">{style.fallback}</span>}
               </div>
               <div className="px-2 py-3 text-center"><strong className="block truncate font-serif text-sm">{style.category?.nombre || style.label}</strong><span className="mt-1 block text-[8px] font-bold tracking-wider text-neutral-500">VER TODO →</span></div>
             </button>
