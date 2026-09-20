@@ -1,7 +1,7 @@
 import { useQueries } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
 import { apiAsset } from '../../api/client'
-import type { CatalogCategory } from '../../types/catalog'
+import type { CatalogCategory, Product } from '../../types/catalog'
 
 type Props = {
   categories?: CatalogCategory[]
@@ -14,6 +14,15 @@ const styles = [
   { label: 'Pijamas', keywords: ['pijama', 'pijamas', 'sleep'], fallback: '🌙' },
   { label: 'Lencería', keywords: ['lencería', 'lenceria', 'ropa interior', 'corpiño'], fallback: '♡' },
 ]
+
+function productImage(product: Product | undefined) {
+  if (!product) return null
+  const mainImage = product.imagenes
+    ?.slice()
+    .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)[0]
+  if (mainImage) return apiAsset(`/api/productos/${product.id}/imagenes/${mainImage.id}`)
+  return product.imagen_url ? apiAsset(`/api/productos/${product.id}/imagen`) : null
+}
 
 export function MobileStylePicker({ categories = [], selectedCategory, onSelect }: Props) {
   const featured = styles.map((style) => ({
@@ -54,8 +63,8 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
       </div>
       <div className="grid grid-cols-3 gap-2.5">
         {featured.map((style, index) => {
-          const product = products[index].data?.items[0]
-          const imageUrl = product?.imagen_url ? apiAsset(`/api/productos/${product.id}/imagen`) : null
+          const product = products[index].data?.items.find(item => Boolean(item.imagenes?.length || item.imagen_url))
+          const imageUrl = productImage(product)
           const isSelected = style.category && String(style.category.id) === selectedCategory
           return (
             <button
