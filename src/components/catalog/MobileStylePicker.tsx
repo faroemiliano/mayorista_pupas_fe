@@ -10,9 +10,9 @@ type Props = {
 }
 
 const styles = [
-  { label: 'Bikinis', keywords: ['bikini', 'malla', 'traje de baño'], fallback: '👙' },
-  { label: 'Pijamas', keywords: ['pijama', 'pijamas', 'sleep'], fallback: '🌙' },
-  { label: 'Lencería', keywords: ['lencería', 'lenceria', 'ropa interior', 'corpiño'], fallback: '♡' },
+  { label: 'Bikinis', keywords: ['bikini', 'malla', 'traje de baño'], fallback: '👙', fallbackImage: '/images/home/provisional/bikini-01.webp' },
+  { label: 'Pijamas', keywords: ['pijama', 'pijamas', 'sleep'], fallback: '🌙', fallbackImage: '/images/home/provisional/pijama-01.webp' },
+  { label: 'Lencería', keywords: ['lencería', 'lenceria', 'ropa interior', 'corpiño'], fallback: '♡', fallbackImage: '/images/home/lenceria-carousel.webp' },
 ]
 
 function productImage(product: Product | undefined) {
@@ -42,6 +42,7 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
         marcaId: '',
         orden: 'nombre_asc',
         page: 1,
+        limit: 100,
       }),
       enabled: Boolean(style.category),
       staleTime: 60_000,
@@ -64,7 +65,7 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
       <div className="grid grid-cols-3 gap-2.5">
         {featured.map((style, index) => {
           const product = products[index].data?.items.find(item => Boolean(item.imagenes?.length || item.imagen_url))
-          const imageUrl = productImage(product)
+          const imageUrl = productImage(product) || style.fallbackImage
           const isSelected = style.category && String(style.category.id) === selectedCategory
           return (
             <button
