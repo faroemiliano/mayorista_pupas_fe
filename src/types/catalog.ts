@@ -40,4 +40,5 @@ export type ProductQuery = {
   marcaId: string
   orden: string
   page: number
+  limit?: number
 }

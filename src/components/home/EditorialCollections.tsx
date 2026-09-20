@@ -77,14 +77,14 @@ function CollectionProducts({ keyword, provisional }: { keyword: string; provisi
   const category = filters.data?.categorias.find((item) => normalize(item.nombre).includes(keyword))
   const products = useQuery({
     queryKey: ['home-collection-products', category?.id],
-    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'nombre_asc', page: 1 }),
+    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'nombre_asc', page: 1, limit: 100 }),
     enabled: Boolean(category),
     staleTime: 60_000,
   })
 
   return <div className="grid grid-cols-2 items-start gap-3 pb-8 sm:grid-cols-12 sm:gap-5 sm:pb-16">
     {products.isLoading && [0, 1].map((item) => <div key={item} className={`aspect-[3/4] animate-pulse bg-white/40 ${item === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5'}`}/>)}
-    {products.data?.items.slice(0, 2).map((product, index) => <div key={product.id} className={`relative transition duration-500 hover:z-10 hover:-translate-y-2 hover:drop-shadow-2xl ${index === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5 sm:-translate-y-2'}`}><CollectionProductPhoto product={product} fallback={provisional[index]}/></div>)}
+    {products.data?.items.filter((product) => product.imagen_url || product.imagenes?.length).slice(0, 2).map((product, index) => <div key={product.id} className={`relative transition duration-500 hover:z-10 hover:-translate-y-2 hover:drop-shadow-2xl ${index === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5 sm:-translate-y-2'}`}><CollectionProductPhoto product={product} fallback={provisional[index]}/></div>)}
     {!products.isLoading && !products.data?.items.length && [0, 1].map((item) => <div key={item} className={`relative aspect-[3/4] overflow-hidden bg-white/40 ${item === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5'}`}>{provisional[item] ? <img className="h-full w-full object-cover" src={provisional[item]} alt={`Modelo provisorio de ${keyword}`}/> : <span className="grid h-full place-items-center px-4 text-center text-xs text-neutral-500">Próximo producto</span>}</div>)}
   </div>
 }

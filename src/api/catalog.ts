@@ -9,7 +9,7 @@ export function getProducts(query: ProductQuery) {
   const params = new URLSearchParams({
     solo_habilitados: 'true',
     page: String(query.page),
-    limit: '12',
+    limit: String(query.limit ?? 12),
     orden: query.orden,
   })
   if (query.buscar) params.set('buscar', query.buscar)
