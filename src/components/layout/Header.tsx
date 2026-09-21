@@ -26,10 +26,10 @@ export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }:
   return <header className="!sticky !top-8 !z-40 !block !border-b !border-neutral-200 !bg-white !p-0">
     <div className="relative mx-auto flex min-h-18 max-w-360 items-center justify-between px-4 sm:px-7 lg:px-[5vw]">
       <div className="hidden w-40 items-center gap-4 text-neutral-800 md:flex">
-        <a href="#" className="grid size-9 place-items-center text-current no-underline transition hover:opacity-50" aria-label="Facebook">
+        <a href="https://www.facebook.com/pupaokk" target="_blank" rel="noopener noreferrer" className="grid size-9 place-items-center text-current no-underline transition hover:opacity-50" aria-label="Facebook de Pupas">
           <svg className="size-5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.6 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V10H7.4v3h2.8v8h3.4Z"/></svg>
         </a>
-        <a href="#" className="grid size-9 place-items-center text-current no-underline transition hover:opacity-50" aria-label="Instagram">
+        <a href="https://www.instagram.com/pupasokk" target="_blank" rel="noopener noreferrer" className="grid size-9 place-items-center text-current no-underline transition hover:opacity-50" aria-label="Instagram de Pupas">
           <svg className="size-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.8" r=".8" fill="currentColor" stroke="none"/></svg>
         </a>
       </div>

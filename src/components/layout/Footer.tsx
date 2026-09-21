@@ -8,7 +8,7 @@ export function Footer() {
     </section>
     <div className="flex justify-center border-b border-neutral-200 py-8"><Brand/></div>
     <div className="grid md:grid-cols-2">
-      <a href="#" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Facebook">
+      <a href="https://www.facebook.com/pupaokk" target="_blank" rel="noopener noreferrer" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Facebook de Pupas">
         <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/facebook.webp" alt=""/>
         <span className="absolute inset-0 backdrop-blur-[2px] [mask-image:radial-gradient(ellipse_at_center,transparent_52%,black_100%)]"/>
         <span className="absolute inset-0 bg-black/40 transition group-hover:bg-black/55"/>
@@ -17,7 +17,7 @@ export function Footer() {
           <strong className="text-[9px] uppercase tracking-[.24em]">Seguinos en Facebook</strong>
         </span>
       </a>
-      <a href="#" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Instagram">
+      <a href="https://www.instagram.com/pupasokk" target="_blank" rel="noopener noreferrer" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Instagram de Pupas">
         <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/instagram.webp" alt=""/>
         <span className="absolute inset-0 backdrop-blur-[2px] [mask-image:radial-gradient(ellipse_at_center,transparent_52%,black_100%)]"/>
         <span className="absolute inset-0 bg-black/40 transition group-hover:bg-black/55"/>
