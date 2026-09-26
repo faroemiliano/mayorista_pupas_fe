@@ -2,7 +2,7 @@ import { Brand } from "../layout/Brand";
 
 export function BrandManifesto() {
   return (
-    <section className="grid bg-[#e5e5e3] lg:grid-cols-[42%_58%]">
+    <section className="grid bg-[#faf7f2] lg:grid-cols-[42%_58%]">
       <div className="flex min-h-72 items-center justify-center border-b border-black/10 px-8 py-14 lg:min-h-105 lg:border-b-0 lg:border-r">
         <div className="max-w-sm">
           <Brand />
@@ -15,20 +15,22 @@ export function BrandManifesto() {
           </p>
         </div>
       </div>
-      <div className="flex min-h-80 items-center bg-black px-8 py-16 text-white sm:px-14 lg:min-h-105 lg:px-[8vw]">
-        <div className="max-w-3xl">
-          <span className="text-[9px] font-bold uppercase tracking-[.3em] text-white/50">
+      <div className="relative flex min-h-80 items-center overflow-hidden bg-[#cdb99f] px-8 py-16 text-[#241d17] sm:px-14 lg:min-h-105 lg:px-[8vw]">
+        <span className="pointer-events-none absolute -bottom-24 -right-16 size-80 rounded-full border border-white/25" aria-hidden="true" />
+        <span className="pointer-events-none absolute -bottom-10 right-12 size-44 rounded-full border border-white/20" aria-hidden="true" />
+        <div className="relative max-w-3xl">
+          <span className="text-[9px] font-bold uppercase tracking-[.3em] text-[#655444]">
             El espíritu de la marca
           </span>
           <h2 className="mt-6 font-serif text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
             No llenamos percheros.
             <br />
-            <em className="font-normal text-neutral-400">
+            <em className="font-normal text-[#6b5847]">
               Creamos próximas vidrieras.
             </em>
           </h2>
-          <div className="mt-8 h-px w-24 bg-white/40" />
-          <p className="mt-6 max-w-xl text-sm leading-7 text-white/65">
+          <div className="mt-8 h-px w-24 bg-black/30" />
+          <p className="mt-6 max-w-xl text-sm leading-7 text-[#594a3d]">
             Bikinis y pijamas pensados para negocios que quieren vender con
             identidad.
           </p>
