@@ -103,6 +103,10 @@ export type WordpressMigrationSummary = {
 export const getWordpressMigrationSummary = () =>
   apiGet<WordpressMigrationSummary>('/api/admin/migracion-wordpress/resumen')
 
+export type WordpressMigrationExecution = { estado:'pendiente'|'en_progreso'|'completada'|'error'; etapa:string|null; progreso:Record<string,unknown>|null; resultado:Record<string,unknown>|null; error:string|null; iniciada_en?:string|null; finalizada_en?:string|null }
+export const getWordpressMigrationExecution = () => apiGet<WordpressMigrationExecution>('/api/admin/migracion-wordpress/ejecucion')
+export const runWordpressMigration = () => apiPost<WordpressMigrationExecution>('/api/admin/migracion-wordpress/ejecutar',{confirmar:true})
+
 export type ProductReconciliation = {
   disponible: boolean
   totales?: { wordpress:number; dux:number; coincidencias:number; dudosos:number; solo_wordpress:number; solo_dux:number; dux_informados:number; dux_omitidos_por_error:number; vinculados:number }

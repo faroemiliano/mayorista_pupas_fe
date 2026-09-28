@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { getProductReconciliation, getReconciliationCandidates, getWordpressMigrationSummary, linkReconciliationCandidate } from '../../api/admin'
+import { getProductReconciliation, getReconciliationCandidates, getWordpressMigrationExecution, getWordpressMigrationSummary, linkReconciliationCandidate, runWordpressMigration } from '../../api/admin'
 
 const money = (value: string | null, currency = 'ARS') => {
   if (!value) return 'Sin precio'
@@ -17,6 +17,8 @@ export function AdminWordpressMigration() {
   const queryClient = useQueryClient()
   const summary = useQuery({ queryKey: ['wordpress-migration-summary'], queryFn: getWordpressMigrationSummary })
   const reconciliation = useQuery({ queryKey: ['wordpress-dux-reconciliation'], queryFn: getProductReconciliation })
+  const execution = useQuery({ queryKey: ['wordpress-migration-execution'], queryFn: getWordpressMigrationExecution, refetchInterval: query => query.state.data?.estado === 'en_progreso' ? 3000 : false })
+  const runMigration = useMutation({ mutationFn: runWordpressMigration, onSuccess: data => queryClient.setQueryData(['wordpress-migration-execution'],data) })
   const candidates = useQuery({ queryKey: ['wordpress-dux-candidates', candidatePage, candidateSearch], queryFn: () => getReconciliationCandidates(candidatePage, candidateSearch), enabled: reconciliation.data?.disponible === true })
   const linkCandidate = useMutation({ mutationFn: ({wordpressId,duxCode}:{wordpressId:number;duxCode:string}) => linkReconciliationCandidate(wordpressId,duxCode), onSuccess: async()=>{await Promise.all([queryClient.invalidateQueries({queryKey:['wordpress-dux-candidates']}),queryClient.invalidateQueries({queryKey:['wordpress-dux-reconciliation']})])} })
 
@@ -25,7 +27,11 @@ export function AdminWordpressMigration() {
   const data = summary.data
 
   return <div className="space-y-6">
-    <header className="admin-page-header"><div><p className="eyebrow">MIGRACIÓN SEGURA</p><h1>Copia de WordPress</h1><span>Vista previa de los datos importados al área de preparación.</span></div><span className="rounded-full bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-800">Sólo lectura</span></header>
+    <header className="admin-page-header"><div><p className="eyebrow">MIGRACIÓN SEGURA</p><h1>Copia de WordPress</h1><span>Copia los datos de WordPress a la base propia de esta página.</span></div><button className="rounded bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-40" disabled={runMigration.isPending||execution.data?.estado==='en_progreso'} onClick={()=>{if(window.confirm('¿Iniciar la copia completa desde WordPress? WordPress no será modificado y Dux permanecerá pausado.'))runMigration.mutate()}}>{execution.data?.estado==='en_progreso'?'Importando…':'Importar WordPress'}</button></header>
+
+    {execution.data?.estado==='en_progreso'&&<div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Importación en progreso: {execution.data.etapa?.replaceAll('_',' ')}</strong><span className="mt-1 block">La copia continúa en segundo plano. No cierres ni reinicies el servicio de Render.</span></div>}
+    {execution.data?.estado==='completada'&&<div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><strong>La copia de WordPress terminó correctamente.</strong><span className="mt-1 block">El catálogo anterior de Dux quedó oculto, no eliminado.</span></div>}
+    {(execution.data?.estado==='error'||runMigration.isError)&&<div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800"><strong>No se pudo completar la importación.</strong><span className="mt-1 block">{execution.data?.error||runMigration.error?.message}</span></div>}
 
     <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><strong>WordPress sigue funcionando normalmente.</strong><span className="mt-1 block">Esta pantalla no modifica WordPress, Dux ni el catálogo público.</span></div>
 
