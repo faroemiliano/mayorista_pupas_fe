@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getDuxClients, getDuxClientSyncStatus, getWebClients, makeWebUserAdmin, syncDuxClients } from '../../api/admin'
+import { getDuxClients, getDuxClientSyncStatus, getDuxConfiguration, getWebClients, makeWebUserAdmin, syncDuxClients } from '../../api/admin'
 
 
 export function AdminClients() {
   const queryClient = useQueryClient()
+  const duxConfiguration = useQuery({ queryKey: ['dux-configuration'], queryFn: getDuxConfiguration })
+  const duxSyncEnabled = duxConfiguration.data?.sincronizacion_habilitada === true
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
@@ -41,7 +43,7 @@ export function AdminClients() {
   const lastSync = clients.data?.ultima_sincronizacion
 
   return <div className="admin-page">
-    <header className="admin-page-header"><div><p className="eyebrow">GESTIÓN DE CLIENTES</p><h1>Clientes</h1><span>Cuentas registradas en la página y datos comerciales sincronizados desde Dux.</span></div><button className="rounded-md bg-[#111111] px-4 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={syncing} onClick={() => sync.mutate()}>{syncing ? 'Sincronizando…' : '↻ Sincronizar Dux'}</button></header>
+    <header className="admin-page-header"><div><p className="eyebrow">GESTIÓN DE CLIENTES</p><h1>Clientes</h1><span>Cuentas migradas desde WordPress y registradas en la nueva página.</span></div><button className="rounded-md bg-[#111111] px-4 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={syncing||!duxSyncEnabled} onClick={() => sync.mutate()}>{!duxSyncEnabled?'Dux pausado':syncing ? 'Sincronizando…' : '↻ Sincronizar Dux'}</button></header>
     {syncing && <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900"><strong>Sincronización en segundo plano.</strong> {syncStatus.data?.procesados ?? 0} clientes procesados. Podés seguir usando el panel.</div>}
     {sync.isError && <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800">{sync.error instanceof Error ? sync.error.message : 'No se pudo completar la sincronización.'}</div>}
     {syncStatus.data?.estado === 'error' && <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800"><strong>La sincronización no pudo completarse.</strong> {syncStatus.data.error || 'Reintentá nuevamente.'}</div>}

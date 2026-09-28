@@ -7,3 +7,6 @@ export const register = (data:{nombre:string;email:string;telefono:string;provin
 export const getCurrentUser = () => apiGet<AuthUser>('/api/auth/me')
 export const updateProfile = (data:{nombre:string;telefono:string;documento:string|null;provincia:string|null;localidad_partido:string|null;domicilio:string|null;canal_venta:string|null;tienda_online_url:string|null;acepta_promociones_email:boolean}) => apiPatch<AuthUser>('/api/auth/me',data)
 export const changePassword = (data:{password_actual:string;password_nueva:string;confirmar_password:string}) => apiPatch<{mensaje:string}>('/api/auth/me/password',data)
+export const requestPasswordReset = (email:string) => apiPost<{mensaje:string}>('/api/auth/solicitar-reset-password',{email})
+export const resetPassword = (token:string,password:string,confirmar_password:string) => apiPost<{mensaje:string}>('/api/auth/restablecer-password',{token,password,confirmar_password})
+export const completePasswordMigration = (data:{email:string;password_anterior:string;password_nueva:string;confirmar_password:string}) => apiPost<AuthResult>('/api/auth/completar-migracion-password',data)

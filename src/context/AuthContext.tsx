@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { getCurrentUser, login, register } from '../api/auth'
+import { completePasswordMigration, getCurrentUser, login, register } from '../api/auth'
 import type { AuthUser } from '../types/auth'
 import { Link } from 'react-router-dom'
 
@@ -32,6 +32,7 @@ export function GoogleAccessButton() {
   const [mode, setMode] = useState<'login'|'register'>('login')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [migration,setMigration]=useState<{email:string;oldPassword:string}|null>(null)
 
   useEffect(() => {
     if (!user && !sessionStorage.getItem(WELCOME_KEY)) setOpen(true)
@@ -49,6 +50,10 @@ export function GoogleAccessButton() {
     const data = new FormData(event.currentTarget)
     const password = String(data.get('password'))
     const confirmation = String(data.get('confirmar_password'))
+    if(migration){
+      const newPassword=String(data.get('password_nueva'));if(newPassword!==confirmation){setError('Las contraseñas no coinciden.');return}
+      try{const result=await completePasswordMigration({email:migration.email,password_anterior:migration.oldPassword,password_nueva:newPassword,confirmar_password:confirmation});localStorage.setItem(KEY,result.access_token);window.location.reload()}catch(reason){setError(reason instanceof Error?reason.message:'No se pudo migrar la cuenta.')}return
+    }
     if (mode === 'register' && password !== confirmation) { setError('Las contraseñas no coinciden.'); return }
     try {
       if (mode === 'login') {
@@ -59,7 +64,7 @@ export function GoogleAccessButton() {
         const result = await register({nombre:String(data.get('nombre')),email:String(data.get('email')),telefono:String(data.get('telefono')),provincia:String(data.get('provincia')),localidad_partido:String(data.get('localidad_partido')),domicilio:String(data.get('domicilio')),canal_venta:String(data.get('canal_venta')),tienda_online_url:tiendaOnline||null,password,confirmar_password:confirmation})
         setSuccess(result.mensaje)
       }
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo continuar.') }
+    } catch (reason) { const message=reason instanceof Error?reason.message:'No se pudo continuar.';if(mode==='login'&&message==='MIGRACION_PASSWORD_REQUERIDA'){setMigration({email:String(data.get('email')),oldPassword:password});setError('')}else setError(message) }
   }
 
   const field = 'w-full rounded-xl border border-neutral-300 bg-[#fafafa] px-4 py-3 text-sm outline-none transition focus:border-[#404040] focus:ring-4 focus:ring-neutral-200'
@@ -70,13 +75,15 @@ export function GoogleAccessButton() {
         <div className="bg-black px-8 py-7 text-white"><button className="absolute right-5 top-4 text-3xl text-white/80" type="button" aria-label="Cerrar bienvenida" onClick={closeModal}>×</button><img className="h-14 w-44 object-contain invert" src="/brand/logo-pupas.jpg" alt="Pupas"/><h2 className="mt-3 font-serif text-3xl font-semibold">Bienvenidos a Pupas</h2><p className="mt-2 text-sm text-white/70">Ingresá o creá tu cuenta para acceder a precios y compras mayoristas. También podés cerrar esta ventana y recorrer la tienda.</p></div>
         <div className="space-y-4 px-8 py-7">
           {success ? <><div className="rounded-2xl bg-emerald-50 p-5 text-center"><div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-emerald-600 text-2xl text-white">✓</div><h3 className="font-bold text-emerald-900">Registro enviado</h3><p className="mt-2 text-sm text-emerald-800">{success}</p></div><button className="w-full rounded-xl bg-[#111111] p-3 text-white" type="button" onClick={()=>{setSuccess('');setMode('login')}}>Ir a iniciar sesión</button></> : <>
-          <div className="grid grid-cols-2 border border-neutral-200 p-1"><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='login'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('login');setError('')}}>Ingresar</button><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='register'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('register');setError('')}}>Registrarme</button></div>
+          {!migration&&<div className="grid grid-cols-2 border border-neutral-200 p-1"><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='login'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('login');setError('')}}>Ingresar</button><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='register'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('register');setError('')}}>Registrarme</button></div>}
+          {migration&&<div className="bg-amber-50 p-4 text-sm text-amber-900"><strong className="block">Migramos tu cuenta</strong><span>La contraseña anterior fue reconocida. Elegí una nueva para ingresar a la tienda.</span></div>}
           {mode==='register' && <><label className="block text-xs font-bold text-[#262626]">Nombre de usuario<input className={`${field} mt-1.5`} required minLength={2} name="nombre" placeholder="Tu nombre o nombre comercial"/></label><label className="block text-xs font-bold text-[#262626]">Teléfono<input className={`${field} mt-1.5`} required minLength={6} name="telefono" type="tel" placeholder="Ej: 341 555 1234"/></label></>}
-          <label className="block text-xs font-bold text-[#262626]">Dirección de correo electrónico<input className={`${field} mt-1.5`} required type="email" name="email" placeholder="nombre@correo.com"/></label>
-          <label className="block text-xs font-bold text-[#262626]">Contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="password" placeholder="Mínimo 8 caracteres"/></label>
+          {!migration&&<label className="block text-xs font-bold text-[#262626]">Dirección de correo electrónico<input className={`${field} mt-1.5`} required type="email" name="email" placeholder="nombre@correo.com"/></label>}
+          {!migration&&<label className="block text-xs font-bold text-[#262626]">Contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="password" placeholder="Mínimo 8 caracteres"/></label>}
+          {migration&&<><label className="block text-xs font-bold text-[#262626]">Nueva contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="password_nueva"/></label><label className="block text-xs font-bold text-[#262626]">Repetir nueva contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="confirmar_password"/></label></>}
           {mode==='register' && <><label className="block text-xs font-bold text-[#262626]">Repetir contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="confirmar_password" placeholder="Repetí tu contraseña"/></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-bold text-[#262626]">Provincia<select className={`${field} mt-1.5`} required name="provincia" defaultValue=""><option value="" disabled>Seleccioná una provincia</option>{PROVINCIAS.map(provincia=><option key={provincia}>{provincia}</option>)}</select></label><label className="block text-xs font-bold text-[#262626]">Localidad / Partido<input className={`${field} mt-1.5`} required minLength={2} name="localidad_partido" placeholder="Ej: Rosario"/></label></div><label className="block text-xs font-bold text-[#262626]">Domicilio de entrega<input className="mt-1.5 w-full rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-sm outline-none transition focus:border-neutral-700 focus:ring-4 focus:ring-neutral-200" required minLength={4} name="domicilio" placeholder="Calle, número, piso o referencia"/></label><fieldset className="rounded-2xl border border-neutral-200 bg-[#fafafa] p-4"><legend className="px-2 text-xs font-extrabold text-[#262626]">Canales de venta</legend><div className="mt-1 grid gap-2 sm:grid-cols-3">{[['local_fisico','Local físico'],['tienda_online','Tienda online'],['ambos','Local físico y tienda online']].map(([value,label])=><label key={value} className="flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-white p-3 text-xs font-semibold"><input required type="radio" name="canal_venta" value={value} className="accent-[#111111]"/>{label}</label>)}</div></fieldset><label className="block text-xs font-bold text-[#262626]">Link de tu tienda online <span className="font-normal text-gray-400">(opcional)</span><input className={`${field} mt-1.5`} type="url" name="tienda_online_url" placeholder="https://mitienda.com o Instagram"/></label></>}
           {error && <p className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-700">{error}</p>}
-          <button className="w-full rounded-xl bg-[#111111] p-3.5 text-sm font-extrabold text-white transition hover:bg-[#262626]">{mode==='login'?'Ingresar a mi cuenta':'Crear mi cuenta'}</button>
+          <button className="w-full rounded-xl bg-[#111111] p-3.5 text-sm font-extrabold text-white transition hover:bg-[#262626]">{migration?'Crear contraseña e ingresar':mode==='login'?'Ingresar a mi cuenta':'Crear mi cuenta'}</button>
           </>}
         </div>
       </form>

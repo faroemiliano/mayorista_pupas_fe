@@ -13,6 +13,7 @@ const navigation = [
   { to: '/admin/stock-talles', label: 'Stock por talles', icon: '▦' },
   { to: '/admin/analitica', label: 'Analítica', icon: '↗' },
   { to: '/admin/clientes', label: 'Clientes', icon: '♙' },
+  { to: '/admin/migracion-wordpress', label: 'Migración WordPress', icon: '⇄' },
   { to: '/admin/materiales', label: 'Material para clientes', icon: '▧' },
   { to: '/admin/configuracion', label: 'Configuración', icon: '⚙' },
 ]
@@ -20,6 +21,7 @@ const navigation = [
 export function AdminLayout() {
   const duxConfiguration = useQuery({ queryKey: ['dux-configuration'], queryFn: getDuxConfiguration })
   const escrituraHabilitada = duxConfiguration.data?.escritura_habilitada === true
+  const sincronizacionHabilitada = duxConfiguration.data?.sincronizacion_habilitada === true
   return (
     <div className={adminStyles}>
       <aside className="admin-sidebar">
@@ -37,8 +39,8 @@ export function AdminLayout() {
       </aside>
       <main className="admin-main">
         <div className="admin-dev-warning">
-          <strong>{escrituraHabilitada ? 'Dux conectado' : 'Modo desarrollo seguro'}</strong>
-          <span>{escrituraHabilitada ? 'La creación de clientes y pedidos en Dux está habilitada.' : 'La escritura en Dux está deshabilitada. Las sincronizaciones de lectura funcionan normalmente.'}</span>
+          <strong>{escrituraHabilitada ? 'Dux conectado' : 'Modo catálogo WordPress'}</strong>
+          <span>{escrituraHabilitada ? 'La creación de clientes y pedidos en Dux está habilitada.' : sincronizacionHabilitada ? 'Dux está disponible sólo para sincronizaciones controladas.' : 'La tienda utiliza la copia local de WordPress. La sincronización y escritura con Dux están pausadas.'}</span>
         </div>
         <Outlet />
       </main>

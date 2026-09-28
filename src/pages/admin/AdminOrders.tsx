@@ -18,14 +18,22 @@ const states: OrderStatus[] = [
   "cancelado",
 ];
 
-const stateLabels: Record<OrderStatus, string> = {
+const historicalStates = ["completed", "processing", "on-hold", "cancelled", "refunded", "failed"];
+
+const stateLabels: Record<string, string> = {
   pendiente: "Pendiente",
   contactado: "Contactado",
   confirmado: "Confirmado",
   cancelado: "Cancelado",
+  completed: "Completado",
+  processing: "Procesando",
+  "on-hold": "En espera",
+  cancelled: "Cancelado",
+  refunded: "Reembolsado",
+  failed: "Fallido",
 };
 
-const stateStyles: Record<OrderStatus, string> = {
+const stateStyles: Record<string, string> = {
   pendiente: "border-amber-200 bg-amber-50 text-amber-800",
   contactado: "border-blue-200 bg-blue-50 text-blue-800",
   confirmado: "border-emerald-200 bg-emerald-50 text-emerald-800",
@@ -36,6 +44,7 @@ export function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedId = Number(searchParams.get("pedido_id")) || null;
   const [status, setStatus] = useState("");
+  const [source, setSource] = useState("todos");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -45,8 +54,8 @@ export function AdminOrders() {
   const [personal, setPersonal] = useState(1051689);
   const queryClient = useQueryClient();
   const orders = useQuery({
-    queryKey: ["admin-orders", status, search, dateFrom, dateTo, page],
-    queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo),
+    queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, page],
+    queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo, source),
   });
   const requestedOrder = useQuery({
     queryKey: ["admin-order", requestedId],
@@ -75,7 +84,7 @@ export function AdminOrders() {
         <div>
           <p className="eyebrow">GESTIÓN COMERCIAL</p>
           <h1>Pedidos</h1>
-          <span>Compras recibidas desde la tienda mayorista.</span>
+          <span>Pedidos históricos de WordPress y compras nuevas de la tienda.</span>
         </div>
       </header>
       <section className="grid gap-4 border border-neutral-200 bg-white p-5 md:grid-cols-2 xl:grid-cols-5">
@@ -83,7 +92,7 @@ export function AdminOrders() {
         <label className="text-xs font-bold">Mes completo<input className="admin-filter mt-2 w-full" type="month" value={month} onChange={(event)=>{const value=event.target.value;setMonth(value);if(value){const [year,monthNumber]=value.split('-').map(Number);const lastDay=new Date(year,monthNumber,0).getDate();setDateFrom(`${value}-01`);setDateTo(`${value}-${String(lastDay).padStart(2,'0')}`)}else{setDateFrom('');setDateTo('')}setPage(1)}}/></label>
         <label className="text-xs font-bold">Desde<input className="admin-filter mt-2 w-full" type="date" value={dateFrom} onChange={(event)=>{setDateFrom(event.target.value);setMonth('');setPage(1)}}/></label>
         <label className="text-xs font-bold">Hasta<input className="admin-filter mt-2 w-full" type="date" min={dateFrom||undefined} value={dateTo} onChange={(event)=>{setDateTo(event.target.value);setMonth('');setPage(1)}}/></label>
-        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-5"><label className="grow text-xs font-bold sm:max-w-52">Estado<select className="admin-filter mt-2 w-full" value={status} onChange={(event)=>{setStatus(event.target.value);setPage(1)}}><option value="">Todos los estados</option>{states.map((state)=><option key={state} value={state}>{state}</option>)}</select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo} onClick={()=>{setSearch('');setStatus('');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
+        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-5"><label className="grow text-xs font-bold sm:max-w-52">Origen<select className="admin-filter mt-2 w-full" value={source} onChange={(event)=>{setSource(event.target.value);setStatus('');setPage(1)}}><option value="todos">Todos</option><option value="tienda">Nueva tienda</option><option value="wordpress">WordPress histórico</option></select></label><label className="grow text-xs font-bold sm:max-w-52">Estado<select className="admin-filter mt-2 w-full" value={status} onChange={(event)=>{setStatus(event.target.value);setPage(1)}}><option value="">Todos los estados</option>{(source==='tienda'?states:source==='wordpress'?historicalStates:[...states,...historicalStates]).map((state)=><option key={state} value={state}>{stateLabels[state] || state}</option>)}</select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo&&source==='todos'} onClick={()=>{setSearch('');setStatus('');setSource('todos');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
       </section>
       <section className="admin-panel-card admin-table-card">
         <div className="admin-card-header">
@@ -117,9 +126,10 @@ export function AdminOrders() {
               </thead>
               <tbody>
                 {orders.data?.items.map((order) => (
-                  <tr key={order.id}>
+                  <tr key={`${order.origen}-${order.id}`}>
                     <td>
                       <strong>{order.codigo}</strong>
+                      <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
                     </td>
                     <td>
                       <strong>{order.cliente_nombre}</strong>
@@ -131,7 +141,7 @@ export function AdminOrders() {
                       <strong>{formatCurrency(Number(order.total))}</strong>
                     </td>
                     <td>
-                      <select
+                      {order.solo_lectura ? <span className="order-state border-neutral-300 bg-neutral-50 text-neutral-700">{stateLabels[order.estado] || order.estado}</span> : <select
                         className={`order-state ${order.estado}`}
                         value={order.estado}
                         disabled={update.isPending}
@@ -145,7 +155,7 @@ export function AdminOrders() {
                         {states.map((state) => (
                           <option key={state}>{state}</option>
                         ))}
-                      </select>
+                      </select>}
                     </td>
                     <td>
                       <button
@@ -205,10 +215,10 @@ export function AdminOrders() {
                 <span className="mt-1 block text-sm text-neutral-500">{selected.localidad}, {selected.provincia}</span>
                 {selected.observaciones && <div className="mt-4 rounded-xl bg-amber-50 p-3"><small className="font-bold uppercase tracking-wider text-amber-800">Nota del cliente</small><p className="mt-1 text-sm leading-5 text-amber-950">{selected.observaciones}</p></div>}
               </section>
-              <section className={`min-w-44 rounded-2xl border p-5 shadow-sm ${stateStyles[selected.estado]}`}>
+              <section className={`min-w-44 rounded-2xl border p-5 shadow-sm ${stateStyles[selected.estado] || 'border-neutral-200 bg-white text-neutral-800'}`}>
                 <p className="text-[9px] font-bold uppercase tracking-[.18em]">ESTADO</p>
-                <strong className="mt-2 block text-lg">{stateLabels[selected.estado]}</strong>
-                <span className="mt-2 block text-xs opacity-70">Actualizá el avance del pedido.</span><select className="mt-4 w-full rounded-lg border border-current/20 bg-white/80 px-3 py-2.5 text-xs font-bold outline-none" value={selected.estado} disabled={update.isPending} onChange={(event) => update.mutate({ id: selected.id, next: event.target.value as OrderStatus })}>{states.map(state => <option key={state} value={state}>{stateLabels[state]}</option>)}</select>
+                <strong className="mt-2 block text-lg">{stateLabels[selected.estado] || selected.estado}</strong>
+                {selected.solo_lectura ? <span className="mt-2 block text-xs opacity-70">Estado histórico de WordPress.</span> : <><span className="mt-2 block text-xs opacity-70">Actualizá el avance del pedido.</span><select className="mt-4 w-full rounded-lg border border-current/20 bg-white/80 px-3 py-2.5 text-xs font-bold outline-none" value={selected.estado} disabled={update.isPending} onChange={(event) => update.mutate({ id: selected.id, next: event.target.value as OrderStatus })}>{states.map(state => <option key={state} value={state}>{stateLabels[state]}</option>)}</select></>}
               </section>
             </div>
 
@@ -229,7 +239,7 @@ export function AdminOrders() {
             </section>
 
             <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_340px]">
-            <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+            {selected.solo_lectura ? <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><p className="eyebrow">ORIGEN</p><strong className="mt-1 block text-lg">WordPress histórico</strong><p className="mt-3 text-sm text-neutral-600">Pedido importado para consulta y analítica. No modifica stock y no se vuelve a enviar a Dux.</p><small className="mt-3 block text-neutral-400">ID WooCommerce: #{selected.wordpress_id}</small></section> : <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">INTEGRACIÓN</p><strong className="mt-1 block text-lg">Sincronización con Dux</strong></div><span className={`border px-3 py-1 text-[10px] font-bold uppercase ${selected.estado_sync_dux === 'enviado' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : selected.estado_sync_dux === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-neutral-300 bg-white text-neutral-600'}`}>{selected.estado_sync_dux}</span></div>
               {selected.estado_sync_dux === 'enviado' ? (
                 <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm"><strong className="text-emerald-800">✓ Pedido enviado correctamente</strong><p className="mt-1 text-neutral-600">Número en Dux: #{selected.dux_nro_pedido || selected.dux_id_pedido}</p>{selected.sincronizado_dux_en && <p className="mt-1 text-xs text-neutral-400">Sincronizado el {new Date(selected.sincronizado_dux_en).toLocaleString('es-AR')}</p>}</div>
@@ -245,11 +255,11 @@ export function AdminOrders() {
                 {selected.error_sync_dux && <p className="mt-2 text-xs text-red-700">{selected.error_sync_dux}</p>}
                 {sendDux.isError && <p className="mt-2 text-xs text-red-700">{sendDux.error.message}</p>}
               </>}
-            </section>
+            </section>}
             <section className="rounded-2xl bg-neutral-950 p-5 text-white shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[.18em] text-white/45">RESUMEN ECONÓMICO</p><div className="mt-4 space-y-3 text-sm"><div className="flex justify-between gap-4"><span className="text-white/55">Subtotal</span><strong>{formatCurrency(Number(selected.subtotal_sin_descuento))}</strong></div><div className="flex justify-between gap-4 text-emerald-400"><span>Descuento</span><strong>− {formatCurrency(Number(selected.descuento_aplicado))}</strong></div><div className="flex items-end justify-between gap-4 border-t border-white/20 pt-4"><span className="font-bold">Total final</span><strong className="font-serif text-3xl">{formatCurrency(Number(selected.total))}</strong></div>{selected.aplica_precio_24_productos && <p className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-2 text-center text-[10px] font-bold uppercase text-emerald-300">Precio por cantidad aplicado</p>}</div></section>
             </div>
 
-            {selected.estado !== 'cancelado' ? <section className="mx-5 mb-6 flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50 p-4 sm:mx-6 sm:flex-row sm:items-center sm:justify-between"><div><strong className="text-red-900">Zona de cancelación</strong><p className="mt-1 max-w-2xl text-xs text-red-700">Impide continuar procesándolo.{selected.dux_id_pedido ? ' Como ya existe en Dux, también deberá cancelarse allí.' : ''}</p></div><button className="shrink-0 rounded-xl bg-red-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-800 disabled:opacity-50" disabled={update.isPending} onClick={() => { if (window.confirm(`¿Confirmás la cancelación del pedido ${selected.codigo}?`)) update.mutate({ id: selected.id, next: 'cancelado' }, { onSuccess: () => { setSelectedId(null); setSearchParams({}) } }) }}>{update.isPending ? 'Cancelando…' : 'Cancelar pedido'}</button></section> : <section className="mx-5 mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm font-bold text-gray-600 sm:mx-6">Este pedido está cancelado y no puede continuar procesándose.</section>}
+            {!selected.solo_lectura && (selected.estado !== 'cancelado' ? <section className="mx-5 mb-6 flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50 p-4 sm:mx-6 sm:flex-row sm:items-center sm:justify-between"><div><strong className="text-red-900">Zona de cancelación</strong><p className="mt-1 max-w-2xl text-xs text-red-700">Impide continuar procesándolo.{selected.dux_id_pedido ? ' Como ya existe en Dux, también deberá cancelarse allí.' : ''}</p></div><button className="shrink-0 rounded-xl bg-red-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-800 disabled:opacity-50" disabled={update.isPending} onClick={() => { if (window.confirm(`¿Confirmás la cancelación del pedido ${selected.codigo}?`)) update.mutate({ id: selected.id, next: 'cancelado' }, { onSuccess: () => { setSelectedId(null); setSearchParams({}) } }) }}>{update.isPending ? 'Cancelando…' : 'Cancelar pedido'}</button></section> : <section className="mx-5 mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm font-bold text-gray-600 sm:mx-6">Este pedido está cancelado y no puede continuar procesándose.</section>)}
           </aside>
         </div>
       )}

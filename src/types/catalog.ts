@@ -2,7 +2,7 @@ export type CatalogOption = { id: number; nombre: string; slug: string }
 export type CatalogCategory = CatalogOption & { subcategorias: CatalogOption[] }
 export type CatalogFilters = { categorias: CatalogCategory[]; marcas: CatalogOption[] }
 export type ProductImage = { id: number; url: string; orden: number; principal: boolean }
-export type ProductSizeStock = { talle:number; cantidad:number; disponible:number }
+export type ProductSizeStock = { talle:string; cantidad:number; disponible:number }
 
 export type Product = {
   id: number

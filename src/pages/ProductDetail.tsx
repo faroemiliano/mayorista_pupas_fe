@@ -13,7 +13,7 @@ export function ProductDetail({ productId }: { productId: number }) {
   const cart = useCart()
   const [imageIndex, setImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [selectedSize,setSelectedSize]=useState<number>()
+  const [selectedSize,setSelectedSize]=useState<string>()
   const product = useQuery({
     queryKey: ['product-detail', productId],
     queryFn: () => getProduct(productId),
@@ -65,7 +65,7 @@ export function ProductDetail({ productId }: { productId: number }) {
           {user ? <div className="mt-7 border-y border-neutral-200 py-6">
             <strong className="text-2xl">{price ? formatCurrency(price) : 'Consultar precio'}</strong>
             <span className="mt-1 block text-[9px] uppercase tracking-[.15em] text-neutral-500">Precio mayorista</span>
-            <div className="mt-5"><span className="text-[10px] font-bold uppercase tracking-wider">Talle</span><div className="mt-2 flex gap-2">{[1,2,3,4,5].map(size=>{const stock=item.talles?.find(x=>x.talle===size)?.disponible??0;return <button type="button" key={size} disabled={!stock} onClick={()=>{setSelectedSize(size);setQuantity(1)}} className={`size-10 border text-sm font-bold ${selectedSize===size?'bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size}</button>})}</div></div>
+            <div className="mt-5"><span className="text-[10px] font-bold uppercase tracking-wider">Talle</span><div className="mt-2 flex flex-wrap gap-2">{item.talles.map(size=><button type="button" key={size.talle} disabled={!size.disponible} onClick={()=>{setSelectedSize(size.talle);setQuantity(1)}} className={`min-w-10 border px-2 py-2 text-sm font-bold ${selectedSize===size.talle?'bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size.talle}</button>)}</div></div>
             <p className={`mt-5 text-xs font-bold uppercase tracking-wider ${maxStock ? 'text-emerald-700' : 'text-neutral-500'}`}>{maxStock ? `${maxStock} unidades disponibles en talle ${selectedSize}` : 'Sin stock por talle'}</p>
             {maxStock > 0 && price > 0 && <div className="mt-6 flex min-h-13 border border-black">
               <QuantityControl value={quantity} max={maxStock} onChange={setQuantity}/>

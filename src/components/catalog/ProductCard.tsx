@@ -15,7 +15,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
   const availableSizes = product.talles?.filter(item=>item.disponible>0) ?? []
-  const [selectedSize,setSelectedSize]=useState<number|undefined>(availableSizes[0]?.talle)
+  const [selectedSize,setSelectedSize]=useState<string|undefined>(availableSizes[0]?.talle)
   const [imageIndex, setImageIndex] = useState(0)
   const price = Number(product.precio_mayorista ?? 0)
   const maxStock = product.talles?.find(item=>item.talle===selectedSize)?.disponible ?? 0
@@ -77,7 +77,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
         <button className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-neutral-800 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100" type="button" onClick={openProduct}>Ver producto</button>
       </div>
 
-      {user && price > 0 && <div className="border-t border-neutral-200 bg-white px-3 py-3"><span className="mb-2 block text-[9px] font-bold uppercase tracking-wider">Elegí el talle</span><div className="flex gap-1.5">{[1,2,3,4,5].map(size=>{const stock=product.talles?.find(item=>item.talle===size)?.disponible??0;return <button key={size} type="button" disabled={!stock} onClick={()=>{setSelectedSize(size);setQuantity(1)}} className={`grid size-8 place-items-center border text-xs font-bold ${selectedSize===size?'border-black bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size}</button>})}</div>{!availableSizes.length&&<small className="mt-2 block text-amber-700">Stock por talles pendiente de configuración.</small>}</div>}
+      {user && price > 0 && <div className="border-t border-neutral-200 bg-white px-3 py-3"><span className="mb-2 block text-[9px] font-bold uppercase tracking-wider">Elegí el talle</span><div className="flex flex-wrap gap-1.5">{product.talles.map(size=><button key={size.talle} type="button" disabled={!size.disponible} onClick={()=>{setSelectedSize(size.talle);setQuantity(1)}} className={`grid min-w-8 place-items-center border px-2 py-2 text-xs font-bold ${selectedSize===size.talle?'border-black bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size.talle}</button>)}</div>{!availableSizes.length&&<small className="mt-2 block text-amber-700">Sin stock disponible por talle.</small>}</div>}
       {user && maxStock > 0 && price > 0 && <div className="flex min-h-12 border-y border-black bg-black text-white">
         <div className="border-r border-white/25 bg-white px-1 py-1 text-black"><QuantityControl value={quantity} max={maxStock} onChange={setQuantity} /></div>
         <button className="grow px-3 text-[11px] font-extrabold uppercase tracking-[.14em] transition hover:bg-neutral-700" type="button" onClick={addToCart}>Agregar al carrito</button>

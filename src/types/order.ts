@@ -15,7 +15,10 @@ export type OrderCreateData = {
 export type Order = {
   id: number
   codigo: string
-  estado: OrderStatus
+  estado: string
+  origen: 'tienda' | 'wordpress'
+  solo_lectura: boolean
+  wordpress_id: number | null
   cliente_nombre: string
   cliente_telefono: string
   cliente_email: string | null
@@ -33,7 +36,7 @@ export type Order = {
   dux_id_pedido: number | null
   dux_nro_pedido: number | null
   dux_id_personal: number | null
-  estado_sync_dux: 'pendiente'|'enviando'|'enviado'|'error'
+  estado_sync_dux: 'pendiente'|'enviando'|'enviado'|'error'|'historico'
   error_sync_dux: string | null
   sincronizado_dux_en: string | null
   items: Array<CartCalculationItem & { id: number; producto_nombre: string }>

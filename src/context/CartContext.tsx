@@ -3,11 +3,11 @@ import type {Product} from '../types/catalog'
 import type {CartItem} from '../types/cart'
 
 const STORAGE_KEY='pupas-mayorista-cart'
-type Entry={product:Product;quantity:number;talle?:number}
-type Value={items:CartItem[];isOpen:boolean;totalUnits:number;addItem:(p:Product,q:number,t?:number)=>void;addMany:(items:Entry[])=>void;updateQuantity:(id:number,t:number,q:number)=>void;removeItem:(id:number,t:number)=>void;clearCart:()=>void;openCart:()=>void;closeCart:()=>void}
+type Entry={product:Product;quantity:number;talle?:string}
+type Value={items:CartItem[];isOpen:boolean;totalUnits:number;addItem:(p:Product,q:number,t?:string)=>void;addMany:(items:Entry[])=>void;updateQuantity:(id:number,t:string,q:number)=>void;removeItem:(id:number,t:string)=>void;clearCart:()=>void;openCart:()=>void;closeCart:()=>void}
 const Context=createContext<Value|null>(null)
 const load=():CartItem[]=>{try{return (JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]') as CartItem[]).filter(item=>item.talle)}catch{return[]}}
-const firstSize=(product:Product,requested?:number)=>requested??product.talles?.find(item=>item.disponible>0)?.talle
+const firstSize=(product:Product,requested?:string)=>requested??product.talles?.find(item=>item.disponible>0)?.talle
 
 export function CartProvider({children}:{children:ReactNode}){
  const [items,setItems]=useState<CartItem[]>(load),[isOpen,setOpen]=useState(false)

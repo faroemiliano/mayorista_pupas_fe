@@ -26,6 +26,8 @@ import { AdminSizeStock } from './pages/admin/AdminSizeStock'
 import { HowToBuy } from './pages/HowToBuy'
 import { AdminMaterials } from './pages/admin/AdminMaterials'
 import { storeStyles } from './styles/tailwind'
+import { ResetPassword } from './pages/ResetPassword'
+import { AdminWordpressMigration } from './pages/admin/AdminWordpressMigration'
 
 function Storefront() {
   const navigate = useNavigate()
@@ -72,6 +74,7 @@ export default function App() {
   const { user, loading } = useAuth()
   if (loading) return <div className="grid min-h-screen place-items-center"><p>Verificando sesión…</p></div>
   return <Routes>
+    <Route path="/restablecer-clave" element={<ResetPassword/>}/>
     <Route path="/mi-cuenta" element={user ? <MyAccount/> : <Navigate to="/" replace/>}/>
     <Route path="/admin" element={user?.rol === 'admin' ? <AdminLayout/> : <Navigate to="/" replace/>}>
       <Route index element={<AdminDashboard/>}/>
@@ -82,6 +85,7 @@ export default function App() {
       <Route path="confirmaciones" element={<AdminConfirmations/>}/>
       <Route path="notificaciones" element={<AdminNotifications/>}/>
       <Route path="clientes" element={<AdminClients/>}/>
+      <Route path="migracion-wordpress" element={<AdminWordpressMigration/>}/>
       <Route path="materiales" element={<AdminMaterials/>}/>
       <Route path="configuracion" element={<AdminPlaceholder title="Configuración" description="Reglas comerciales, sincronización y preferencias de la tienda." icon="⚙"/>}/>
     </Route>

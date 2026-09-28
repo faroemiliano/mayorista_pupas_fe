@@ -3,7 +3,7 @@ import type { Product } from './catalog'
 export type CartItem = {
   product: Product
   quantity: number
-  talle: number
+  talle: string
 }
 
 export type CartCalculationItem = {
@@ -13,7 +13,7 @@ export type CartCalculationItem = {
   slug: string
   imagen_url: string | null
   cantidad: number
-  talle: number
+  talle: string
   precio_mayorista: string
   precio_unitario: string
   subtotal_sin_descuento: string

@@ -69,7 +69,7 @@ export function AdminProductAnalytics() {
     {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Calculando ventas…</p></div>
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
-        <div className="analytics-scope"><strong>Origen actual: pedidos de la tienda</strong><span>{data.alcance}</span></div>
+        <div className="analytics-scope"><strong>Origen: WordPress histórico + pedidos de la tienda</strong><span>{data.alcance}</span></div>
         <section className="admin-metrics">
           <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
           <article><span>IMPORTE VENDIDO</span><strong>{formatCurrency(Number(data.resumen.importe_vendido))}</strong><small>Total confirmado en la web</small></article>
