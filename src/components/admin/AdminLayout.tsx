@@ -1,31 +1,36 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { Brand } from '../layout/Brand'
-import { adminStyles } from '../../styles/tailwind'
-import { useQuery } from '@tanstack/react-query'
-import { getDuxConfiguration } from '../../api/admin'
+import { NavLink, Outlet } from "react-router-dom";
+import { Brand } from "../layout/Brand";
+import { adminStyles } from "../../styles/tailwind";
+import { useQuery } from "@tanstack/react-query";
+import { getDuxConfiguration } from "../../api/admin";
 
 const navigation = [
-  { to: '/admin', label: 'Resumen', icon: '⌂', end: true },
-  { to: '/admin/pedidos', label: 'Pedidos', icon: '▤' },
-  { to: '/admin/confirmaciones', label: 'Confirmaciones', icon: '✓' },
-  { to: '/admin/notificaciones', label: 'Notificaciones', icon: '●' },
-  { to: '/admin/productos', label: 'Productos', icon: '◇' },
-  { to: '/admin/stock-talles', label: 'Stock por talles', icon: '▦' },
-  { to: '/admin/analitica', label: 'Analítica', icon: '↗' },
-  { to: '/admin/clientes', label: 'Clientes', icon: '♙' },
-  { to: '/admin/migracion-wordpress', label: 'Migración WordPress', icon: '⇄' },
-  { to: '/admin/materiales', label: 'Material para clientes', icon: '▧' },
-  { to: '/admin/configuracion', label: 'Configuración', icon: '⚙' },
-]
+  { to: "/admin", label: "Resumen", icon: "⌂", end: true },
+  { to: "/admin/pedidos", label: "Pedidos", icon: "▤" },
+  { to: "/admin/confirmaciones", label: "Confirmaciones", icon: "✓" },
+  { to: "/admin/notificaciones", label: "Notificaciones", icon: "●" },
+  { to: "/admin/productos", label: "Productos", icon: "◇" },
+  { to: "/admin/stock-talles", label: "Stock por talles", icon: "▦" },
+  { to: "/admin/analitica", label: "Analítica", icon: "↗" },
+  { to: "/admin/clientes", label: "Clientes", icon: "♙" },
+  { to: "/admin/migracion-wordpress", label: "Migración WordPress", icon: "⇄" },
+  { to: "/admin/materiales", label: "Material para clientes", icon: "▧" },
+  { to: "/admin/configuracion", label: "Configuración", icon: "⚙" },
+];
 
 export function AdminLayout() {
-  const duxConfiguration = useQuery({ queryKey: ['dux-configuration'], queryFn: getDuxConfiguration })
-  const escrituraHabilitada = duxConfiguration.data?.escritura_habilitada === true
-  const sincronizacionHabilitada = duxConfiguration.data?.sincronizacion_habilitada === true
+  const duxConfiguration = useQuery({
+    queryKey: ["dux-configuration"],
+    queryFn: getDuxConfiguration,
+  });
+  const escrituraHabilitada =
+    duxConfiguration.data?.escritura_habilitada === true;
+  const sincronizacionHabilitada =
+    duxConfiguration.data?.sincronizacion_habilitada === true;
   return (
     <div className={adminStyles}>
       <aside className="admin-sidebar">
-        <Brand/>
+        <Brand />
         <span className="admin-role">Panel administrativo</span>
         <nav>
           {navigation.map((item) => (
@@ -35,15 +40,25 @@ export function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <a className="back-to-store" href="/">← Volver a la tienda</a>
+        <a className="back-to-store" href="/">
+          ← Volver a la tienda
+        </a>
       </aside>
       <main className="admin-main">
         <div className="admin-dev-warning">
-          <strong>{escrituraHabilitada ? 'Dux conectado' : 'Modo catálogo WordPress'}</strong>
-          <span>{escrituraHabilitada ? 'La creación de clientes y pedidos en Dux está habilitada.' : sincronizacionHabilitada ? 'Dux está disponible sólo para sincronizaciones controladas.' : 'La tienda utiliza la copia local de WordPress. La sincronización y escritura con Dux están pausadas.'}</span>
+          <strong>
+            {escrituraHabilitada ? "Dux conectado" : "Modo catálogo WordPress"}
+          </strong>
+          <span>
+            {escrituraHabilitada
+              ? "La creación de clientes y pedidos en Dux está habilitada."
+              : sincronizacionHabilitada
+                ? "Dux está disponible sólo para sincronizaciones controladas."
+                : "La tienda utiliza la copia local de WordPress. La sincronización y escritura con Dux están pausadas."}
+          </span>
         </div>
         <Outlet />
       </main>
     </div>
-  )
+  );
 }

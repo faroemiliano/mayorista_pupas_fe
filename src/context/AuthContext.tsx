@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { checkEmailMigration, completePasswordMigration, getCurrentUser, login, register } from '../api/auth'
+import { createContext, useContext, useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react'
+import { checkEmailMigration, completePasswordMigration, getCurrentUser, login, register, requestPasswordReset } from '../api/auth'
 import type { AuthUser } from '../types/auth'
 import { Link } from 'react-router-dom'
 
@@ -34,6 +34,7 @@ export function GoogleAccessButton() {
   const [success, setSuccess] = useState('')
   const [migration,setMigration]=useState<{email:string;oldPassword:string}|null>(null)
   const [emailMigrated,setEmailMigrated]=useState(false)
+  const [resetSent,setResetSent]=useState(false)
 
   useEffect(() => {
     if (!user && !sessionStorage.getItem(WELCOME_KEY)) setOpen(true)
@@ -49,6 +50,13 @@ export function GoogleAccessButton() {
   const revisarEmail = async (valor:string) => {
     if (!valor.includes('@')) return
     try { setEmailMigrated((await checkEmailMigration(valor)).requiere_migracion) } catch { setEmailMigrated(false) }
+  }
+
+  const enviarEnlace = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault(); setError('')
+    const email = String((event.currentTarget.form?.elements.namedItem('email') as HTMLInputElement)?.value || '')
+    if (!email.includes('@')) { setError('Ingresá primero tu email.'); return }
+    try { await requestPasswordReset(email); setResetSent(true) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo enviar el enlace.') }
   }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -89,7 +97,9 @@ export function GoogleAccessButton() {
           {!migration&&<label className="block text-xs font-bold text-[#262626]">Contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="password" placeholder="Mínimo 8 caracteres"/></label>}
           {migration&&<><label className="block text-xs font-bold text-[#262626]">Nueva contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="password_nueva"/></label><label className="block text-xs font-bold text-[#262626]">Repetir nueva contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="confirmar_password"/></label></>}
           {mode==='register' && <><label className="block text-xs font-bold text-[#262626]">Repetir contraseña<input className={`${field} mt-1.5`} required minLength={8} type="password" name="confirmar_password" placeholder="Repetí tu contraseña"/></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-xs font-bold text-[#262626]">Provincia<select className={`${field} mt-1.5`} required name="provincia" defaultValue=""><option value="" disabled>Seleccioná una provincia</option>{PROVINCIAS.map(provincia=><option key={provincia}>{provincia}</option>)}</select></label><label className="block text-xs font-bold text-[#262626]">Localidad / Partido<input className={`${field} mt-1.5`} required minLength={2} name="localidad_partido" placeholder="Ej: Rosario"/></label></div><label className="block text-xs font-bold text-[#262626]">Domicilio de entrega<input className="mt-1.5 w-full rounded-xl border border-neutral-300 bg-neutral-50 px-4 py-3 text-sm outline-none transition focus:border-neutral-700 focus:ring-4 focus:ring-neutral-200" required minLength={4} name="domicilio" placeholder="Calle, número, piso o referencia"/></label><fieldset className="rounded-2xl border border-neutral-200 bg-[#fafafa] p-4"><legend className="px-2 text-xs font-extrabold text-[#262626]">Canales de venta</legend><div className="mt-1 grid gap-2 sm:grid-cols-3">{[['local_fisico','Local físico'],['tienda_online','Tienda online'],['ambos','Local físico y tienda online']].map(([value,label])=><label key={value} className="flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 bg-white p-3 text-xs font-semibold"><input required type="radio" name="canal_venta" value={value} className="accent-[#111111]"/>{label}</label>)}</div></fieldset><label className="block text-xs font-bold text-[#262626]">Link de tu tienda online <span className="font-normal text-gray-400">(opcional)</span><input className={`${field} mt-1.5`} type="url" name="tienda_online_url" placeholder="https://mitienda.com o Instagram"/></label></>}
+          {resetSent && <p className="rounded-lg bg-emerald-50 p-3 text-xs font-medium text-emerald-800">¡Bienvenido/a a Pupas Mayorista! Te enviamos un email para crear tu nueva contraseña.</p>}
           {error && <p className="rounded-lg bg-red-50 p-3 text-xs font-medium text-red-700">{error}</p>}
+          {!migration && mode==='login' && <button type="button" className="w-full text-xs font-semibold text-neutral-600 underline" onClick={enviarEnlace}>Enviar email para crear o renovar mi contraseña</button>}
           <button className="w-full rounded-xl bg-[#111111] p-3.5 text-sm font-extrabold text-white transition hover:bg-[#262626]">{migration?'Crear contraseña e ingresar':mode==='login'?'Ingresar a mi cuenta':'Crear mi cuenta'}</button>
           </>}
         </div>
