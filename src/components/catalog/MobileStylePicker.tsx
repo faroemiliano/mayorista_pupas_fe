@@ -88,6 +88,27 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
           )
         })}
       </div>
+      <button
+        type="button"
+        className={`mt-3 w-full border px-4 py-3 text-xs font-bold uppercase tracking-[.12em] transition ${!selectedCategory ? 'border-black bg-black text-white' : 'border-neutral-300 bg-white text-neutral-800'}`}
+        onClick={() => select('')}
+      >
+        Ver toda la colección
+      </button>
+      {categories.length > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              className={`shrink-0 border px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${String(category.id) === selectedCategory ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white text-neutral-700'}`}
+              onClick={() => select(String(category.id))}
+            >
+              {category.nombre}
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
