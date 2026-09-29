@@ -50,7 +50,14 @@ export function GoogleAccessButton() {
   const revisarEmail = async (valor:string) => {
     if (!valor.includes('@')) { setEmailMigrated(false); return }
     setCheckingEmail(true)
-    try { setEmailMigrated((await checkEmailMigration(valor)).requiere_migracion) } catch { setEmailMigrated(false) } finally { setCheckingEmail(false) }
+    try {
+      const migrada = (await checkEmailMigration(valor)).requiere_migracion
+      setEmailMigrated(migrada)
+      if (migrada) {
+        await requestPasswordReset(valor)
+        setResetSent(true)
+      }
+    } catch { setEmailMigrated(false) } finally { setCheckingEmail(false) }
   }
 
   const revisarAlEntrarEnPassword = (event: React.FocusEvent<HTMLInputElement>) => {
