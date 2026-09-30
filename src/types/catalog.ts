@@ -6,6 +6,7 @@ export type ProductSizeStock = { talle:string; cantidad:number; disponible:numbe
 
 export type Product = {
   id: number
+  origen: string
   dux_codigo: string
   nombre: string
   slug: string

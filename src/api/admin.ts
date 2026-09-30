@@ -1,5 +1,5 @@
-import { apiGet, apiPatch, apiPost } from "./client";
-import type { ProductPage } from "../types/catalog";
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "./client";
+import type { Product, ProductPage } from "../types/catalog";
 import type {
   AdminDashboardData,
   AdminFiltersData,
@@ -68,6 +68,28 @@ export function setProductVisibility(productId: number, visible: boolean) {
     { visible },
   );
 }
+
+export type ProductEditorPayload = {
+  codigo: string
+  nombre: string
+  descripcion: string | null
+  categoria_id: number | null
+  subcategoria_id: number | null
+  marca_id: number | null
+  precio_mayorista: number
+  precio_24_productos: number | null
+  cantidad_unidades_por_bulto: number | null
+  talles: Array<{ talle: string; cantidad: number }>
+  habilitado: boolean
+  visible_tienda: boolean
+}
+
+export const createAdminProduct = (payload: ProductEditorPayload) => apiPost<{id:number;mensaje:string}>("/api/admin/productos/", payload)
+export const updateAdminProduct = (id:number,payload:ProductEditorPayload) => apiPut<{id:number;mensaje:string}>(`/api/admin/productos/${id}`, payload)
+export const uploadAdminProductImage = (id:number,payload:{nombre:string;media_type:string;contenido_base64:string;principal:boolean}) => apiPost<{id:number}>(`/api/admin/productos/${id}/imagenes`,payload)
+export const deleteAdminProductImage = (productId:number,imageId:number) => apiDelete(`/api/admin/productos/${productId}/imagenes/${imageId}`)
+export const setAdminProductMainImage = (productId:number,imageId:number) => apiPatch<{id:number;principal:boolean}>(`/api/admin/productos/${productId}/imagenes/${imageId}/principal`,{})
+export const getAdminProduct = (id:number) => apiGet<Product>(`/api/productos/${id}`)
 
 export function syncDuxCatalog() {
   return apiPost<DuxClientSyncStatus>("/api/admin/productos/sincronizar", {});

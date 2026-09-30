@@ -59,6 +59,19 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return response.json() as Promise<T>
 }
 
+export async function apiPut<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => null) as { detail?: string } | null
+    throw new Error(error?.detail || `No se pudo guardar (${response.status})`)
+  }
+  return response.json() as Promise<T>
+}
+
 export async function apiDelete(path: string): Promise<void> {
   const response = await fetch(`${API_URL}${path}`, { method: 'DELETE', headers: authHeaders() })
   if (!response.ok) {
