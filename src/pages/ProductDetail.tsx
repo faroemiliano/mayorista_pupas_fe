@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { formatCurrency } from '../utils/currency'
 import { QuantityControl } from '../components/cart/QuantityControl'
+import { isNewProduct } from '../utils/product'
 
 export function ProductDetail({ productId }: { productId: number }) {
   const { user } = useAuth()
@@ -39,6 +40,7 @@ export function ProductDetail({ productId }: { productId: number }) {
   const price = Number(item.precio_mayorista ?? 0)
   const maxStock = item.talles?.find(size=>size.talle===selectedSize)?.disponible??0
   const categorySlug = item.categoria?.nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-') || ''
+  const isNew = isNewProduct(item)
 
   return <section className="bg-white px-5 py-10 sm:px-8 lg:px-[7vw] lg:py-16">
     <div className="mx-auto max-w-360">
@@ -51,6 +53,7 @@ export function ProductDetail({ productId }: { productId: number }) {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,58%)_minmax(320px,42%)] lg:gap-16">
         <div>
           <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
+            {isNew && <span className="absolute left-4 top-4 z-10 bg-black px-4 py-2 text-[9px] font-extrabold uppercase tracking-[.18em] text-white shadow-md">Nuevo</span>}
             {images.length ? <img className="h-full w-full object-cover" src={images[imageIndex]} alt={item.nombre}/> : <div className="grid h-full place-items-center text-7xl">👙</div>}
           </div>
           {images.length > 1 && <div className="mt-3 grid grid-cols-5 gap-2">{images.map((image, index) => <button type="button" key={image} onClick={() => setImageIndex(index)} className={`aspect-[3/4] overflow-hidden border ${index === imageIndex ? 'border-black' : 'border-transparent'}`}><img className="h-full w-full object-cover" src={image} alt={`${item.nombre}, foto ${index + 1}`}/></button>)}</div>}

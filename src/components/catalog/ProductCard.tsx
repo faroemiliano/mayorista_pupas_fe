@@ -7,6 +7,7 @@ import { QuantityControl } from '../cart/QuantityControl'
 import { useAuth } from '../../context/AuthContext'
 import { useShoppingTools } from '../../context/ShoppingToolsContext'
 import { useNavigate } from 'react-router-dom'
+import { isNewProduct } from '../../utils/product'
 
 export function ProductCard({ product, fallbackImage }: { product: Product; fallbackImage?: string }) {
   const cart = useCart()
@@ -19,8 +20,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
   const [imageIndex, setImageIndex] = useState(0)
   const price = Number(product.precio_mayorista ?? 0)
   const maxStock = product.talles?.find(item=>item.talle===selectedSize)?.disponible ?? 0
-  const creationTime = product.fecha_creacion_dux ? new Date(`${product.fecha_creacion_dux}T00:00:00`).getTime() : 0
-  const isNew = creationTime > 0 && Date.now() - creationTime <= 60 * 24 * 60 * 60 * 1000
+  const isNew = isNewProduct(product)
 
   const images = useMemo(() => {
     if (product.imagenes?.length) {

@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext'
 import { useShoppingTools } from '../../context/ShoppingToolsContext'
 import type { Product } from '../../types/catalog'
 import { formatCurrency } from '../../utils/currency'
+import { isNewProduct } from '../../utils/product'
 
 export function CompactProductCard({ product }: { product: Product }) {
   const { user } = useAuth()
@@ -12,9 +13,11 @@ export function CompactProductCard({ product }: { product: Product }) {
   const tools = useShoppingTools()
   const image = product.imagen_url ? apiAsset(`/api/productos/${product.id}/imagen`) : null
   const productPath = `/producto/${product.id}/${product.slug || 'producto'}`
+  const isNew = isNewProduct(product)
 
   return <article className="relative grid min-h-34 grid-cols-[92px_1fr] overflow-hidden border border-neutral-200 bg-white">
     <Link to={productPath} onClick={() => tools.view(product)} className="relative block min-h-34 overflow-hidden bg-neutral-100 no-underline">
+      {isNew && <span className="absolute left-2 top-2 z-10 bg-black px-2 py-1 text-[7px] font-extrabold uppercase tracking-[.16em] text-white">Nuevo</span>}
       {image ? <img className="absolute inset-0 h-full w-full object-cover" src={image} alt={product.nombre}/> : <span className="grid h-full place-items-center text-3xl">👙</span>}
     </Link>
     <div className="flex min-w-0 flex-col p-3 pr-9">
