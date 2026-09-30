@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
+  getDuxConfiguration,
   getProductReconciliation,
   getReconciliationCandidates,
   getWordpressMigrationExecution,
   getWordpressMigrationSummary,
   linkReconciliationCandidate,
   runWordpressMigration,
+  setDuxStockMode,
 } from "../../api/admin";
 
 const money = (value: string | null, currency = "ARS") => {
@@ -32,6 +34,7 @@ export function AdminWordpressMigration() {
     queryKey: ["wordpress-migration-summary"],
     queryFn: getWordpressMigrationSummary,
   });
+  const duxConfiguration = useQuery({ queryKey: ["dux-configuration"], queryFn: getDuxConfiguration });
   const reconciliation = useQuery({
     queryKey: ["wordpress-dux-reconciliation"],
     queryFn: getProductReconciliation,
@@ -49,6 +52,10 @@ export function AdminWordpressMigration() {
     mutationFn: runWordpressMigration,
     onSuccess: (data) =>
       queryClient.setQueryData(["wordpress-migration-execution"], data),
+  });
+  const toggleDux = useMutation({
+    mutationFn: setDuxStockMode,
+    onSuccess: (data) => queryClient.setQueryData(["dux-configuration"], data),
   });
   const candidates = useQuery({
     queryKey: ["wordpress-dux-candidates", candidatePage, candidateSearch],
@@ -94,7 +101,7 @@ export function AdminWordpressMigration() {
             Copia los datos de WordPress a la base propia de esta página.
           </span>
         </div>
-        <button
+        <div className="flex flex-wrap gap-3"><button
           className="rounded bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-40"
           disabled={runMigration.isPending || (execution.data?.estado === "en_progreso" && !ejecucionEstancada)}
           onClick={() => {
@@ -109,8 +116,10 @@ export function AdminWordpressMigration() {
           {execution.data?.estado === "en_progreso"
             ? ejecucionEstancada ? "Reanudar importación…" : "Importando…"
             : "Importar WordPress"}
-        </button>
+        </button><button className={`rounded px-4 py-3 text-xs font-bold text-white disabled:opacity-40 ${duxConfiguration.data?.sincronizacion_habilitada ? 'bg-amber-700' : 'bg-emerald-700'}`} disabled={toggleDux.isPending} onClick={() => { const activo=duxConfiguration.data?.sincronizacion_habilitada===true; if(window.confirm(activo?'¿Volver a usar el stock temporal de WordPress?':'¿Usar Dux como fuente única del stock total? Los productos sin vínculo no tendrán stock.')) toggleDux.mutate(!activo) }}>{duxConfiguration.data?.sincronizacion_habilitada?'Pausar Dux':'Activar Dux como stock'}</button></div>
       </header>
+
+      {toggleDux.isError&&<p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">No se pudo cambiar el modo Dux: {toggleDux.error.message}</p>}
 
       {execution.data?.estado === "en_progreso" && (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

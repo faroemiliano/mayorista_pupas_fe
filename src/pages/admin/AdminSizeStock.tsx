@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getSizeStocks, saveSizeStocks, type SizeStockProduct } from '../../api/admin'
+import { compareDuxStock, getSizeStocks, saveSizeStocks, type SizeStockProduct } from '../../api/admin'
 
 const defaultSizes = ['1', '2', '3', '4', '5']
 const emptySizes = (sizes: string[]) => Object.fromEntries(sizes.map(size => [size, 0]))
@@ -66,11 +66,14 @@ export function AdminSizeStock() {
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<SizeStockProduct | null>(null)
   const query = useQuery({ queryKey: ['size-stocks', page, search], queryFn: () => getSizeStocks(page, search) })
+  const comparison = useMutation({ mutationFn: compareDuxStock })
 
   return <div className="admin-page">
     <header className="admin-page-header"><div><p className="eyebrow">INVENTARIO LOCAL</p><h1>Control de stock por talles</h1><span>Los talles informados por Dux se sincronizan solos; los demás se cargan manualmente.</span></div></header>
     <section className="admin-panel-card">
-      <div className="admin-card-header"><input className="admin-filter w-full max-w-md" placeholder="Buscar por nombre o código Dux" value={search} onChange={event => { setSearch(event.target.value); setPage(1) }}/><strong>{query.data?.total ?? 0} productos</strong></div>
+      <div className="admin-card-header"><input className="admin-filter w-full max-w-md" placeholder="Buscar por nombre o código Dux" value={search} onChange={event => { setSearch(event.target.value); setPage(1) }}/><div className="flex items-center gap-3"><strong>{query.data?.total ?? 0} productos</strong><button type="button" className="bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50" disabled={comparison.isPending} onClick={() => comparison.mutate()}>{comparison.isPending ? 'Comparando Dux…' : 'Comparar con Dux'}</button></div></div>
+      {comparison.data && <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>{comparison.data.total_diferencias} diferencias detectadas sobre {comparison.data.consultados} productos de Dux.</strong><span className="mt-1 block">No se modificó nada. Buscá por código para abrir un producto y repartir manualmente su cantidad por talles.</span></div>}
+      {comparison.isError && <p className="border-b border-red-200 bg-red-50 p-4 text-sm text-red-800">{comparison.error.message}</p>}
       {query.isLoading ? <div className="admin-status"><span className="loader"/></div> : !query.data?.items.length ? <div className="admin-status"><strong>No encontramos productos</strong></div> : <div className="divide-y divide-neutral-200">{query.data.items.map(product => { const assigned = totalSizes(product.talles); return <article className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center" key={product.id}><div className="min-w-0"><strong className="block truncate">{product.nombre}</strong><small className="text-neutral-500">{product.codigo} · Stock total: {product.stock_dux}</small><div className="mt-2 flex flex-wrap gap-1.5">{Object.entries(product.talles).map(([size, quantity]) => <span className="border border-neutral-200 bg-neutral-50 px-2 py-1 text-[10px]" key={size}>T{size}: <b>{quantity}</b></span>)}</div></div><div className="flex shrink-0 items-center gap-3"><span className={`text-xs font-bold ${product.origen==='dux'?'text-blue-700':assigned?'text-emerald-700':'text-amber-700'}`}>{product.origen==='dux'?`Dux · ${assigned} unidades`:assigned?`${product.origen} · ${assigned} unidades`:'Pendiente'}</span><button className="bg-black px-4 py-2.5 text-xs font-bold text-white" onClick={() => setSelected(product)}>{assigned ? 'Modificar talles' : 'Cargar talles'}</button></div></article>})}</div>}
     </section>
     {query.data && query.data.total_paginas > 1 && <nav className="pagination"><button disabled={page === 1} onClick={() => setPage(value => value - 1)}>← Anterior</button><span>{page} / {query.data.total_paginas}</span><button disabled={page >= query.data.total_paginas} onClick={() => setPage(value => value + 1)}>Siguiente →</button></nav>}

@@ -135,6 +135,19 @@ export function getDuxConfiguration() {
   return apiGet<DuxConfiguration>("/api/admin/configuracion/dux");
 }
 
+export const setDuxStockMode = (habilitado: boolean) =>
+  apiPatch<DuxConfiguration>("/api/admin/configuracion/dux/modo", { habilitado });
+
+export type DuxStockComparison = {
+  consultados: number;
+  total_diferencias: number;
+  solo_lectura: boolean;
+  diferencias: Array<{ codigo: string; nombre: string; producto_id: number | null; stock_dux: number; stock_pagina: number | null; estado: string }>;
+};
+
+export const compareDuxStock = () =>
+  apiPost<DuxStockComparison>("/api/admin/configuracion/dux/comparar-stock", {});
+
 export type SizeStockProduct = {
   id: number;
   codigo: string;
