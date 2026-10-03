@@ -49,7 +49,7 @@ export function AdminWordpressMigration() {
     ? Date.now() - new Date(execution.data.actualizado_en).getTime() > 120000
     : false;
   const runMigration = useMutation({
-    mutationFn: runWordpressMigration,
+    mutationFn: (updateAll:boolean) => runWordpressMigration(updateAll),
     onSuccess: (data) =>
       queryClient.setQueryData(["wordpress-migration-execution"], data),
   });
@@ -107,15 +107,15 @@ export function AdminWordpressMigration() {
           onClick={() => {
             if (
               window.confirm(
-                ejecucionEstancada ? "La ejecución anterior quedó sin actividad. ¿Querés reanudarla?" : "¿Iniciar la copia completa desde WordPress? WordPress no será modificado y Dux permanecerá pausado.",
+                ejecucionEstancada ? "La ejecución anterior quedó sin actividad. ¿Querés reanudarla?" : "¿Actualizar ahora todos los productos, clientes y pedidos desde WordPress? WordPress no será modificado y Dux permanecerá pausado.",
               )
             )
-              runMigration.mutate();
+              runMigration.mutate(!ejecucionEstancada);
           }}
         >
           {execution.data?.estado === "en_progreso"
             ? ejecucionEstancada ? "Reanudar importación…" : "Importando…"
-            : "Importar WordPress"}
+            : "Actualización final WordPress"}
         </button><button className={`rounded px-4 py-3 text-xs font-bold text-white disabled:opacity-40 ${duxConfiguration.data?.sincronizacion_habilitada ? 'bg-amber-700' : 'bg-emerald-700'}`} disabled={toggleDux.isPending} onClick={() => { const activo=duxConfiguration.data?.sincronizacion_habilitada===true; if(window.confirm(activo?'¿Volver a usar el stock temporal de WordPress?':'¿Usar Dux como fuente única del stock total? Los productos sin vínculo no tendrán stock.')) toggleDux.mutate(!activo) }}>{duxConfiguration.data?.sincronizacion_habilitada?'Pausar Dux':'Activar Dux como stock'}</button></div>
       </header>
 

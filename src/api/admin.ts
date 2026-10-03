@@ -287,10 +287,10 @@ export const getWordpressMigrationExecution = () =>
   apiGet<WordpressMigrationExecution>(
     "/api/admin/migracion-wordpress/ejecucion",
   );
-export const runWordpressMigration = () =>
+export const runWordpressMigration = (updateAll = false) =>
   apiPost<WordpressMigrationExecution>(
     "/api/admin/migracion-wordpress/ejecutar",
-    { confirmar: true },
+    { confirmar: true, actualizar_todo: updateAll },
   );
 
 export type ProductReconciliation = {
