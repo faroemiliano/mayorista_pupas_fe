@@ -31,8 +31,8 @@ export function getMyOrders(page: number) {
   return apiGet<OrderPage>(`/api/pedidos/mios?page=${page}&limit=10`)
 }
 
-export function updateOrderStatus(orderId: number, status: OrderStatus) {
-  return apiPatch<Order>(`/api/admin/pedidos/${orderId}/estado`, { estado: status })
+export function updateOrderStatus(orderId: number, status: OrderStatus, origin: Order['origen']) {
+  return apiPatch<Order>(`/api/admin/pedidos/${orderId}/estado`, { estado: status, origen: origin })
 }
 
 export function sendOrderToDux(orderId:number,idPersonal:number){

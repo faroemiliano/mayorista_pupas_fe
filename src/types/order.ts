@@ -19,6 +19,7 @@ export type Order = {
   origen: 'tienda' | 'wordpress'
   solo_lectura: boolean
   wordpress_id: number | null
+  estado_original: string | null
   cliente_nombre: string
   cliente_telefono: string
   cliente_email: string | null
