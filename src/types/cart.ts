@@ -30,7 +30,4 @@ export type CartCalculation = {
   subtotal_sin_descuento: string
   descuento_aplicado: string
   total: string
-  compra_minima_unidades: number
-  faltantes_para_compra_minima: number
-  cumple_compra_minima: boolean
 }

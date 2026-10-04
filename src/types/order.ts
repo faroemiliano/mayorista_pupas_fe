@@ -21,6 +21,8 @@ export type Order = {
   wordpress_id: number | null
   estado_original: string | null
   cliente_nombre: string
+  cliente_primer_nombre?: string | null
+  cliente_apellido?: string | null
   cliente_telefono: string
   cliente_email: string | null
   provincia: string

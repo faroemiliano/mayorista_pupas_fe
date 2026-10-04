@@ -85,12 +85,37 @@ export function AdminOrders() {
           <span>Pedidos históricos de WordPress y compras nuevas de la tienda.</span>
         </div>
       </header>
+      <section className="admin-panel-card overflow-hidden p-0">
+        <div className="border-b border-gray-100 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">
+            Filtrar por estado
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 p-4">
+          {([
+            ["", "Todos"],
+            ["pendiente", "Pendiente"],
+            ["contactado", "Contactado"],
+            ["confirmado", "Confirmado"],
+            ["cancelado", "Cancelado"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value || "todos"}
+              type="button"
+              className={`rounded-full px-4 py-2 text-xs font-bold transition ${status === value ? "bg-[#111111] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              onClick={() => { setStatus(value); setPage(1); }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
       <section className="grid gap-4 border border-neutral-200 bg-white p-5 md:grid-cols-2 xl:grid-cols-5">
         <label className="text-xs font-bold xl:col-span-2">Pedido o cliente<input className="admin-filter mt-2 w-full" value={search} onChange={(event)=>{setSearch(event.target.value);setPage(1)}} placeholder="Código, ID, nombre, email o teléfono"/></label>
         <label className="text-xs font-bold">Mes completo<input className="admin-filter mt-2 w-full" type="month" value={month} onChange={(event)=>{const value=event.target.value;setMonth(value);if(value){const [year,monthNumber]=value.split('-').map(Number);const lastDay=new Date(year,monthNumber,0).getDate();setDateFrom(`${value}-01`);setDateTo(`${value}-${String(lastDay).padStart(2,'0')}`)}else{setDateFrom('');setDateTo('')}setPage(1)}}/></label>
         <label className="text-xs font-bold">Desde<input className="admin-filter mt-2 w-full" type="date" value={dateFrom} onChange={(event)=>{setDateFrom(event.target.value);setMonth('');setPage(1)}}/></label>
         <label className="text-xs font-bold">Hasta<input className="admin-filter mt-2 w-full" type="date" min={dateFrom||undefined} value={dateTo} onChange={(event)=>{setDateTo(event.target.value);setMonth('');setPage(1)}}/></label>
-        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:grid-cols-5"><label className="grow text-xs font-bold sm:max-w-52">Origen<select className="admin-filter mt-2 w-full" value={source} onChange={(event)=>{setSource(event.target.value);setStatus('');setPage(1)}}><option value="todos">Todos</option><option value="tienda">Nueva tienda</option><option value="wordpress">Importados de WordPress</option></select></label><label className="grow text-xs font-bold sm:max-w-52">Estado de gestión<select className="admin-filter mt-2 w-full" value={status} onChange={(event)=>{setStatus(event.target.value);setPage(1)}}><option value="">Todos los estados</option>{states.map((state)=><option key={state} value={state}>{stateLabels[state]}</option>)}</select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo&&source==='todos'} onClick={()=>{setSearch('');setStatus('');setSource('todos');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
+        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:grid-cols-5"><label className="grow text-xs font-bold sm:max-w-52">Origen<select className="admin-filter mt-2 w-full" value={source} onChange={(event)=>{setSource(event.target.value);setStatus('');setPage(1)}}><option value="todos">Todos</option><option value="tienda">Nueva tienda</option><option value="wordpress">Importados de WordPress</option></select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo&&source==='todos'} onClick={()=>{setSearch('');setStatus('');setSource('todos');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
       </section>
       <section className="admin-panel-card admin-table-card">
         <div className="admin-card-header">

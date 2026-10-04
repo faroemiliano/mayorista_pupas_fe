@@ -270,30 +270,6 @@ export function CartDrawer() {
                 </>
               )}
             </div>
-            {result && (
-              <div
-                className={`mx-5 mt-3 rounded-xl p-3 text-sm ${result.cumple_compra_minima ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}
-              >
-                {result.cumple_compra_minima ? (
-                  <strong>
-                    ✓ Alcanzaste la compra mínima de{" "}
-                    {result.compra_minima_unidades} prendas.
-                  </strong>
-                ) : (
-                  <>
-                    <strong>
-                      Sumá {result.faltantes_para_compra_minima}{" "}
-                      {result.faltantes_para_compra_minima === 1
-                        ? "prenda más"
-                        : "prendas más"}
-                    </strong>
-                    <span className="block text-xs">
-                      Podés combinar cualquier producto del catálogo.
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
             <div className="cart-lines">
               {cart.items.map((item) => {
                 const calculated = result?.items.find(
@@ -406,12 +382,10 @@ export function CartDrawer() {
               <button
                 className="checkout-button"
                 type="button"
-                disabled={!result || !result.cumple_compra_minima}
+                disabled={!result}
                 onClick={() => setStage("review")}
               >
-                {result && !result.cumple_compra_minima
-                  ? "Completá la compra mínima"
-                  : "Revisar compra"}
+                Revisar compra
               </button>
               <button
                 className="clear-cart"

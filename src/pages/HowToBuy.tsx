@@ -21,9 +21,9 @@ const steps = [
   },
   {
     number: '04',
-    title: 'Completá el mínimo mayorista',
-    text: 'La compra se habilita al reunir al menos 6 prendas en total, sin importar si son productos o talles diferentes.',
-    note: 'El carrito te indica cuántas unidades faltan para alcanzar el mínimo.',
+    title: 'Armá tu pedido a tu medida',
+    text: 'Podés comprar desde una unidad y combinar productos o talles diferentes en un mismo pedido.',
+    note: 'Al llegar a 24 unidades se aplicará el precio especial cuando corresponda.',
   },
   {
     number: '05',

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 const messages = [
-  "Compra mínima: 6 prendas",
+  "Comprá desde 1 unidad",
   "5% OFF en efectivo",
 
   "No realizamos cambios",
