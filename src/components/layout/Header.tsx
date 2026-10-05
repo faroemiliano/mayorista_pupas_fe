@@ -15,9 +15,10 @@ const navItems = [
 export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }: Props) {
   const cart = useCart()
   const { user } = useAuth()
+  const esAdministrador = user?.rol === 'admin' || user?.rol === 'admin_operativo'
   const notifications = useQuery({
-    queryKey: [user?.rol === 'admin' ? 'admin-notifications' : 'my-notifications'],
-    queryFn: user?.rol === 'admin' ? getAdminNotifications : getMyNotifications,
+    queryKey: [esAdministrador ? 'admin-notifications' : 'my-notifications'],
+    queryFn: esAdministrador ? getAdminNotifications : getMyNotifications,
     enabled: Boolean(user),
     refetchInterval: 30_000,
   })
@@ -35,9 +36,9 @@ export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }:
       </div>
       <div className="absolute -left-2 md:left-1/2 md:-translate-x-1/2"><Brand/></div>
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        {user?.rol === 'admin' && <Link className="grid size-9 shrink-0 place-items-center border border-neutral-200 text-neutral-800 no-underline transition hover:border-black sm:flex sm:h-9 sm:w-auto sm:gap-2 sm:px-3" to="/admin" aria-label="Ir al panel de administración"><span className="text-base sm:text-sm" aria-hidden="true">⚙</span><span className="hidden text-[9px] font-bold uppercase tracking-wider sm:inline">Panel admin</span></Link>}
+        {esAdministrador && <Link className="grid size-9 shrink-0 place-items-center border border-neutral-200 text-neutral-800 no-underline transition hover:border-black sm:flex sm:h-9 sm:w-auto sm:gap-2 sm:px-3" to="/admin" aria-label="Ir al panel de administración"><span className="text-base sm:text-sm" aria-hidden="true">⚙</span><span className="hidden text-[9px] font-bold uppercase tracking-wider sm:inline">Panel admin</span></Link>}
         <GoogleAccessButton/>
-        {user && <Link to={user.rol === 'admin' ? '/admin/notificaciones' : '/mi-cuenta?seccion=notificaciones'} className="relative grid size-9 place-items-center text-neutral-800 no-underline" aria-label="Notificaciones">♢{unread > 0 && <b className="absolute right-0 top-0 grid min-h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[8px] text-white">{unread > 99 ? '99+' : unread}</b>}</Link>}
+        {user && <Link to={esAdministrador ? '/admin/notificaciones' : '/mi-cuenta?seccion=notificaciones'} className="relative grid size-9 place-items-center text-neutral-800 no-underline" aria-label="Notificaciones">♢{unread > 0 && <b className="absolute right-0 top-0 grid min-h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[8px] text-white">{unread > 99 ? '99+' : unread}</b>}</Link>}
         <button type="button" onClick={cart.openCart} className="relative grid size-9 place-items-center bg-transparent text-neutral-900 transition hover:text-neutral-500" aria-label="Abrir carrito"><svg className="size-5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="1.5" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M5.5 8.5h13l-1 11h-11l-1-11Z"/><path strokeLinecap="round" d="M9 9V6.5a3 3 0 0 1 6 0V9"/></svg>{cart.totalUnits > 0 && <b className="absolute -right-0.5 -top-0.5 grid min-h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[8px] leading-none text-white">{cart.totalUnits}</b>}</button>
       </div>
     </div>
