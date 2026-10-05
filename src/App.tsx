@@ -15,7 +15,6 @@ import { Benefits } from "./components/home/Benefits";
 import { HeroCarousel } from "./components/home/HeroCarousel";
 import { EditorialCollections } from "./components/home/EditorialCollections";
 import { FeaturedProducts } from "./components/home/FeaturedProducts";
-import { InstallPupasApp } from "./components/home/InstallPupasApp";
 import { BrandManifesto } from "./components/home/BrandManifesto";
 import { AnnouncementBar } from "./components/layout/AnnouncementBar";
 import { Footer } from "./components/layout/Footer";
@@ -89,7 +88,6 @@ function Storefront() {
             <FeaturedProducts />
             <BrandManifesto />
             <Benefits />
-            <InstallPupasApp />
           </>
         )}
       </main>
