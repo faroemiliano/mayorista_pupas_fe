@@ -20,9 +20,9 @@ const states: OrderStatus[] = [
 ];
 
 const stateLabels: Record<string, string> = {
-  pendiente: "Pendiente",
-  contactado: "Contactado",
-  confirmado: "Confirmado",
+  pendiente: "En espera",
+  contactado: "Procesado",
+  confirmado: "Completado",
   cancelado: "Cancelado",
   completed: "Completado",
   processing: "Procesando",
@@ -111,9 +111,9 @@ export function AdminOrders() {
         <div className="flex flex-wrap gap-2 p-4">
           {([
             ["", "Todos"],
-            ["pendiente", "Pendiente"],
-            ["contactado", "Contactado"],
-            ["confirmado", "Confirmado"],
+            ["pendiente", "En espera"],
+            ["contactado", "Procesado"],
+            ["confirmado", "Completado"],
             ["cancelado", "Cancelado"],
           ] as const).map(([value, label]) => (
             <button

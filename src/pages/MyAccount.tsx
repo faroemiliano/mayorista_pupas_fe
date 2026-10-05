@@ -15,7 +15,7 @@ import { Brand } from '../components/layout/Brand'
 import { ClientMaterials } from '../components/account/ClientMaterials'
 import { whatsappUrl } from '../config/contact'
 
-const statusLabels: Record<string,string> = { pendiente:'Pendiente', contactado:'Contactado', confirmado:'Confirmado', cancelado:'Cancelado' }
+const statusLabels: Record<string,string> = { pendiente:'En espera', contactado:'Procesado', confirmado:'Completado', cancelado:'Cancelado' }
 const statusDetails: Record<string,string> = {
   pendiente: 'Recibimos tu pedido y está esperando revisión.',
   contactado: 'Nuestro equipo ya se comunicó para continuar la compra.',
