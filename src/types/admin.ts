@@ -50,4 +50,13 @@ export type ProductAnalytics = {
   mas_vendidos: ProductSalesRanking[]
   menos_vendidos: ProductSalesRanking[]
   sin_ventas: ProductSalesRanking[]
+  comparacion_anterior: {
+    desde: string
+    hasta: string
+    resumen: {
+      pedidos: number
+      unidades: number
+      importe: string
+    }
+  } | null
 }

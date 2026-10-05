@@ -58,24 +58,35 @@ function SalesLineChart({ points }: { points: ProductAnalytics['serie_ventas'] }
 export function AdminProductAnalytics() {
   const [days, setDays] = useState<number | null>(30)
   const [grouping, setGrouping] = useState<'dia' | 'semana' | 'mes' | 'anio'>('dia')
+  const [monthFrom, setMonthFrom] = useState('')
+  const [monthTo, setMonthTo] = useState('')
+  const fechaDesde = monthFrom ? `${monthFrom}-01` : ''
+  const fechaHasta = monthTo ? `${monthTo}-${String(new Date(Number(monthTo.slice(0, 4)), Number(monthTo.slice(5, 7)), 0).getDate()).padStart(2, '0')}` : ''
+  const customRange = Boolean(fechaDesde && fechaHasta)
+  const incompleteRange = Boolean(fechaDesde) !== Boolean(fechaHasta)
   const analytics = useQuery({
-    queryKey: ['admin-product-analytics', days, grouping],
-    queryFn: () => getProductAnalytics(days, grouping),
+    queryKey: ['admin-product-analytics', days, grouping, fechaDesde, fechaHasta],
+    queryFn: () => getProductAnalytics(days, grouping, fechaDesde, fechaHasta),
+    enabled: !incompleteRange,
   })
   const data = analytics.data
+  const importeAnterior = Number(data?.comparacion_anterior?.resumen.importe ?? 0)
+  const variacionPeriodo = importeAnterior === 0 ? null : ((Number(data?.resumen.importe_vendido ?? 0) - importeAnterior) / importeAnterior) * 100
 
   return <div className="admin-page">
-    <header className="admin-page-header"><div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Evolución, facturación, pedidos y rotación por producto.</span></div><div className="flex flex-wrap gap-2"><select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div></header>
+    <header className="admin-page-header"><div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Evolución, facturación, pedidos y rotación por producto.</span></div><div className="flex flex-wrap items-end gap-2"><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Desde mes<input aria-label="Mes inicial" className="admin-filter mt-1 block" type="month" value={monthFrom} max={monthTo || undefined} onChange={event => setMonthFrom(event.target.value)}/></label><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Hasta mes<input aria-label="Mes final" className="admin-filter mt-1 block" type="month" value={monthTo} min={monthFrom || undefined} onChange={event => setMonthTo(event.target.value)}/></label>{(monthFrom || monthTo) && <button type="button" className="admin-filter" onClick={() => { setMonthFrom(''); setMonthTo('') }}>Limpiar período</button>}<select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} disabled={customRange} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div></header>
     {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Calculando ventas…</p></div>
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
         <div className="analytics-scope"><strong>Origen: WordPress histórico + pedidos de la tienda</strong><span>{data.alcance}</span></div>
+        {customRange && <div className="analytics-scope"><strong>Período elegido: {new Date(`${fechaDesde}T00:00:00`).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })} a {new Date(`${fechaHasta}T00:00:00`).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}</strong><span>La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
         <section className="admin-metrics">
           <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
           <article><span>IMPORTE VENDIDO</span><strong>{formatCurrency(Number(data.resumen.importe_vendido))}</strong><small>Total confirmado en la web</small></article>
           <article><span>PRODUCTOS CON VENTAS</span><strong>{data.resumen.productos_con_ventas}</strong><small>Con movimiento en el período</small></article>
           <article className="attention"><span>SIN VENTAS</span><strong>{data.resumen.productos_sin_ventas}</strong><small>Productos habilitados sin rotación</small></article>
         </section>
+        {data.comparacion_anterior && <section className="admin-metrics"><article><span>PERÍODO ANTERIOR</span><strong>{formatCurrency(importeAnterior)}</strong><small>{data.comparacion_anterior.resumen.unidades} unidades · {data.comparacion_anterior.resumen.pedidos} pedidos</small></article><article><span>VARIACIÓN DE FACTURACIÓN</span><strong className={variacionPeriodo != null && variacionPeriodo < 0 ? 'text-red-700' : 'text-emerald-700'}>{variacionPeriodo == null ? 'Sin base comparable' : `${variacionPeriodo > 0 ? '+' : ''}${variacionPeriodo.toFixed(1)}%`}</strong><small>Respecto del período anterior</small></article></section>}
         <SalesLineChart points={data.serie_ventas}/>
         <div className="analytics-grid"><RankingTable title="Más vendidos" description="Ordenados por cantidad de unidades." items={data.mas_vendidos}/><RankingTable title="Menor rotación" description="Productos vendidos con menos unidades." items={data.menos_vendidos}/></div>
         <div className="analytics-last"><RankingTable title="Productos sin ventas" description="Habilitados en Dux que no registraron ventas en el período." items={data.sin_ventas}/></div>

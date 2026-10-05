@@ -121,9 +121,14 @@ export function getDuxCatalogSyncStatus() {
 export function getProductAnalytics(
   days: number | null,
   grouping: "dia" | "semana" | "mes" | "anio",
+  fechaDesde = "",
+  fechaHasta = "",
 ) {
+  const params = new URLSearchParams({ dias: String(days ?? 0), agrupacion: grouping })
+  if (fechaDesde) params.set('fecha_desde', fechaDesde)
+  if (fechaHasta) params.set('fecha_hasta', fechaHasta)
   return apiGet<ProductAnalytics>(
-    `/api/admin/productos/analitica?dias=${days ?? 0}&agrupacion=${grouping}`,
+    `/api/admin/productos/analitica?${params}`,
   );
 }
 
