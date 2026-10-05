@@ -98,6 +98,8 @@ function Storefront() {
 
 export default function App() {
   const { user, loading } = useAuth();
+  const esAdministrador = user?.rol === "admin" || user?.rol === "admin_operativo";
+  const esAdminTotal = user?.rol === "admin";
   if (loading)
     return (
       <div className="grid min-h-screen place-items-center">
@@ -114,31 +116,29 @@ export default function App() {
       <Route
         path="/admin"
         element={
-          user?.rol === "admin" ? <AdminLayout /> : <Navigate to="/" replace />
+          esAdministrador ? <AdminLayout /> : <Navigate to="/" replace />
         }
       >
         <Route index element={<AdminDashboard />} />
         <Route path="productos" element={<AdminProducts />} />
         <Route path="stock-talles" element={<AdminSizeStock />} />
-        <Route path="analitica" element={<AdminProductAnalytics />} />
+        <Route path="analitica" element={esAdminTotal ? <AdminProductAnalytics /> : <Navigate to="/admin" replace />} />
         <Route path="pedidos" element={<AdminOrders />} />
         <Route path="confirmaciones" element={<AdminConfirmations />} />
         <Route path="notificaciones" element={<AdminNotifications />} />
         <Route path="clientes" element={<AdminClients />} />
         <Route
           path="migracion-wordpress"
-          element={<AdminWordpressMigration />}
+          element={esAdminTotal ? <AdminWordpressMigration /> : <Navigate to="/admin" replace />}
         />
         <Route path="materiales" element={<AdminMaterials />} />
         <Route
           path="configuracion"
-          element={
-            <AdminPlaceholder
+          element={esAdminTotal ? <AdminPlaceholder
               title="Configuración"
               description="Reglas comerciales, sincronización y preferencias de la tienda."
               icon="⚙"
-            />
-          }
+            /> : <Navigate to="/admin" replace />}
         />
       </Route>
       <Route path="/" element={<Storefront />} />

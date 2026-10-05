@@ -3,6 +3,7 @@ import { Brand } from "../layout/Brand";
 import { adminStyles } from "../../styles/tailwind";
 import { useQuery } from "@tanstack/react-query";
 import { getDuxConfiguration } from "../../api/admin";
+import { useAuth } from "../../context/AuthContext";
 
 const navigation = [
   { to: "/admin", label: "Resumen", icon: "⌂", end: true },
@@ -11,14 +12,16 @@ const navigation = [
   { to: "/admin/notificaciones", label: "Notificaciones", icon: "●" },
   { to: "/admin/productos", label: "Productos", icon: "◇" },
   { to: "/admin/stock-talles", label: "Stock por talles", icon: "▦" },
-  { to: "/admin/analitica", label: "Analítica", icon: "↗" },
+  { to: "/admin/analitica", label: "Analítica", icon: "↗", soloAdminTotal: true },
   { to: "/admin/clientes", label: "Clientes", icon: "♙" },
-  { to: "/admin/migracion-wordpress", label: "Migración WordPress", icon: "⇄" },
+  { to: "/admin/migracion-wordpress", label: "Migración WordPress", icon: "⇄", soloAdminTotal: true },
   { to: "/admin/materiales", label: "Material para clientes", icon: "▧" },
-  { to: "/admin/configuracion", label: "Configuración", icon: "⚙" },
+  { to: "/admin/configuracion", label: "Configuración", icon: "⚙", soloAdminTotal: true },
 ];
 
 export function AdminLayout() {
+  const { user } = useAuth();
+  const esAdminTotal = user?.rol === "admin";
   const duxConfiguration = useQuery({
     queryKey: ["dux-configuration"],
     queryFn: getDuxConfiguration,
@@ -33,7 +36,7 @@ export function AdminLayout() {
         <Brand />
         <span className="admin-role">Panel administrativo</span>
         <nav>
-          {navigation.map((item) => (
+          {navigation.filter((item) => !item.soloAdminTotal || esAdminTotal).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end}>
               <span aria-hidden="true">{item.icon}</span>
               {item.label}
