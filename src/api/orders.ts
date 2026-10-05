@@ -13,9 +13,10 @@ export function createOrder(data: OrderCreateData, items: CartItem[]) {
   })
 }
 
-export function getAdminOrders(status: string, page: number, buscar = '', fechaDesde = '', fechaHasta = '', origen = 'todos') {
+export function getAdminOrders(status: string, page: number, buscar = '', fechaDesde = '', fechaHasta = '', origen = 'todos', orden = 'fecha_desc') {
   const params = new URLSearchParams({ page: String(page), limit: '20' })
   params.set('origen', origen)
+  params.set('orden', orden)
   if (status) params.set('estado', status)
   if (buscar.trim()) params.set('buscar', buscar.trim())
   if (fechaDesde) params.set('fecha_desde', fechaDesde)

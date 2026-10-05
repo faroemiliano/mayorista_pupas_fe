@@ -48,12 +48,13 @@ export function AdminOrders() {
   const [dateTo, setDateTo] = useState("");
   const [month, setMonth] = useState("");
   const [page, setPage] = useState(1);
+  const [order, setOrder] = useState<'fecha_desc'|'total_desc'|'total_asc'>('fecha_desc');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [personal, setPersonal] = useState(1051689);
   const queryClient = useQueryClient();
   const orders = useQuery({
-    queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, page],
-    queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo, source),
+    queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, order, page],
+    queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo, source, order),
   });
   const requestedOrder = useQuery({
     queryKey: ["admin-order", requestedId],
@@ -142,7 +143,7 @@ export function AdminOrders() {
                   <th>Cliente</th>
                   <th>Fecha</th>
                   <th>Unidades</th>
-                  <th>Total</th>
+                  <th><button type="button" className="font-bold hover:underline" onClick={() => { setOrder(current => current === 'total_desc' ? 'total_asc' : 'total_desc'); setPage(1); }}>Total {order === 'total_desc' ? '↓' : order === 'total_asc' ? '↑' : '↕'}</button></th>
                   <th>Estado</th>
                   <th></th>
                 </tr>
