@@ -231,7 +231,37 @@ export function AdminOrders() {
           </nav>
         )}
       </section>
-      {selected && (
+      {selected && <>
+        <section className="order-print-invoice" aria-hidden="true">
+          <header className="order-print-invoice-header">
+            <h1>Comprobante de pedido</h1>
+            <strong>Pupas Mayorista</strong>
+          </header>
+          <div className="order-print-invoice-info">
+            <section>
+              <strong>{nombreCompletoCliente(selected)}</strong>
+              <span>{selected.direccion}</span>
+              <span>{selected.localidad}</span>
+              <span>{selected.provincia}</span>
+              <span>{selected.cliente_telefono}</span>
+            </section>
+            <section>
+              <span><b>Número de pedido:</b> {selected.codigo}</span>
+              <span><b>Fecha de pedido:</b> {new Date(selected.creado_en).toLocaleDateString('es-AR', { dateStyle: 'long' })}</span>
+              <span><b>Método de pago:</b> A convenir</span>
+              <span><b>Estado:</b> {stateLabels[selected.estado] || selected.estado}</span>
+            </section>
+          </div>
+          <table className="order-print-invoice-table">
+            <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th></tr></thead>
+            <tbody>{selected.items.map(item => <tr key={item.id}><td>{item.producto_nombre}{item.talle ? ` · Talle ${item.talle}` : ''}</td><td>{item.cantidad}</td><td>{formatCurrency(Number(item.precio_unitario))}</td></tr>)}</tbody>
+          </table>
+          <section className="order-print-invoice-totals">
+            <div><span>Subtotal</span><strong>{formatCurrency(Number(selected.subtotal_sin_descuento))}</strong></div>
+            {Number(selected.descuento_aplicado) > 0 && <div><span>Descuento</span><strong>− {formatCurrency(Number(selected.descuento_aplicado))}</strong></div>}
+            <div className="order-print-invoice-total"><span>Total</span><strong>{formatCurrency(Number(selected.total))}</strong></div>
+          </section>
+        </section>
         <div className="order-modal !bg-black/75 backdrop-blur-sm" onMouseDown={() => { setSelectedId(null); setSearchParams({}) }}>
           <aside className="printable-order !max-h-[94vh] !max-w-5xl !overflow-y-auto !rounded-3xl !bg-[#f4f4f2] shadow-[0_30px_100px_rgba(0,0,0,.45)] [scrollbar-gutter:stable]" onMouseDown={(event) => event.stopPropagation()}>
             <header className="sticky top-0 z-20 !items-start !border-b-0 !bg-neutral-950 !px-6 !py-5 !text-white sm:!px-8 sm:!py-6">
@@ -302,7 +332,7 @@ export function AdminOrders() {
             {selected.estado !== 'cancelado' ? <section className="no-print mx-5 mb-6 flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50 p-4 sm:mx-6 sm:flex-row sm:items-center sm:justify-between"><div><strong className="text-red-900">Zona de cancelación</strong><p className="mt-1 max-w-2xl text-xs text-red-700">Impide continuar procesándolo.{selected.dux_id_pedido ? ' Como ya existe en Dux, también deberá cancelarse allí.' : ''}</p></div><button className="shrink-0 rounded-xl bg-red-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-800 disabled:opacity-50" disabled={update.isPending} onClick={() => { if (window.confirm(`¿Confirmás la cancelación del pedido ${selected.codigo}?`)) update.mutate({ id: selected.id, next: 'cancelado', origin: selected.origen }, { onSuccess: () => { setSelectedId(null); setSearchParams({}) } }) }}>{update.isPending ? 'Cancelando…' : 'Cancelar pedido'}</button></section> : <section className="mx-5 mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm font-bold text-gray-600 sm:mx-6">Este pedido está cancelado.</section>}
           </aside>
         </div>
-      )}
+      </>}
     </div>
   );
 }

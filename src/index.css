@@ -1,19 +1,35 @@
 @import "tailwindcss";
 
+.order-print-invoice { display: none; }
+
 @media print {
-  @page { margin: 12mm; }
+  @page { size: A4; margin: 18mm 20mm; }
 
   body * { visibility: hidden !important; }
-  .printable-order, .printable-order * { visibility: visible !important; }
-  .printable-order {
+  .order-print-invoice, .order-print-invoice * { visibility: visible !important; }
+  .order-print-invoice {
+    display: block !important;
     position: absolute !important;
     inset: 0 !important;
     width: 100% !important;
-    max-width: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    color: #171717 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
   }
-  .no-print { display: none !important; }
+  .order-print-invoice-header { display: flex !important; justify-content: space-between !important; align-items: baseline !important; margin-bottom: 28px !important; }
+  .order-print-invoice-header h1 { margin: 0 !important; font-size: 22px !important; }
+  .order-print-invoice-header strong { font-size: 13px !important; }
+  .order-print-invoice-info { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 72px !important; margin-bottom: 28px !important; }
+  .order-print-invoice-info section { display: flex !important; flex-direction: column !important; }
+  .order-print-invoice-info span, .order-print-invoice-info strong { display: block !important; }
+  .order-print-invoice-table { width: 100% !important; border-collapse: collapse !important; }
+  .order-print-invoice-table th { background: #151515 !important; color: #fff !important; padding: 7px 8px !important; text-align: left !important; font-size: 10px !important; }
+  .order-print-invoice-table td { border-bottom: 1px solid #bdbdbd !important; padding: 8px !important; vertical-align: top !important; }
+  .order-print-invoice-table th:nth-child(2), .order-print-invoice-table td:nth-child(2) { width: 110px !important; text-align: center !important; }
+  .order-print-invoice-table th:last-child, .order-print-invoice-table td:last-child { width: 130px !important; text-align: right !important; }
+  .order-print-invoice-totals { width: 42% !important; margin: 14px 0 0 auto !important; }
+  .order-print-invoice-totals div { display: flex !important; justify-content: space-between !important; gap: 24px !important; border-bottom: 1px solid #aaa !important; padding: 5px 4px !important; }
+  .order-print-invoice-totals .order-print-invoice-total { border-top: 2px solid #171717 !important; border-bottom: 2px solid #171717 !important; font-size: 13px !important; }
+  .order-modal { display: none !important; }
 }
