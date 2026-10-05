@@ -6,7 +6,7 @@ export function InstallAppButton() {
   const [showInstructions, setShowInstructions] = useState(false)
 
   return <>
-    <button type="button" onClick={() => setShowInstructions(true)} className="shrink-0 bg-transparent text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 transition hover:opacity-55" aria-label="Instalar la aplicación de Pupas">Instalar app</button>
+    <button type="button" onClick={() => setShowInstructions(true)} className="group relative shrink-0 rounded-full bg-[#171717] px-3.5 py-2 text-[9px] font-bold uppercase tracking-[.1em] text-white shadow-sm transition hover:-translate-y-px hover:bg-neutral-700 hover:shadow-md" aria-label="Ver cómo instalar la aplicación de Pupas"><span className="mr-1.5 text-xs" aria-hidden="true">📱</span>Instalar app<span className="absolute -right-1.5 -top-1.5 rounded-full bg-amber-300 px-1.5 py-0.5 text-[7px] font-extrabold tracking-normal text-black">NUEVO</span></button>
     {showInstructions && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true" aria-labelledby="install-app-title" onMouseDown={() => setShowInstructions(false)}>
       <section className="w-full max-w-sm bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
         <button type="button" className="float-right -mt-2 text-2xl text-neutral-500" onClick={() => setShowInstructions(false)} aria-label="Cerrar">×</button>
