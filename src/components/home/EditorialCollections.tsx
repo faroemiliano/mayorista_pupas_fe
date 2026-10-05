@@ -77,7 +77,7 @@ function CollectionProducts({ keyword, provisional }: { keyword: string; provisi
   const category = filters.data?.categorias.find((item) => normalize(item.nombre).includes(keyword))
   const products = useQuery({
     queryKey: ['home-collection-products', category?.id],
-    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'nombre_asc', page: 1, limit: 100 }),
+    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'recientes', page: 1, limit: 24 }),
     enabled: Boolean(category),
     staleTime: 60_000,
   })
@@ -107,7 +107,7 @@ export function EditorialCollections({ onCategoryNavigate }: { onCategoryNavigat
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(300px,40%)_minmax(0,60%)] lg:gap-16">
             <div className={collection.reverse ? 'lg:order-2' : ''}><VideoSlot file={collection.video} title={collection.title} dark={dark}/></div>
             <div className={collection.reverse ? 'lg:order-1' : ''}>
-              <div className="mb-5 flex items-center justify-between"><span className={`text-[9px] font-bold uppercase tracking-[.2em] ${collection.muted}`}>Productos destacados</span><button type="button" onClick={() => onCategoryNavigate(collection.keyword)} className={`border-b pb-1 text-[9px] font-bold uppercase tracking-[.16em] ${dark ? 'border-white text-white' : 'border-black text-black'}`}>Ver colección completa →</button></div>
+              <div className="mb-5 flex items-center justify-between"><span className={`text-[9px] font-bold uppercase tracking-[.2em] ${collection.muted}`}>Novedades</span><button type="button" onClick={() => onCategoryNavigate(collection.keyword)} className={`border-b pb-1 text-[9px] font-bold uppercase tracking-[.16em] ${dark ? 'border-white text-white' : 'border-black text-black'}`}>Ver colección completa →</button></div>
               <CollectionProducts keyword={collection.keyword} provisional={collection.provisional}/>
             </div>
           </div>
