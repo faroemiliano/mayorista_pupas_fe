@@ -70,43 +70,16 @@ export function InstallAppButton() {
             >
               Instalá Pupas como app
             </h2>
-            {isIos() ? (
-              <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm leading-6 text-neutral-700">
-                <li>
-                  Abrí esta página usando <strong>Safari</strong>.
-                </li>
-                <li>
-                  Abajo de la pantalla, tocá el botón <strong>Compartir</strong>
-                  : es un cuadrado con una flecha hacia arriba (□↑).
-                </li>
-                <li>
-                  Buscá y tocá <strong>“Agregar a pantalla de inicio”</strong>.
-                </li>
-                <li>
-                  Arriba a la derecha, tocá <strong>“Agregar”</strong>. Listo:
-                  vas a ver el ícono de Pupas en tu celular.
-                </li>
-              </ol>
-            ) : (
-              <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm leading-6 text-neutral-700">
-                <li>
-                  Abrí esta página usando <strong>Google Chrome</strong> en tu
-                  celular.
-                </li>
-                <li>
-                  Arriba a la derecha, tocá los <strong>tres puntitos</strong>{" "}
-                  (⋮).
-                </li>
-                <li>
-                  Buscá y tocá <strong>“Instalar app”</strong> o{" "}
-                  <strong>“Agregar a pantalla principal”</strong>.
-                </li>
-                <li>
-                  Tocá <strong>“Instalar”</strong> o <strong>“Agregar”</strong>.
-                  Listo: el ícono de Pupas quedará en tu pantalla.
-                </li>
-              </ol>
-            )}
+            <div className="mt-5 space-y-5 text-sm leading-6 text-neutral-700">
+              <section className="border border-neutral-200 p-4">
+                <h3 className="font-bold text-neutral-900">🍎 Si tenés iPhone</h3>
+                <ol className="mt-3 list-decimal space-y-2 pl-5"><li>Abrí esta página usando <strong>Safari</strong>.</li><li>Abajo, tocá <strong>Compartir</strong>: el cuadrado con flecha hacia arriba (□↑).</li><li>Elegí <strong>“Agregar a pantalla de inicio”</strong>.</li><li>Arriba a la derecha, tocá <strong>“Agregar”</strong>.</li></ol>
+              </section>
+              <section className="border border-neutral-200 p-4">
+                <h3 className="font-bold text-neutral-900">🤖 Si tenés Android</h3>
+                <ol className="mt-3 list-decimal space-y-2 pl-5"><li>Abrí esta página usando <strong>Google Chrome</strong>.</li><li>Arriba a la derecha, tocá los <strong>tres puntitos</strong> (⋮).</li><li>Elegí <strong>“Instalar app”</strong> o <strong>“Agregar a pantalla principal”</strong>.</li><li>Tocá <strong>“Instalar”</strong> o <strong>“Agregar”</strong>.</li></ol>
+              </section>
+            </div>
             {!isIos() && deferredPrompt && (
               <button
                 type="button"
