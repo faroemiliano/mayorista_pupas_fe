@@ -55,10 +55,6 @@ export function GoogleAccessButton() {
     try {
       const migrada = (await checkEmailMigration(valor)).requiere_migracion
       setEmailMigrated(migrada)
-      if (migrada) {
-        await requestPasswordReset(valor)
-        setResetSent(true)
-      }
     } catch { setEmailMigrated(false) } finally { setCheckingEmail(false) }
   }
 
