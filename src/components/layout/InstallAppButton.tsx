@@ -1,9 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
 export function InstallAppButton() {
   const [showInstructions, setShowInstructions] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    const savePrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredPrompt(event as InstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", savePrompt);
+    return () => window.removeEventListener("beforeinstallprompt", savePrompt);
+  }, []);
+
+  const install = async () => {
+    if (!deferredPrompt) return;
+    await deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+  };
 
   return (
     <>
@@ -84,6 +106,15 @@ export function InstallAppButton() {
                   Listo: el ícono de Pupas quedará en tu pantalla.
                 </li>
               </ol>
+            )}
+            {!isIos() && deferredPrompt && (
+              <button
+                type="button"
+                className="mt-6 w-full bg-black px-4 py-3 text-xs font-bold uppercase tracking-[.12em] text-white transition hover:bg-neutral-700"
+                onClick={() => void install()}
+              >
+                Instalar app ahora
+              </button>
             )}
             <p className="mt-5 border-t border-neutral-200 pt-4 text-xs leading-5 text-neutral-500">
               Después podés tocar el ícono de Pupas para entrar a la tienda
