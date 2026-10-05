@@ -10,7 +10,7 @@ const isStandalone = () => window.matchMedia('(display-mode: standalone)').match
 
 export function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null)
-  const [showIosHelp, setShowIosHelp] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
   const [installed, setInstalled] = useState(false)
 
   useEffect(() => {
@@ -27,8 +27,8 @@ export function InstallAppButton() {
 
   if (installed) return null
 
-  const install = async () => {
-    if (isIos()) { setShowIosHelp(true); return }
+  const startInstall = async () => {
+    if (isIos()) return
     if (!deferredPrompt) {
       window.alert('Para instalar Pupas, abrí esta página desde Chrome en tu celular y elegí “Agregar a pantalla de inicio” en el menú del navegador.')
       return
@@ -39,14 +39,15 @@ export function InstallAppButton() {
   }
 
   return <>
-    <button type="button" onClick={install} className="shrink-0 border border-neutral-900 bg-neutral-900 px-3 py-2 text-[9px] font-bold uppercase tracking-[.1em] text-white transition hover:bg-neutral-700" aria-label="Instalar Pupas en tu celular">📱 Instalar Pupas en tu celular</button>
-    {showIosHelp && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true" aria-labelledby="install-ios-title" onMouseDown={() => setShowIosHelp(false)}>
+    <button type="button" onClick={() => setShowInstructions(true)} className="shrink-0 bg-transparent text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 transition hover:opacity-55" aria-label="Instalar la aplicación de Pupas">Instalar app</button>
+    {showInstructions && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true" aria-labelledby="install-app-title" onMouseDown={() => setShowInstructions(false)}>
       <section className="w-full max-w-sm bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
-        <button type="button" className="float-right -mt-2 text-2xl text-neutral-500" onClick={() => setShowIosHelp(false)} aria-label="Cerrar">×</button>
+        <button type="button" className="float-right -mt-2 text-2xl text-neutral-500" onClick={() => setShowInstructions(false)} aria-label="Cerrar">×</button>
         <p className="text-[9px] font-bold uppercase tracking-[.2em] text-neutral-500">Pupas en tu celular</p>
-        <h2 id="install-ios-title" className="mt-2 font-serif text-3xl font-semibold">Agregar como app</h2>
-        <ol className="mt-5 list-decimal space-y-3 pl-5 text-sm leading-6 text-neutral-700"><li>Tocá el botón <strong>Compartir</strong> de Safari (□↑).</li><li>Elegí <strong>“Agregar a pantalla de inicio”</strong>.</li><li>Confirmá con <strong>“Agregar”</strong>.</li></ol>
-        <p className="mt-5 border-t border-neutral-200 pt-4 text-xs text-neutral-500">Verás el ícono de Pupas en tu celular y podrás abrir la tienda como una aplicación.</p>
+        <h2 id="install-app-title" className="mt-2 font-serif text-3xl font-semibold">Instalá Pupas como app</h2>
+        {isIos() ? <ol className="mt-5 list-decimal space-y-3 pl-5 text-sm leading-6 text-neutral-700"><li>Tocá el botón <strong>Compartir</strong> de Safari (□↑).</li><li>Elegí <strong>“Agregar a pantalla de inicio”</strong>.</li><li>Confirmá con <strong>“Agregar”</strong>.</li></ol> : <ol className="mt-5 list-decimal space-y-3 pl-5 text-sm leading-6 text-neutral-700"><li>Tocá <strong>“Instalar ahora”</strong>.</li><li>Confirmá la instalación que mostrará tu navegador.</li><li>Vas a ver el ícono de Pupas en tu pantalla de inicio.</li></ol>}
+        {!isIos() && <button type="button" className="mt-6 w-full bg-black px-4 py-3 text-xs font-bold uppercase tracking-[.12em] text-white transition hover:bg-neutral-700" onClick={() => void startInstall()}>Instalar ahora</button>}
+        <p className="mt-5 border-t border-neutral-200 pt-4 text-xs text-neutral-500">Después vas a poder abrir Pupas directamente desde su ícono, como una aplicación.</p>
       </section>
     </div>}
   </>
