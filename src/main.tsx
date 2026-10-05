@@ -10,6 +10,10 @@ import { ShoppingToolsProvider } from './context/ShoppingToolsContext.tsx'
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js') })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode><BrowserRouter><QueryClientProvider client={queryClient}><AuthProvider><CartProvider><ShoppingToolsProvider><App /></ShoppingToolsProvider></CartProvider></AuthProvider></QueryClientProvider></BrowserRouter></StrictMode>,
 )
