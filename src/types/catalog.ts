@@ -24,6 +24,8 @@ export type Product = {
   cantidad_unidades_por_bulto: string | null
   habilitado: boolean
   visible_tienda: boolean
+  destacado: boolean
+  orden_destacado: number | null
   fecha_creacion_dux: string | null
   creado_en?: string
   actualizado_en?: string
@@ -45,4 +47,5 @@ export type ProductQuery = {
   orden: string
   page: number
   limit?: number
+  soloDestacados?: boolean
 }

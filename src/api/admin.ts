@@ -69,6 +69,13 @@ export function setProductVisibility(productId: number, visible: boolean) {
   );
 }
 
+export function setProductFeatured(productId: number, destacado: boolean) {
+  return apiPatch<{ id: number; destacado: boolean; orden_destacado: number | null }>(
+    `/api/admin/productos/${productId}/destacado`,
+    { destacado },
+  );
+}
+
 export type ProductEditorPayload = {
   codigo: string;
   nombre: string;

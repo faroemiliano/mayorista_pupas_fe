@@ -16,6 +16,7 @@ export function getProducts(query: ProductQuery) {
   if (query.categoriaId) params.set('categoria_id', query.categoriaId)
   if (query.subcategoriaId) params.set('subcategoria_id', query.subcategoriaId)
   if (query.marcaId) params.set('marca_id', query.marcaId)
+  if (query.soloDestacados) params.set('solo_destacados', 'true')
   return apiGet<ProductPage>(`/api/productos/?${params}`)
 }
 export const getProduct=(id:number)=>apiGet<Product>(`/api/productos/${id}`)

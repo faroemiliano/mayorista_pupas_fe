@@ -14,6 +14,7 @@ import { CartDrawer } from "./components/cart/CartDrawer";
 import { Benefits } from "./components/home/Benefits";
 import { HeroCarousel } from "./components/home/HeroCarousel";
 import { EditorialCollections } from "./components/home/EditorialCollections";
+import { FeaturedProducts } from "./components/home/FeaturedProducts";
 import { BrandManifesto } from "./components/home/BrandManifesto";
 import { AnnouncementBar } from "./components/layout/AnnouncementBar";
 import { Footer } from "./components/layout/Footer";
@@ -83,6 +84,7 @@ function Storefront() {
         ) : (
           <>
             <HeroCarousel />
+            <FeaturedProducts />
             <EditorialCollections onCategoryNavigate={openCategory} />
             <BrandManifesto />
             <Benefits />
