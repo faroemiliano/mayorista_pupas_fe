@@ -37,7 +37,6 @@ export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }:
       </div>
       <div className="absolute -left-2 md:left-1/2 md:-translate-x-1/2"><Brand/></div>
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <InstallAppButton/>
         {esAdministrador && <Link className="grid size-9 shrink-0 place-items-center border border-neutral-200 text-neutral-800 no-underline transition hover:border-black sm:flex sm:h-9 sm:w-auto sm:gap-2 sm:px-3" to="/admin" aria-label="Ir al panel de administración"><span className="text-base sm:text-sm" aria-hidden="true">⚙</span><span className="hidden text-[9px] font-bold uppercase tracking-wider sm:inline">Panel admin</span></Link>}
         <GoogleAccessButton/>
         {user && <Link to={esAdministrador ? '/admin/notificaciones' : '/mi-cuenta?seccion=notificaciones'} className="relative grid size-9 place-items-center text-neutral-800 no-underline" aria-label="Notificaciones">♢{unread > 0 && <b className="absolute right-0 top-0 grid min-h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[8px] text-white">{unread > 99 ? '99+' : unread}</b>}</Link>}
@@ -46,7 +45,7 @@ export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }:
     </div>
     <div className="border-t border-neutral-100">
       <div className="mx-auto flex max-w-360 items-center gap-4 overflow-x-auto px-4 py-3 lg:px-[5vw]">
-        <nav className="flex min-w-max items-center gap-5 lg:gap-8">{navItems.map(([label, category]) => <button type="button" key={label} onClick={() => onCategoryNavigate(category)} className="bg-transparent text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 hover:opacity-55">{label}</button>)}<Link to="/catalogo" className="text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 no-underline hover:opacity-55">Catálogo</Link><Link to="/como-comprar" className="text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 no-underline hover:opacity-55">Cómo comprar</Link></nav>
+        <nav className="flex min-w-max items-center gap-5 lg:gap-8">{navItems.map(([label, category]) => <button type="button" key={label} onClick={() => onCategoryNavigate(category)} className="bg-transparent text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 hover:opacity-55">{label}</button>)}<Link to="/catalogo" className="text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 no-underline hover:opacity-55">Catálogo</Link><Link to="/como-comprar" className="text-[9px] font-bold uppercase tracking-[.1em] text-neutral-900 no-underline hover:opacity-55">Cómo comprar</Link><InstallAppButton/></nav>
         <form className="ml-auto flex h-8 min-w-42 items-center border-b border-neutral-400" onSubmit={(event) => { event.preventDefault(); onSearch() }}>
           <input className="min-w-0 grow bg-transparent px-1 text-xs outline-none" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Buscar productos" aria-label="Buscar productos"/>
           <button className="px-2 text-sm" aria-label="Buscar">⌕</button>

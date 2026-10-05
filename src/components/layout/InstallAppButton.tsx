@@ -39,7 +39,7 @@ export function InstallAppButton() {
   }
 
   return <>
-    <button type="button" onClick={install} className="shrink-0 border border-neutral-300 px-3 py-2 text-[9px] font-bold uppercase tracking-[.12em] text-neutral-800 transition hover:border-black hover:bg-neutral-50" aria-label="Agregar Pupas a la pantalla de inicio">▣ <span className="hidden sm:inline">Instalar Pupas</span><span className="sm:hidden">App</span></button>
+    <button type="button" onClick={install} className="shrink-0 border border-neutral-900 bg-neutral-900 px-3 py-2 text-[9px] font-bold uppercase tracking-[.1em] text-white transition hover:bg-neutral-700" aria-label="Instalar Pupas en tu celular">📱 Instalar Pupas en tu celular</button>
     {showIosHelp && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true" aria-labelledby="install-ios-title" onMouseDown={() => setShowIosHelp(false)}>
       <section className="w-full max-w-sm bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
         <button type="button" className="float-right -mt-2 text-2xl text-neutral-500" onClick={() => setShowIosHelp(false)} aria-label="Cerrar">×</button>
