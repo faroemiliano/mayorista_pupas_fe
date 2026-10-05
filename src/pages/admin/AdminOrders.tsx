@@ -38,6 +38,14 @@ const stateStyles: Record<string, string> = {
   cancelado: "border-red-200 bg-red-50 text-red-800",
 };
 
+function nombreCompletoCliente(order: { cliente_nombre: string; cliente_apellido?: string | null }) {
+  const nombre = order.cliente_nombre.trim()
+  const apellido = order.cliente_apellido?.trim()
+  return apellido && !nombre.toLocaleLowerCase('es').endsWith(apellido.toLocaleLowerCase('es'))
+    ? `${nombre} ${apellido}`
+    : nombre
+}
+
 export function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedId = Number(searchParams.get("pedido_id")) || null;
@@ -163,7 +171,7 @@ export function AdminOrders() {
                       <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
                     </td>
                     <td>
-                      <strong>{order.cliente_nombre}</strong>
+                      <strong>{nombreCompletoCliente(order)}</strong>
                       <small>{order.cliente_telefono}</small>
                     </td>
                     <td>{new Date(order.creado_en).toLocaleString("es-AR")}</td>
@@ -237,7 +245,7 @@ export function AdminOrders() {
             <div className="grid gap-4 p-5 sm:p-6 md:grid-cols-[1fr_1fr_auto]">
               <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
                 <p className="eyebrow">CLIENTE</p>
-                <strong className="mt-2 block text-lg">{selected.cliente_nombre}</strong>
+                <strong className="mt-2 block text-lg">{nombreCompletoCliente(selected)}</strong>
                 <a className="mt-3 flex items-center gap-2 text-sm text-neutral-700 no-underline hover:text-black" href={`tel:${selected.cliente_telefono}`}><span className="grid size-7 place-items-center rounded-full bg-neutral-100 text-xs">☎</span>{selected.cliente_telefono}</a>
                 {selected.cliente_email ? <a className="mt-2 flex items-center gap-2 break-all text-sm text-neutral-500 no-underline hover:text-black" href={`mailto:${selected.cliente_email}`}><span className="grid size-7 shrink-0 place-items-center rounded-full bg-neutral-100 text-xs">@</span>{selected.cliente_email}</a> : <span className="mt-2 block text-sm text-neutral-400">Email no informado</span>}
               </section>

@@ -59,7 +59,7 @@ export function CartDrawer() {
   const confirmOrder = () => {
     if (!user || !profileComplete) return;
     orderMutation.mutate({
-      cliente_nombre: user.nombre,
+      cliente_nombre: [user.nombre, user.apellido].filter(Boolean).join(' '),
       cliente_telefono: user.telefono || "",
       cliente_email: user.email,
       provincia: user.provincia || "",
