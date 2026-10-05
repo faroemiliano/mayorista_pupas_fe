@@ -152,8 +152,8 @@ export function AdminOrders() {
                 {orders.data?.items.map((order) => (
                   <tr key={`${order.origen}-${order.id}`}>
                     <td>
-                      <strong>{order.codigo}</strong>
-                      <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
+                      <strong>Ref. {order.codigo}</strong>
+                      <small>N.º interno {order.id} · {order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
                     </td>
                     <td>
                       <strong>{order.cliente_nombre}</strong>
