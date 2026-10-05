@@ -142,12 +142,6 @@ export function getWebClients() {
   return apiGet<AuthUser[]>("/api/admin/usuarios/");
 }
 
-export function makeWebUserAdmin(userId: number) {
-  return apiPatch<AuthUser>(`/api/admin/usuarios/${userId}/hacer-admin`, {
-    confirmar: true,
-  });
-}
-
 export function getDuxClientTotal() {
   return Promise.race([
     apiGet<DuxClientTotal>("/api/admin/clientes-dux/total"),
