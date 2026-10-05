@@ -1,5 +1,6 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import {
   getAdminOrder,
@@ -232,7 +233,7 @@ export function AdminOrders() {
         )}
       </section>
       {selected && <>
-        <section className="order-print-invoice" aria-hidden="true">
+        {createPortal(<section className="order-print-invoice" aria-hidden="true">
           <header className="order-print-invoice-header">
             <h1>Comprobante de pedido</h1>
             <strong>Pupas Mayorista</strong>
@@ -261,7 +262,7 @@ export function AdminOrders() {
             {Number(selected.descuento_aplicado) > 0 && <div><span>Descuento</span><strong>− {formatCurrency(Number(selected.descuento_aplicado))}</strong></div>}
             <div className="order-print-invoice-total"><span>Total</span><strong>{formatCurrency(Number(selected.total))}</strong></div>
           </section>
-        </section>
+        </section>, document.body)}
         <div className="order-modal !bg-black/75 backdrop-blur-sm" onMouseDown={() => { setSelectedId(null); setSearchParams({}) }}>
           <aside className="printable-order !max-h-[94vh] !max-w-5xl !overflow-y-auto !rounded-3xl !bg-[#f4f4f2] shadow-[0_30px_100px_rgba(0,0,0,.45)] [scrollbar-gutter:stable]" onMouseDown={(event) => event.stopPropagation()}>
             <header className="sticky top-0 z-20 !items-start !border-b-0 !bg-neutral-950 !px-6 !py-5 !text-white sm:!px-8 sm:!py-6">
