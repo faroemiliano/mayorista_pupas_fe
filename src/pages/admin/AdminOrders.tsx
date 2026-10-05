@@ -119,7 +119,7 @@ export function AdminOrders() {
             <button
               key={value || "todos"}
               type="button"
-              className={`rounded-full px-4 py-2 text-xs font-bold transition ${status === value ? "bg-[#111111] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              className={`rounded-full border px-4 py-2 text-xs font-bold transition ${status === value ? (value ? stateStyles[value] : "border-[#111111] bg-[#111111] text-white") : (value ? `${stateStyles[value]} opacity-75 hover:opacity-100` : "border-gray-100 bg-gray-100 text-gray-600 hover:bg-gray-200")}`}
               onClick={() => { setStatus(value); setPage(1); }}
             >
               {value ? `${label} (${statusCounts[states.indexOf(value)].data ?? 0})` : label}
@@ -182,7 +182,7 @@ export function AdminOrders() {
                     </td>
                     <td>
                       <select
-                        className={`order-state ${order.estado}`}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-bold outline-none ${stateStyles[order.estado] || "border-neutral-200 bg-neutral-50 text-neutral-700"}`}
                         value={order.estado}
                         disabled={update.isPending}
                         onChange={(event) =>
