@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -56,6 +56,13 @@ export function AdminOrders() {
     queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, order, page],
     queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo, source, order),
   });
+  const statusCounts = useQueries({
+    queries: states.map((state) => ({
+      queryKey: ["admin-order-count", state, source, search, dateFrom, dateTo],
+      queryFn: () => getAdminOrders(state, 1, search, dateFrom, dateTo, source),
+      select: (response: { total: number }) => response.total,
+    })),
+  });
   const requestedOrder = useQuery({
     queryKey: ["admin-order", requestedId],
     queryFn: () => getAdminOrder(requestedId!),
@@ -106,7 +113,7 @@ export function AdminOrders() {
               className={`rounded-full px-4 py-2 text-xs font-bold transition ${status === value ? "bg-[#111111] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               onClick={() => { setStatus(value); setPage(1); }}
             >
-              {label}
+              {value ? `${label} (${statusCounts[states.indexOf(value)].data ?? 0})` : label}
             </button>
           ))}
         </div>
@@ -152,8 +159,8 @@ export function AdminOrders() {
                 {orders.data?.items.map((order) => (
                   <tr key={`${order.origen}-${order.id}`}>
                     <td>
-                      <strong>Ref. {order.codigo}</strong>
-                      <small>N.º interno {order.id} · {order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
+                      <strong>{order.codigo}</strong>
+                      <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
                     </td>
                     <td>
                       <strong>{order.cliente_nombre}</strong>
