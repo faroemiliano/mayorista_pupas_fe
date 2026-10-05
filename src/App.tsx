@@ -84,8 +84,8 @@ function Storefront() {
         ) : (
           <>
             <HeroCarousel />
-            <FeaturedProducts />
             <EditorialCollections onCategoryNavigate={openCategory} />
+            <FeaturedProducts />
             <BrandManifesto />
             <Benefits />
           </>
