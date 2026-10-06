@@ -6,24 +6,42 @@ import type { AuthUser } from '../../types/auth'
 type StatusFilter = 'todos' | 'pendiente' | 'aprobado' | 'rechazado'
 const labels = { pendiente:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado' }
 const channelLabels:Record<string,string> = { local_fisico:'Local físico', tienda_online:'Tienda online', ambos:'Local físico + online' }
+type UsersPage = { items: AuthUser[]; total: number; page: number; limit: number; total_paginas: number; totales_estado: Record<Exclude<StatusFilter, 'todos'>, number> }
 
 export function AdminConfirmations() {
   const queryClient=useQueryClient()
-  const [filter,setFilter]=useState<StatusFilter>('todos')
-  const users=useQuery({queryKey:['admin-users'],queryFn:()=>apiGet<AuthUser[]>('/api/admin/usuarios/')})
+  const [filter,setFilter]=useState<StatusFilter>('pendiente')
+  const [page, setPage] = useState(1)
+  const users=useQuery({queryKey:['admin-users-page', filter, page],queryFn:()=>apiGet<UsersPage>(`/api/admin/usuarios/paginados?${new URLSearchParams({ page: String(page), limit: '25', ...(filter === 'todos' ? {} : { estado: filter }) })}`)})
   const update=useMutation({
     mutationFn:({id,estado}:{id:number;estado:'aprobado'|'rechazado'})=>apiPatch<AuthUser>(`/api/admin/usuarios/${id}/estado`,{estado}),
-    onSuccess:()=>queryClient.invalidateQueries({queryKey:['admin-users']}),
+    onSuccess:(updated)=>queryClient.setQueryData<UsersPage>(['admin-users-page', filter, page], current => {
+      if (!current) return current
+      const previous = current.items.find(user => user.id === updated.id)
+      if (!previous) return current
+      const totals = { ...current.totales_estado }
+      if (previous.estado_registro !== updated.estado_registro) {
+        totals[previous.estado_registro] = Math.max(0, totals[previous.estado_registro] - 1)
+        totals[updated.estado_registro] += 1
+      }
+      const leavesCurrentFilter = filter !== 'todos' && updated.estado_registro !== filter
+      return {
+        ...current,
+        total: leavesCurrentFilter ? Math.max(0, current.total - 1) : current.total,
+        items: leavesCurrentFilter ? current.items.filter(user => user.id !== updated.id) : current.items.map(user => user.id === updated.id ? updated : user),
+        totales_estado: totals,
+      }
+    }),
   })
-  const all=users.data??[]
-  const visible=filter==='todos'?all:all.filter(user=>user.estado_registro===filter)
-  const count=(status:Exclude<StatusFilter,'todos'>)=>all.filter(user=>user.estado_registro===status).length
+  const visible=users.data?.items??[]
+  const counts=users.data?.totales_estado??{pendiente:0,aprobado:0,rechazado:0}
+  const totalClients=counts.pendiente+counts.aprobado+counts.rechazado
 
   return <div className="admin-page">
     <header className="admin-page-header"><div><p className="eyebrow">GESTIÓN DE ACCESOS</p><h1>Confirmaciones</h1><span>Historial completo de solicitudes mayoristas y su estado.</span></div></header>
     <section className="admin-panel-card">
-      <div className="admin-card-header"><div><h2>{all.length} clientes registrados</h2><p>{count('pendiente')} pendientes · {count('aprobado')} aprobados · {count('rechazado')} rechazados</p></div></div>
-      <div className="flex flex-wrap gap-2 border-b border-gray-100 p-4">{(['todos','pendiente','aprobado','rechazado'] as StatusFilter[]).map(status=><button key={status} className={`rounded-full px-4 py-2 text-xs font-bold ${filter===status?'bg-[#111111] text-white':'bg-gray-100 text-gray-600'}`} onClick={()=>setFilter(status)}>{status==='todos'?`Todos (${all.length})`:`${labels[status]} (${count(status)})`}</button>)}</div>
+      <div className="admin-card-header"><div><h2>{totalClients} clientes registrados</h2><p>{counts.pendiente} pendientes · {counts.aprobado} aprobados · {counts.rechazado} rechazados</p></div></div>
+      <div className="flex flex-wrap gap-2 border-b border-gray-100 p-4">{(['todos','pendiente','aprobado','rechazado'] as StatusFilter[]).map(status=><button key={status} className={`rounded-full px-4 py-2 text-xs font-bold ${filter===status?'bg-[#111111] text-white':'bg-gray-100 text-gray-600'}`} onClick={()=>{setFilter(status);setPage(1)}}>{status==='todos'?`Todos (${totalClients})`:`${labels[status]} (${counts[status]})`}</button>)}</div>
       {users.isLoading?<div className="admin-status"><span className="loader"/></div>
         :!visible.length?<div className="admin-status"><strong>No hay clientes en este estado</strong></div>
         :<div className="admin-table-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Ubicación</th><th>Canal de venta</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{visible.map(user=><tr key={user.id}>
@@ -35,6 +53,7 @@ export function AdminConfirmations() {
           <td><span className={`admin-state ${user.estado_registro==='aprobado'?'active':''}`}>{labels[user.estado_registro]}</span></td>
           <td><div className="flex gap-2">{user.estado_registro!=='aprobado'&&<button className="rounded-md bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50" disabled={update.isPending} onClick={()=>update.mutate({id:user.id,estado:'aprobado'})}>Aprobar</button>}{user.estado_registro!=='rechazado'&&<button className="rounded-md bg-neutral-200 px-3 py-2 text-xs font-bold text-neutral-800 disabled:opacity-50" disabled={update.isPending} onClick={()=>update.mutate({id:user.id,estado:'rechazado'})}>Rechazar</button>}</div></td>
         </tr>)}</tbody></table></div>}
+      {users.data && users.data.total_paginas > 1 && <nav className="pagination"><button disabled={page === 1} onClick={() => setPage(current => current - 1)}>← Anterior</button><span>Página {page} de {users.data.total_paginas}</span><button disabled={page >= users.data.total_paginas} onClick={() => setPage(current => current + 1)}>Siguiente →</button></nav>}
     </section>
   </div>
 }
