@@ -13,7 +13,11 @@ function initialize() {
   if (initialized || !measurementId || typeof window === 'undefined') return
   initialized = true
   window.dataLayer = window.dataLayer || []
-  window.gtag = (...args: unknown[]) => { window.dataLayer?.push(args) }
+  // Google espera el objeto `arguments` de la llamada, igual que su snippet
+  // oficial; una lista común puede no ser interpretada por gtag.js.
+  window.gtag = function gtag(..._args: unknown[]) {
+    window.dataLayer?.push(arguments)
+  }
 
   const script = document.createElement('script')
   script.async = true
