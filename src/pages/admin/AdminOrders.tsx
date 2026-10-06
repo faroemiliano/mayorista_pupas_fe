@@ -47,6 +47,33 @@ function nombreCompletoCliente(order: { cliente_nombre: string; cliente_apellido
     : nombre
 }
 
+const ARGENTINA_TIME_ZONE = "America/Argentina/Buenos_Aires";
+
+function formatOrderDate(value: string) {
+  const date = new Date(value);
+  const elapsedHours = Math.floor((Date.now() - date.getTime()) / 3_600_000);
+
+  if (elapsedHours >= 0 && elapsedHours < 24) {
+    return elapsedHours === 0 ? "Hace menos de 1 hora" : `Hace ${elapsedHours} ${elapsedHours === 1 ? "hora" : "horas"}`;
+  }
+
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: ARGENTINA_TIME_ZONE,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date).replace(/\./g, "");
+}
+
+function formatOrderTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: ARGENTINA_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(value));
+}
+
 export function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedId = Number(searchParams.get("pedido_id")) || null;
@@ -158,6 +185,7 @@ export function AdminOrders() {
                   <th>Pedido</th>
                   <th>Cliente</th>
                   <th>Fecha</th>
+                  <th>Hora</th>
                   <th>Unidades</th>
                   <th><button type="button" className="font-bold hover:underline" onClick={() => { setOrder(current => current === 'total_desc' ? 'total_asc' : 'total_desc'); setPage(1); }}>Total {order === 'total_desc' ? '↓' : order === 'total_asc' ? '↑' : '↕'}</button></th>
                   <th>Estado</th>
@@ -175,7 +203,8 @@ export function AdminOrders() {
                       <strong>{nombreCompletoCliente(order)}</strong>
                       <small>{order.cliente_telefono}</small>
                     </td>
-                    <td>{new Date(order.creado_en).toLocaleString("es-AR")}</td>
+                    <td>{formatOrderDate(order.creado_en)}</td>
+                    <td>{formatOrderTime(order.creado_en)}</td>
                     <td>{order.cantidad_unidades}</td>
                     <td>
                       <strong>{formatCurrency(Number(order.total))}</strong>
