@@ -77,7 +77,7 @@ function formatOrderTime(value: string) {
 export function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedId = Number(searchParams.get("pedido_id")) || null;
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<OrderStatus | "">("pendiente");
   const [source, setSource] = useState("todos");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -130,11 +130,11 @@ export function AdminOrders() {
         </div>
         <div className="flex flex-wrap gap-2 p-4">
           {([
-            ["", "Todos"],
             ["pendiente", "En espera"],
             ["contactado", "Procesado"],
             ["confirmado", "Completado"],
             ["cancelado", "Cancelado"],
+            ["", "Todos"],
           ] as const).map(([value, label]) => (
             <button
               key={value || "todos"}
@@ -152,7 +152,7 @@ export function AdminOrders() {
         <label className="text-xs font-bold">Mes completo<input className="admin-filter mt-2 w-full" type="month" value={month} onChange={(event)=>{const value=event.target.value;setMonth(value);if(value){const [year,monthNumber]=value.split('-').map(Number);const lastDay=new Date(year,monthNumber,0).getDate();setDateFrom(`${value}-01`);setDateTo(`${value}-${String(lastDay).padStart(2,'0')}`)}else{setDateFrom('');setDateTo('')}setPage(1)}}/></label>
         <label className="text-xs font-bold">Desde<input className="admin-filter mt-2 w-full" type="date" value={dateFrom} onChange={(event)=>{setDateFrom(event.target.value);setMonth('');setPage(1)}}/></label>
         <label className="text-xs font-bold">Hasta<input className="admin-filter mt-2 w-full" type="date" min={dateFrom||undefined} value={dateTo} onChange={(event)=>{setDateTo(event.target.value);setMonth('');setPage(1)}}/></label>
-        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:grid-cols-5"><label className="grow text-xs font-bold sm:max-w-52">Origen<select className="admin-filter mt-2 w-full" value={source} onChange={(event)=>{setSource(event.target.value);setStatus('');setPage(1)}}><option value="todos">Todos</option><option value="tienda">Nueva tienda</option><option value="wordpress">Importados de WordPress</option></select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo&&source==='todos'} onClick={()=>{setSearch('');setStatus('');setSource('todos');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
+        <div className="flex flex-wrap items-end gap-3 md:col-span-2 xl:grid-cols-5"><label className="grow text-xs font-bold sm:max-w-52">Origen<select className="admin-filter mt-2 w-full" value={source} onChange={(event)=>{setSource(event.target.value);setStatus('pendiente');setPage(1)}}><option value="todos">Todos</option><option value="tienda">Nueva tienda</option><option value="wordpress">Importados de WordPress</option></select></label><button className="h-10 border border-neutral-300 px-4 text-xs font-bold disabled:opacity-40" type="button" disabled={!search&&!status&&!dateFrom&&!dateTo&&source==='todos'} onClick={()=>{setSearch('');setStatus('pendiente');setSource('todos');setDateFrom('');setDateTo('');setMonth('');setPage(1)}}>Limpiar filtros</button></div>
       </section>
       <section className="admin-panel-card admin-table-card">
         <div className="admin-card-header">
