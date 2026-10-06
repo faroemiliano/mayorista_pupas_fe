@@ -14,7 +14,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(localStorage.getItem(KEY)))
   useEffect(() => {
     if (!localStorage.getItem(KEY)) return
-    getCurrentUser().then(setUser).catch(() => localStorage.removeItem(KEY)).finally(() => setLoading(false))
+    let cancelado = false
+    const restaurarSesion = async (intento = 0): Promise<void> => {
+      try {
+        const sesion = await getCurrentUser()
+        if (!cancelado) setUser(sesion)
+      } catch (error) {
+        const sesionInvalida = error instanceof Error && error.message.includes('(401)')
+        if (sesionInvalida) {
+          localStorage.removeItem(KEY)
+        } else if (intento < 2) {
+          window.setTimeout(() => { void restaurarSesion(intento + 1) }, 1500)
+          return
+        }
+      }
+      if (!cancelado) setLoading(false)
+    }
+    void restaurarSesion()
+    return () => { cancelado = true }
   }, [])
   const refreshUser = async () => { setUser(await getCurrentUser()) }
   return <Context.Provider value={{user,loading,logout:()=>{localStorage.removeItem(KEY);setUser(null)},refreshUser}}>{children}</Context.Provider>
