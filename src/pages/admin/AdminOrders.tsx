@@ -84,7 +84,7 @@ export function AdminOrders() {
   const [dateTo, setDateTo] = useState("");
   const [month, setMonth] = useState("");
   const [page, setPage] = useState(1);
-  const [order, setOrder] = useState<'fecha_desc'|'total_desc'|'total_asc'>('fecha_desc');
+  const [order, setOrder] = useState<'fecha_desc'|'total_desc'|'total_asc'|'unidades_desc'|'unidades_asc'>('fecha_desc');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [personal, setPersonal] = useState(1051689);
   const queryClient = useQueryClient();
@@ -179,7 +179,7 @@ export function AdminOrders() {
                   <th>Cliente</th>
                   <th>Fecha</th>
                   <th>Hora</th>
-                  <th>Unidades</th>
+                  <th><button type="button" className="font-bold hover:underline" onClick={() => { setOrder(current => current === 'unidades_desc' ? 'unidades_asc' : current === 'unidades_asc' ? 'fecha_desc' : 'unidades_desc'); setPage(1); }}>Unidades {order === 'unidades_desc' ? '↓' : order === 'unidades_asc' ? '↑' : '↕'}</button></th>
                   <th><button type="button" className="font-bold hover:underline" onClick={() => { setOrder(current => current === 'total_desc' ? 'total_asc' : 'total_desc'); setPage(1); }}>Total {order === 'total_desc' ? '↓' : order === 'total_asc' ? '↑' : '↕'}</button></th>
                   <th>Estado</th>
                   <th></th>
