@@ -52,8 +52,7 @@ export function CartDrawer() {
     user?.nombre &&
     user.telefono &&
     user.provincia &&
-    user.localidad_partido &&
-    user.domicilio,
+    user.localidad_partido,
   );
 
   const confirmOrder = () => {
@@ -64,7 +63,7 @@ export function CartDrawer() {
       cliente_email: user.email,
       provincia: user.provincia || "",
       localidad: user.localidad_partido || "",
-      direccion: user.domicilio || "",
+      direccion: user.domicilio || "No informado",
       observaciones: null,
     });
   };
@@ -498,7 +497,7 @@ export function CartDrawer() {
                   <div className="mt-4 border border-amber-200 bg-amber-50 p-3 text-amber-900">
                     <strong>Faltan datos en tu cuenta</strong>
                     <p className="mt-1 text-xs">
-                      Completá teléfono, provincia, localidad y domicilio una
+                      Completá teléfono, provincia y localidad una
                       sola vez para confirmar pedidos.
                     </p>
                     <Link
