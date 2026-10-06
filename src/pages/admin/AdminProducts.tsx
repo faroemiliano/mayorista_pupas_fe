@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { getAdminProducts, getDuxCatalogSyncStatus, getDuxConfiguration, setProductFeatured, setProductVisibility, syncDuxCatalog } from '../../api/admin'
 import { formatCurrency } from '../../utils/currency'
@@ -10,15 +10,28 @@ export function AdminProducts() {
   const [page, setPage] = useState(1)
   const [search,setSearch]=useState('')
   const [submittedSearch,setSubmittedSearch]=useState('')
+  const [stockFilter, setStockFilter] = useState<'todos'|'con_stock'|'sin_stock'>('todos')
   const [editing,setEditing]=useState<Product|null|undefined>(undefined)
   const queryClient = useQueryClient()
   const duxConfiguration = useQuery({ queryKey: ['dux-configuration'], queryFn: getDuxConfiguration })
   const filters=useCatalogFilters()
   const duxSyncEnabled = duxConfiguration.data?.sincronizacion_habilitada === true
+  const stockFilterValue = stockFilter === 'todos' ? undefined : stockFilter === 'con_stock'
   const products = useQuery({
-    queryKey: ['admin-products', page, submittedSearch],
-    queryFn: () => getAdminProducts(page,submittedSearch),
+    queryKey: ['admin-products', page, submittedSearch, stockFilter],
+    queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue),
     placeholderData: (previous) => previous,
+  })
+  const stockCounts = useQueries({
+    queries: ([
+      ['todos', undefined],
+      ['con_stock', true],
+      ['sin_stock', false],
+    ] as const).map(([filter, conStock]) => ({
+      queryKey: ['admin-product-stock-count', filter, submittedSearch],
+      queryFn: () => getAdminProducts(1, submittedSearch, conStock),
+      select: (response: { total: number }) => response.total,
+    })),
   })
   const syncStatus = useQuery({
     queryKey: ['dux-catalog-sync'],
@@ -53,6 +66,25 @@ export function AdminProducts() {
       {duxSyncEnabled&&(!syncStatus.data||syncStatus.data.estado==='pendiente')&&!sync.isError&&<span>Sincronizá para traer los últimos productos, precios y existencias disponibles.</span>}
       {sync.isError&&<span>No se pudo iniciar la sincronización: {sync.error.message}</span>}
     </div>
+    <section className="admin-panel-card overflow-hidden p-0">
+      <div className="border-b border-gray-100 p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">Filtrar por stock</p></div>
+      <div className="flex flex-wrap gap-2 p-4">
+        {([
+          ['todos', 'Todos'],
+          ['con_stock', 'Con stock'],
+          ['sin_stock', 'Sin stock'],
+        ] as const).map(([value, label]) => {
+          const count = stockCounts[['todos', 'con_stock', 'sin_stock'].indexOf(value)]?.data ?? 0
+          const selected = stockFilter === value
+          const style = value === 'con_stock'
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            : value === 'sin_stock'
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : 'border-[#111111] bg-[#111111] text-white'
+          return <button key={value} type="button" className={`rounded-full border px-4 py-2 text-xs font-bold transition ${selected ? style : `${style} opacity-75 hover:opacity-100`}`} onClick={() => { setStockFilter(value); setPage(1) }}>{label} ({count})</button>
+        })}
+      </div>
+    </section>
     <section className="admin-panel-card admin-table-card">
       <div className="admin-card-header"><div><h2>{products.data?.total ?? 0} productos</h2><p>{submittedSearch?`Resultados para “${submittedSearch}”`:'Catálogo importado desde WordPress y guardado en la nueva página.'}</p></div><form className="flex w-full max-w-md gap-2" onSubmit={event=>{event.preventDefault();setPage(1);setSubmittedSearch(search.trim())}}><input className="admin-filter min-w-0 grow" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Buscar por nombre o código…"/><button className="rounded-md bg-[#111111] px-4 text-sm font-bold text-white" type="submit">Buscar</button>{submittedSearch&&<button className="rounded-md bg-gray-100 px-3 text-sm font-bold" type="button" onClick={()=>{setSearch('');setSubmittedSearch('');setPage(1)}}>Limpiar</button>}</form></div>
       {(visibility.isError||featured.isError)&&<p className="m-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{(visibility.error||featured.error)?.message}</p>}

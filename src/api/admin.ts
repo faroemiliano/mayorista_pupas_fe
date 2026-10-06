@@ -51,7 +51,7 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   };
 }
 
-export function getAdminProducts(page: number, search = "") {
+export function getAdminProducts(page: number, search = "", conStock?: boolean) {
   const params = new URLSearchParams({
     solo_habilitados: "false",
     page: String(page),
@@ -59,6 +59,7 @@ export function getAdminProducts(page: number, search = "") {
     orden: "recientes",
   });
   if (search.trim()) params.set("buscar", search.trim());
+  if (conStock !== undefined) params.set("con_stock", String(conStock));
   return apiGet<AdminProductsData>(`/api/productos/?${params}`);
 }
 
