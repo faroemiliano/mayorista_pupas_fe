@@ -36,6 +36,7 @@ import { AdminMaterials } from "./pages/admin/AdminMaterials";
 import { storeStyles } from "./styles/tailwind";
 import { ResetPassword } from "./pages/ResetPassword";
 import { AdminWordpressMigration } from "./pages/admin/AdminWordpressMigration";
+import { RouteLoadingOverlay } from "./components/layout/RouteLoadingOverlay";
 
 function Storefront() {
   const navigate = useNavigate();
@@ -108,7 +109,8 @@ export default function App() {
         <p>Verificando sesión…</p>
       </div>
     );
-  return (
+  return <>
+    <RouteLoadingOverlay />
     <Routes>
       <Route path="/restablecer-clave" element={<ResetPassword />} />
       <Route
@@ -153,5 +155,5 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  );
+  </>;
 }
