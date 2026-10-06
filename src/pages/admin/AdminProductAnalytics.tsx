@@ -60,12 +60,13 @@ export function AdminProductAnalytics() {
   const [grouping, setGrouping] = useState<'dia' | 'semana' | 'mes' | 'anio'>('dia')
   const [fechaDesde, setFechaDesde] = useState('')
   const [fechaHasta, setFechaHasta] = useState('')
-  const customRange = Boolean(fechaDesde && fechaHasta)
-  const incompleteRange = Boolean(fechaDesde) !== Boolean(fechaHasta)
+  // Una sola fecha se interpreta como el día completo elegido.
+  const fechaConsultaDesde = fechaDesde || fechaHasta
+  const fechaConsultaHasta = fechaHasta || fechaDesde
+  const customRange = Boolean(fechaConsultaDesde && fechaConsultaHasta)
   const analytics = useQuery({
-    queryKey: ['admin-product-analytics', days, grouping, fechaDesde, fechaHasta],
-    queryFn: () => getProductAnalytics(days, grouping, fechaDesde, fechaHasta),
-    enabled: !incompleteRange,
+    queryKey: ['admin-product-analytics', days, grouping, fechaConsultaDesde, fechaConsultaHasta],
+    queryFn: () => getProductAnalytics(days, grouping, fechaConsultaDesde, fechaConsultaHasta),
   })
   const data = analytics.data
   const importeAnterior = Number(data?.comparacion_anterior?.resumen.importe ?? 0)
@@ -77,7 +78,7 @@ export function AdminProductAnalytics() {
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
         <div className="analytics-scope"><strong>Origen: WordPress histórico + pedidos de la tienda</strong><span>{data.alcance}</span></div>
-        {customRange && <div className="analytics-scope"><strong>Período elegido: {new Date(`${fechaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })} a {new Date(`${fechaHasta}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}</strong><span>La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
+        {customRange && <div className="analytics-scope"><strong>{fechaConsultaDesde === fechaConsultaHasta ? `Día elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}` : `Período elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })} a ${new Date(`${fechaConsultaHasta}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}`}</strong><span>La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
         <section className="admin-metrics">
           <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
           <article><span>IMPORTE VENDIDO</span><strong>{formatCurrency(Number(data.resumen.importe_vendido))}</strong><small>Total confirmado en la web</small></article>
