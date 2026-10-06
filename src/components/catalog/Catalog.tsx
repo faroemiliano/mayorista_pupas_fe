@@ -58,6 +58,7 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
   const tools = useShoppingTools(),
     cart = useCart();
   const { user } = useAuth();
+  const esAdministrador = user?.rol === "admin" || user?.rol === "admin_operativo";
   const filters = useCatalogFilters();
   const products = useProducts({
     buscar: submittedSearch,
@@ -284,7 +285,7 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
                 <thead className="bg-neutral-50 text-left">
                   <tr>
                     <th className="p-3">Producto</th>
-                    <th>Stock</th>
+                    {esAdministrador && <th>Stock</th>}
                     <th>Precio</th>
                     <th>Cantidad</th>
                     <th></th>
@@ -299,7 +300,7 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
                           {product.dux_codigo}
                         </small>
                       </td>
-                      <td>{Number(product.stock_disponible)}</td>
+                      {esAdministrador && <td>{Number(product.stock_disponible)}</td>}
                       <td>
                         {product.precio_mayorista
                           ? formatCurrency(Number(product.precio_mayorista))

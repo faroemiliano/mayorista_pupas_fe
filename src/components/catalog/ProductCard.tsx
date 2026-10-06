@@ -12,6 +12,7 @@ import { isNewProduct } from '../../utils/product'
 export function ProductCard({ product, fallbackImage }: { product: Product; fallbackImage?: string }) {
   const cart = useCart()
   const { user } = useAuth()
+  const esAdministrador = user?.rol === 'admin' || user?.rol === 'admin_operativo'
   const tools = useShoppingTools()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
@@ -63,7 +64,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
         )}
 
         {user && <span className={`absolute left-3 z-10 rounded-sm px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-sm ${isNew ? 'top-12' : 'top-3'} ${product.tiene_stock ? 'bg-white/95 text-emerald-800' : 'bg-neutral-800 text-white'}`}>
-          {product.tiene_stock ? `${maxStock} disponibles` : 'Sin stock'}
+          {product.tiene_stock ? (esAdministrador ? `${maxStock} disponibles` : 'Disponible') : 'Sin stock'}
         </span>}
 
         {images.length > 1 && <>
