@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Navigate,
   Route,
@@ -37,6 +37,21 @@ import { storeStyles } from "./styles/tailwind";
 import { ResetPassword } from "./pages/ResetPassword";
 import { AdminWordpressMigration } from "./pages/admin/AdminWordpressMigration";
 import { RouteLoadingOverlay } from "./components/layout/RouteLoadingOverlay";
+import { trackPageView } from "./lib/googleAnalytics";
+
+function TrafficTracker() {
+  const location = useLocation()
+  const lastPath = useRef('')
+
+  useEffect(() => {
+    const path = `${location.pathname}${location.search}`
+    if (path === lastPath.current || location.pathname.startsWith('/admin')) return
+    lastPath.current = path
+    trackPageView(path)
+  }, [location.pathname, location.search])
+
+  return null
+}
 
 function Storefront() {
   const navigate = useNavigate();
@@ -110,6 +125,7 @@ export default function App() {
       </div>
     );
   return <>
+    <TrafficTracker />
     <RouteLoadingOverlay />
     <Routes>
       <Route path="/restablecer-clave" element={<ResetPassword />} />
