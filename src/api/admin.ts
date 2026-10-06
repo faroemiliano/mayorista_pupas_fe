@@ -51,12 +51,12 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   };
 }
 
-export function getAdminProducts(page: number, search = "", conStock?: boolean) {
+export function getAdminProducts(page: number, search = "", conStock?: boolean, order = "recientes") {
   const params = new URLSearchParams({
     solo_habilitados: "false",
     page: String(page),
     limit: "20",
-    orden: "recientes",
+    orden: order,
   });
   if (search.trim()) params.set("buscar", search.trim());
   if (conStock !== undefined) params.set("con_stock", String(conStock));
