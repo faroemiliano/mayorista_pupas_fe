@@ -48,6 +48,7 @@ export type Order = {
 export type OrderPage = {
   items: Order[]
   total: number
+  conteos_estado: Partial<Record<OrderStatus, number>>
   page: number
   limit: number
   total_paginas: number

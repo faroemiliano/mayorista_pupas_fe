@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
@@ -92,13 +92,6 @@ export function AdminOrders() {
     queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, order, page],
     queryFn: () => getAdminOrders(status, page, search, dateFrom, dateTo, source, order),
   });
-  const statusCounts = useQueries({
-    queries: states.map((state) => ({
-      queryKey: ["admin-order-count", state, source, search, dateFrom, dateTo],
-      queryFn: () => getAdminOrders(state, 1, search, dateFrom, dateTo, source),
-      select: (response: { total: number }) => response.total,
-    })),
-  });
   const requestedOrder = useQuery({
     queryKey: ["admin-order", requestedId],
     queryFn: () => getAdminOrder(requestedId!),
@@ -149,7 +142,7 @@ export function AdminOrders() {
               className={`rounded-full border px-4 py-2 text-xs font-bold transition ${status === value ? (value ? stateStyles[value] : "border-[#111111] bg-[#111111] text-white") : (value ? `${stateStyles[value]} opacity-75 hover:opacity-100` : "border-gray-100 bg-gray-100 text-gray-600 hover:bg-gray-200")}`}
               onClick={() => { setStatus(value); setPage(1); }}
             >
-              {value ? `${label} (${statusCounts[states.indexOf(value)].data ?? 0})` : label}
+              {value ? `${label} (${orders.data?.conteos_estado[value] ?? 0})` : label}
             </button>
           ))}
         </div>
