@@ -70,7 +70,7 @@ export function ProductDetail({ productId }: { productId: number }) {
             <strong className="text-2xl">{price ? formatCurrency(price) : 'Consultar precio'}</strong>
             <span className="mt-1 block text-[9px] uppercase tracking-[.15em] text-neutral-500">Precio mayorista</span>
             <div className="mt-5"><span className="text-[10px] font-bold uppercase tracking-wider">Talle</span><div className="mt-2 flex flex-wrap gap-2">{item.talles.map(size=><button type="button" key={size.talle} disabled={!size.disponible} onClick={()=>{setSelectedSize(size.talle);setQuantity(1)}} className={`min-w-10 border px-2 py-2 text-sm font-bold ${selectedSize===size.talle?'bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size.talle}</button>)}</div></div>
-            <p className={`mt-5 text-xs font-bold uppercase tracking-wider ${maxStock ? 'text-emerald-700' : 'text-neutral-500'}`}>{maxStock ? (esAdministrador ? `${maxStock} unidades disponibles en talle ${selectedSize}` : `Disponible en talle ${selectedSize}`) : 'Sin stock por talle'}</p>
+            {esAdministrador && <p className={`mt-5 text-xs font-bold uppercase tracking-wider ${maxStock ? 'text-emerald-700' : 'text-neutral-500'}`}>{maxStock ? `${maxStock} unidades disponibles en talle ${selectedSize}` : 'Sin stock por talle'}</p>}
             {maxStock > 0 && price > 0 && <div className="mt-6 flex min-h-13 border border-black">
               <QuantityControl value={quantity} max={maxStock} onChange={setQuantity}/>
               <button type="button" className="grow bg-black px-5 text-[10px] font-bold uppercase tracking-[.15em] text-white" onClick={() => cart.addItem(item, quantity, selectedSize)}>Agregar al carrito</button>

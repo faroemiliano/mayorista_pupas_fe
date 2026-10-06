@@ -63,8 +63,8 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
           <div className="grid h-full place-items-center bg-gradient-to-b from-neutral-50 to-neutral-200 text-6xl" aria-hidden="true">👙</div>
         )}
 
-        {user && <span className={`absolute left-3 z-10 rounded-sm px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-sm ${isNew ? 'top-12' : 'top-3'} ${product.tiene_stock ? 'bg-white/95 text-emerald-800' : 'bg-neutral-800 text-white'}`}>
-          {product.tiene_stock ? (esAdministrador ? `${maxStock} disponibles` : 'Disponible') : 'Sin stock'}
+        {esAdministrador && user && <span className={`absolute left-3 z-10 rounded-sm px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-sm ${isNew ? 'top-12' : 'top-3'} ${product.tiene_stock ? 'bg-white/95 text-emerald-800' : 'bg-neutral-800 text-white'}`}>
+          {product.tiene_stock ? `${maxStock} disponibles` : 'Sin stock'}
         </span>}
 
         {images.length > 1 && <>
