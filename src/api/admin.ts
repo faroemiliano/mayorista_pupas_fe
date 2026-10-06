@@ -146,8 +146,10 @@ export function getDuxClients(page: number, search = "") {
   return apiGet<DuxClientPage>(`/api/admin/clientes-dux/?${params}`);
 }
 
-export function getWebClients() {
-  return apiGet<AuthUser[]>("/api/admin/usuarios/");
+export function getWebClients(page = 1, buscar = '', cambioClave: 'todos'|'pendiente'|'creada' = 'pendiente') {
+  const params = new URLSearchParams({ page: String(page), limit: '25', cambio_clave: cambioClave })
+  if (buscar.trim()) params.set('buscar', buscar.trim())
+  return apiGet<{ items: AuthUser[]; total: number; page: number; limit: number; total_paginas: number }>(`/api/admin/usuarios/paginados?${params}`);
 }
 
 export function getDuxClientTotal() {
