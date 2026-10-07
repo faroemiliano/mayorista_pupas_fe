@@ -11,7 +11,7 @@ import {
 import { formatCurrency } from "../../utils/currency";
 import type { AuthUser } from "../../types/auth";
 
-function ClientPurchaseModal({ client, onClose }: { client: AuthUser; onClose: () => void }) {
+export function ClientPurchaseModal({ client, onClose }: { client: AuthUser; onClose: () => void }) {
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [periodo, setPeriodo] = useState({ desde: "", hasta: "" });
@@ -48,7 +48,6 @@ export function AdminClients() {
     "todos" | "pendiente" | "creada"
   >("pendiente");
   const [view, setView] = useState<"web" | "dux">("web");
-  const [selectedClient, setSelectedClient] = useState<AuthUser | null>(null);
   const clients = useQuery({
     queryKey: ["admin-dux-clients", page, submittedSearch],
     queryFn: () => getDuxClients(page, submittedSearch),
@@ -268,7 +267,7 @@ export function AdminClients() {
                   </thead>
                   <tbody>
                     {webClients.data.items.map((client) => (
-                      <tr key={client.id} className="cursor-pointer transition hover:bg-neutral-50" onClick={() => setSelectedClient(client)}>
+                      <tr key={client.id}>
                         <td>
                           <strong>
                             {client.nombre} {client.apellido}
@@ -459,7 +458,6 @@ export function AdminClients() {
           </>
         )}
       </section>
-      {selectedClient && <ClientPurchaseModal client={selectedClient} onClose={() => setSelectedClient(null)} />}
     </div>
   );
 }

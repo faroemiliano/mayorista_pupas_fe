@@ -14,6 +14,7 @@ export type OrderCreateData = {
 
 export type Order = {
   id: number
+  usuario_id: number | null
   codigo: string
   estado: string
   origen: 'tienda' | 'wordpress'

@@ -11,6 +11,7 @@ import {
 import type { OrderStatus } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { getDuxConfiguration } from "../../api/admin";
+import { ClientPurchaseModal, type ClientPurchaseModalClient } from "../../components/admin/ClientPurchaseModal";
 
 const states: OrderStatus[] = [
   "pendiente",
@@ -86,6 +87,7 @@ export function AdminOrders() {
   const [page, setPage] = useState(1);
   const [order, setOrder] = useState<'fecha_desc'|'total_desc'|'total_asc'|'unidades_desc'|'unidades_asc'>('fecha_desc');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientPurchaseModalClient | null>(null);
   const [personal, setPersonal] = useState(1051689);
   const queryClient = useQueryClient();
   const orders = useQuery({
@@ -193,7 +195,22 @@ export function AdminOrders() {
                       <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>
                     </td>
                     <td>
-                      <strong>{nombreCompletoCliente(order)}</strong>
+                      {order.usuario_id ? (
+                        <button
+                          type="button"
+                          className="text-left font-bold hover:underline"
+                          onClick={() => setSelectedClient({
+                            id: order.usuario_id!,
+                            nombre: order.cliente_primer_nombre || order.cliente_nombre,
+                            apellido: order.cliente_apellido,
+                            email: order.cliente_email,
+                          })}
+                        >
+                          {nombreCompletoCliente(order)}
+                        </button>
+                      ) : (
+                        <strong title="Este pedido no está vinculado a una cuenta web">{nombreCompletoCliente(order)}</strong>
+                      )}
                       <small>{order.cliente_telefono}</small>
                     </td>
                     <td>{formatOrderDate(order.creado_en)}</td>
@@ -254,6 +271,7 @@ export function AdminOrders() {
           </nav>
         )}
       </section>
+      {selectedClient ? <ClientPurchaseModal client={selectedClient} onClose={() => setSelectedClient(null)} /> : null}
       {selected && <>
         {createPortal(<section className="order-print-invoice" aria-hidden="true">
           <header className="order-print-invoice-header">
