@@ -45,7 +45,7 @@ export function AdminConfirmations() {
       {users.isLoading?<div className="admin-status"><span className="loader"/></div>
         :!visible.length?<div className="admin-status"><strong>No hay clientes en este estado</strong></div>
         :<div className="admin-table-wrap"><table><thead><tr><th>Cliente</th><th>Contacto</th><th>Ubicación</th><th>Canal de venta</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{visible.map(user=><tr key={user.id}>
-          <td><strong>{user.nombre}</strong><small>Cuenta web #{user.id}</small></td>
+          <td><strong>{[user.nombre,user.apellido].filter(Boolean).join(' ')}</strong>{!user.apellido?.trim()&&<small className="font-bold text-amber-700">Falta apellido</small>}<small>Cuenta web #{user.id}</small></td>
           <td>{user.email}<small>{user.telefono||'Sin teléfono'}</small></td>
           <td>{user.localidad_partido||'No informado'}<small>{user.provincia||'Sin provincia'}</small></td>
           <td>{channelLabels[user.canal_venta||'']||'No informado'}{user.tienda_online_url&&<a className="block text-xs text-[#111111]" href={user.tienda_online_url} target="_blank" rel="noreferrer">Ver tienda ↗</a>}</td>
