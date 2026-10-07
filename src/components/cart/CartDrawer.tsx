@@ -63,7 +63,9 @@ export function CartDrawer() {
       cliente_email: user.email,
       provincia: user.provincia || "",
       localidad: user.localidad_partido || "",
-      direccion: user.domicilio || "No informado",
+      direccion: user.domicilio?.trim().length && user.domicilio.trim().length >= 4
+        ? user.domicilio.trim()
+        : "No informado",
       observaciones: null,
     });
   };
