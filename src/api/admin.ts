@@ -51,7 +51,12 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   };
 }
 
-export function getAdminProducts(page: number, search = "", conStock?: boolean, order = "recientes") {
+export function getAdminProducts(
+  page: number,
+  search = "",
+  conStock?: boolean,
+  order = "recientes",
+) {
   const params = new URLSearchParams({
     solo_habilitados: "false",
     page: String(page),
@@ -71,10 +76,11 @@ export function setProductVisibility(productId: number, visible: boolean) {
 }
 
 export function setProductFeatured(productId: number, destacado: boolean) {
-  return apiPatch<{ id: number; destacado: boolean; orden_destacado: number | null }>(
-    `/api/admin/productos/${productId}/destacado`,
-    { destacado },
-  );
+  return apiPatch<{
+    id: number;
+    destacado: boolean;
+    orden_destacado: number | null;
+  }>(`/api/admin/productos/${productId}/destacado`, { destacado });
 }
 
 export type ProductEditorPayload = {
@@ -132,12 +138,13 @@ export function getProductAnalytics(
   fechaDesde = "",
   fechaHasta = "",
 ) {
-  const params = new URLSearchParams({ dias: String(days ?? 0), agrupacion: grouping })
-  if (fechaDesde) params.set('fecha_desde', fechaDesde)
-  if (fechaHasta) params.set('fecha_hasta', fechaHasta)
-  return apiGet<ProductAnalytics>(
-    `/api/admin/productos/analitica?${params}`,
-  );
+  const params = new URLSearchParams({
+    dias: String(days ?? 0),
+    agrupacion: grouping,
+  });
+  if (fechaDesde) params.set("fecha_desde", fechaDesde);
+  if (fechaHasta) params.set("fecha_hasta", fechaHasta);
+  return apiGet<ProductAnalytics>(`/api/admin/productos/analitica?${params}`);
 }
 
 export function getDuxClients(page: number, search = "") {
@@ -146,10 +153,48 @@ export function getDuxClients(page: number, search = "") {
   return apiGet<DuxClientPage>(`/api/admin/clientes-dux/?${params}`);
 }
 
-export function getWebClients(page = 1, buscar = '', cambioClave: 'todos'|'pendiente'|'creada' = 'pendiente') {
-  const params = new URLSearchParams({ page: String(page), limit: '25', cambio_clave: cambioClave })
-  if (buscar.trim()) params.set('buscar', buscar.trim())
-  return apiGet<{ items: AuthUser[]; total: number; page: number; limit: number; total_paginas: number }>(`/api/admin/usuarios/paginados?${params}`);
+export function getWebClients(
+  page = 1,
+  buscar = "",
+  cambioClave: "todos" | "pendiente" | "creada" = "pendiente",
+) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: "25",
+    cambio_clave: cambioClave,
+  });
+  if (buscar.trim()) params.set("buscar", buscar.trim());
+  return apiGet<{
+    items: AuthUser[];
+    total: number;
+    page: number;
+    limit: number;
+    total_paginas: number;
+  }>(`/api/admin/usuarios/paginados?${params}`);
+}
+
+export type ClientPurchaseBalance = {
+  cliente_id: number;
+  cliente: string;
+  acumulado: { pedidos: number; unidades: number; importe: number };
+  periodo: { pedidos: number; unidades: number; importe: number };
+  fecha_desde: string | null;
+  fecha_hasta: string | null;
+  alcance: string;
+};
+
+export function getClientPurchaseBalance(
+  clienteId: number,
+  desde?: string,
+  hasta?: string,
+) {
+  const params = new URLSearchParams();
+  if (desde) params.set("fecha_desde", desde);
+  if (hasta) params.set("fecha_hasta", hasta);
+  const query = params.size ? `?${params}` : "";
+  return apiGet<ClientPurchaseBalance>(
+    `/api/admin/usuarios/${clienteId}/balance-compras${query}`,
+  );
 }
 
 export function getDuxClientTotal() {
