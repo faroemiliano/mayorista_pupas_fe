@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext'
 import { formatCurrency } from '../utils/currency'
 import { QuantityControl } from '../components/cart/QuantityControl'
 import { isNewProduct } from '../utils/product'
+import { htmlToPlainText } from '../utils/text'
 
 export function ProductDetail({ productId }: { productId: number }) {
   const { user } = useAuth()
@@ -42,6 +43,7 @@ export function ProductDetail({ productId }: { productId: number }) {
   const maxStock = item.talles?.find(size=>size.talle===selectedSize)?.disponible??0
   const categorySlug = item.categoria?.nombre.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-') || ''
   const isNew = isNewProduct(item)
+  const description = htmlToPlainText(item.descripcion)
 
   return <section className="bg-white px-5 py-10 sm:px-8 lg:px-[7vw] lg:py-16">
     <div className="mx-auto max-w-360">
@@ -64,7 +66,7 @@ export function ProductDetail({ productId }: { productId: number }) {
           <p className="text-[9px] font-bold uppercase tracking-[.2em] text-neutral-500">{item.marca?.nombre || item.categoria?.nombre || 'Marca propia'}</p>
           <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight lg:text-5xl">{item.nombre}</h1>
           {item.dux_codigo && <p className="mt-3 text-[9px] uppercase tracking-[.14em] text-neutral-400">SKU {item.dux_codigo}</p>}
-          <p className="mt-7 border-t border-neutral-200 pt-6 text-sm leading-7 text-neutral-600">{item.descripcion || 'Producto de nuestra colección mayorista.'}</p>
+          <p className="mt-7 whitespace-pre-line border-t border-neutral-200 pt-6 text-sm leading-7 text-neutral-600">{description || 'Producto de nuestra colección mayorista.'}</p>
 
           {user ? <div className="mt-7 border-y border-neutral-200 py-6">
             <strong className="text-2xl">{price ? formatCurrency(price) : 'Consultar precio'}</strong>
