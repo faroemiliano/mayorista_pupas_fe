@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getDuxConfiguration,
+  getImageMigrationDiagnostic,
+  getImageMigrationExecution,
   getProductReconciliation,
   getReconciliationCandidates,
   getWordpressMigrationExecution,
   getWordpressMigrationSummary,
   linkReconciliationCandidate,
   runWordpressMigration,
+  runImageMigration,
   setDuxStockMode,
 } from "../../api/admin";
 
@@ -45,6 +48,22 @@ export function AdminWordpressMigration() {
     refetchInterval: (query) =>
       query.state.data?.estado === "en_progreso" ? 3000 : false,
   });
+  const imageExecution = useQuery({
+    queryKey: ["image-migration-execution"],
+    queryFn: getImageMigrationExecution,
+    refetchInterval: (query) =>
+      query.state.data?.estado === "en_progreso" ? 3000 : false,
+  });
+  const imageDiagnostic = useQuery({
+    queryKey: ["image-migration-diagnostic"],
+    queryFn: getImageMigrationDiagnostic,
+    refetchInterval: imageExecution.data?.estado === "en_progreso" ? 3000 : false,
+  });
+  useEffect(() => {
+    if (imageExecution.data?.estado === "completada") {
+      void queryClient.invalidateQueries({ queryKey: ["image-migration-diagnostic"] });
+    }
+  }, [imageExecution.data?.estado, queryClient]);
   const ejecucionEstancada = execution.data?.estado === "en_progreso" && execution.data.actualizado_en
     ? Date.now() - new Date(execution.data.actualizado_en).getTime() > 120000
     : false;
@@ -52,6 +71,13 @@ export function AdminWordpressMigration() {
     mutationFn: (updateAll:boolean) => runWordpressMigration(updateAll),
     onSuccess: (data) =>
       queryClient.setQueryData(["wordpress-migration-execution"], data),
+  });
+  const runImages = useMutation({
+    mutationFn: (limit: number | null) => runImageMigration(limit),
+    onSuccess: async (data) => {
+      queryClient.setQueryData(["image-migration-execution"], data);
+      await queryClient.invalidateQueries({ queryKey: ["image-migration-diagnostic"] });
+    },
   });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
@@ -155,6 +181,46 @@ export function AdminWordpressMigration() {
           </span>
         </div>
       )}
+
+      <section className="rounded-md border border-neutral-200 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="eyebrow">INDEPENDENCIA DE WORDPRESS</p>
+            <h2 className="mt-1 text-xl font-bold">Imágenes propias en Cloudinary</h2>
+            <p className="mt-2 max-w-2xl text-sm text-neutral-600">
+              Copia las fotos sin borrar ni modificar WordPress. La URL anterior queda guardada como respaldo.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="rounded border border-neutral-300 px-4 py-2.5 text-xs font-bold disabled:opacity-40"
+              disabled={runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
+              onClick={() => {
+                if (window.confirm("Se copiarán solamente 10 fotos para revisar que cada producto conserve su imagen correcta. ¿Continuar?")) runImages.mutate(10);
+              }}
+            >
+              Probar con 10 fotos
+            </button>
+            <button
+              className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40"
+              disabled={runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
+              onClick={() => {
+                if (window.confirm("Se copiarán todas las fotos pendientes a Cloudinary. WordPress no será modificado. ¿Continuar?")) runImages.mutate(null);
+              }}
+            >
+              Migrar todas las imágenes
+            </button>
+          </div>
+        </div>
+        {imageDiagnostic.data && <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded bg-neutral-50 p-4"><small className="font-bold uppercase text-neutral-500">En Cloudinary</small><strong className="mt-1 block text-2xl">{imageDiagnostic.data.cloudinary}</strong></div>
+          <div className="rounded bg-amber-50 p-4"><small className="font-bold uppercase text-amber-800">Aún dependen de WordPress</small><strong className="mt-1 block text-2xl">{imageDiagnostic.data.wordpress}</strong></div>
+          <div className="rounded bg-neutral-50 p-4"><small className="font-bold uppercase text-neutral-500">Total de imágenes</small><strong className="mt-1 block text-2xl">{imageDiagnostic.data.total}</strong></div>
+        </div>}
+        {imageExecution.data?.estado === "en_progreso" && <p className="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-900">Copiando imágenes en segundo plano… {String(imageExecution.data.progreso?.copiadas ?? 0)} completadas, {String(imageExecution.data.progreso?.fallidas ?? 0)} fallidas.</p>}
+        {imageDiagnostic.data?.independiente_wordpress && <p className="mt-4 rounded bg-emerald-50 p-3 text-sm font-bold text-emerald-900">Listo: ninguna imagen del catálogo depende de WordPress.</p>}
+        {(imageExecution.data?.estado === "error" || runImages.isError) && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">{imageExecution.data?.error || runImages.error?.message || "No se pudo copiar las imágenes."}</p>}
+      </section>
 
       <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
         <strong>WordPress sigue funcionando normalmente.</strong>

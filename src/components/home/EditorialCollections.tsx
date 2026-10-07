@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
-import { apiAsset } from '../../api/client'
+import { productImageAsset } from '../../api/client'
 import { useCatalogFilters } from '../../hooks/useCatalog'
 import type { Product } from '../../types/catalog'
 import { useNavigate } from 'react-router-dom'
@@ -49,8 +49,8 @@ function productImage(product: Product, fallback?: string) {
     ?.slice()
     .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)[0]
 
-  if (mainImage) return apiAsset(`/api/productos/${product.id}/imagenes/${mainImage.id}`)
-  if (product.imagen_url) return apiAsset(`/api/productos/${product.id}/imagen`)
+  if (mainImage) return productImageAsset(mainImage.url, `/api/productos/${product.id}/imagenes/${mainImage.id}`, 640)
+  if (product.imagen_url) return productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 640)
   return fallback
 }
 
@@ -66,7 +66,7 @@ function CollectionProductPhoto({ product, fallback }: { product: Product; fallb
 
   return <button className="group block aspect-[3/4] w-full overflow-hidden bg-white/40 text-left" type="button" aria-label={`Ver ${product.nombre}`} onClick={openProduct}>
     {image
-      ? <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]" src={image} alt={product.nombre} loading="lazy"/>
+      ? <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]" src={image} alt={product.nombre} loading="lazy" decoding="async"/>
       : <span className="grid h-full place-items-center text-5xl" aria-hidden="true">👙</span>}
   </button>
 }

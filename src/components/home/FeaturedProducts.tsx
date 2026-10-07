@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
-import { apiAsset } from '../../api/client'
+import { productImageAsset } from '../../api/client'
 import { useNavigate } from 'react-router-dom'
 import { useShoppingTools } from '../../context/ShoppingToolsContext'
 import type { Product } from '../../types/catalog'
@@ -9,8 +9,8 @@ function ProductImage({ product }: { product: Product }) {
   const image = product.imagenes
     ?.slice()
     .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)[0]
-  if (image) return <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" src={apiAsset(`/api/productos/${product.id}/imagenes/${image.id}`)} alt={product.nombre} loading="lazy" />
-  if (product.imagen_url) return <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" src={apiAsset(`/api/productos/${product.id}/imagen`)} alt={product.nombre} loading="lazy" />
+  if (image) return <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" src={productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 640)} alt={product.nombre} loading="lazy" decoding="async" />
+  if (product.imagen_url) return <img className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" src={productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 640)} alt={product.nombre} loading="lazy" decoding="async" />
   return <span className="grid h-full place-items-center bg-neutral-100 text-5xl" aria-hidden="true">👙</span>
 }
 

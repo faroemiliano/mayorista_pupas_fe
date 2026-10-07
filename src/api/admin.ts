@@ -302,6 +302,39 @@ export const runWordpressMigration = (updateAll = false) =>
     { confirmar: true, actualizar_todo: updateAll },
   );
 
+export type ImageMigrationDiagnostic = {
+  total: number;
+  wordpress: number;
+  cloudinary: number;
+  base_datos: number;
+  otros: number;
+  independiente_wordpress: boolean;
+};
+
+export type ImageMigrationExecution = {
+  estado: "pendiente" | "en_progreso" | "completada" | "error";
+  progreso: Record<string, unknown> | null;
+  resultado: Record<string, unknown> | null;
+  error: string | null;
+  actualizado_en?: string | null;
+};
+
+export const getImageMigrationDiagnostic = () =>
+  apiGet<ImageMigrationDiagnostic>(
+    "/api/admin/migracion-wordpress/imagenes/diagnostico",
+  );
+
+export const getImageMigrationExecution = () =>
+  apiGet<ImageMigrationExecution>(
+    "/api/admin/migracion-wordpress/imagenes/ejecucion",
+  );
+
+export const runImageMigration = (limit: number | null = null) =>
+  apiPost<ImageMigrationExecution>(
+    "/api/admin/migracion-wordpress/imagenes/ejecutar",
+    { confirmar: true, limite: limit },
+  );
+
 export type ProductReconciliation = {
   disponible: boolean;
   totales?: {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { calculateCart } from "../../api/cart";
-import { apiAsset } from "../../api/client";
+import { productImageAsset } from "../../api/client";
 import { createOrder } from "../../api/orders";
 import { useCart } from "../../context/CartContext";
 import type { Order, OrderCreateData } from "../../types/order";
@@ -284,8 +284,10 @@ export function CartDrawer() {
                     <div className="cart-line-image">
                       {item.product.imagen_url ? (
                         <img
-                          src={apiAsset(
+                          src={productImageAsset(
+                            item.product.imagen_url,
                             `/api/productos/${item.product.id}/imagen`,
+                            160,
                           )}
                           alt=""
                         />

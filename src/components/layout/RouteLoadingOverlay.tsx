@@ -19,9 +19,9 @@ export function RouteLoadingOverlay() {
 
     const timer = window.setInterval(() => {
       const elapsed = Date.now() - startedAt
-      const images = Array.from(document.querySelectorAll<HTMLImageElement>('main img'))
-      const hayImagenesPendientes = images.some(image => !image.complete)
-      const terminado = fetchingRef.current === 0 && !hayImagenesPendientes
+      // No bloqueamos toda la navegación esperando cada foto del catálogo.
+      // Las imágenes se descargan en paralelo y muestran su contenido al estar listas.
+      const terminado = fetchingRef.current === 0
 
       if ((elapsed >= MINIMUM_VISIBLE_MS && terminado) || elapsed >= MAXIMUM_VISIBLE_MS) {
         window.clearInterval(timer)

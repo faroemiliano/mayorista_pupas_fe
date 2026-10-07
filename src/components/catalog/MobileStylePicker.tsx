@@ -1,6 +1,6 @@
 import { useQueries } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
-import { apiAsset } from '../../api/client'
+import { productImageAsset } from '../../api/client'
 import type { CatalogCategory, Product } from '../../types/catalog'
 
 type Props = {
@@ -20,8 +20,8 @@ function productImage(product: Product | undefined) {
   const mainImage = product.imagenes
     ?.slice()
     .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)[0]
-  if (mainImage) return apiAsset(`/api/productos/${product.id}/imagenes/${mainImage.id}`)
-  return product.imagen_url ? apiAsset(`/api/productos/${product.id}/imagen`) : null
+  if (mainImage) return productImageAsset(mainImage.url, `/api/productos/${product.id}/imagenes/${mainImage.id}`, 360)
+  return product.imagen_url ? productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 360) : null
 }
 
 export function MobileStylePicker({ categories = [], selectedCategory, onSelect }: Props) {

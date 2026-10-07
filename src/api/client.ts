@@ -26,6 +26,26 @@ export function apiAsset(path: string): string {
   return `${API_URL}${path}`
 }
 
+/**
+ * Cloudinary ya es una CDN pública. Para sus imágenes evitamos el recorrido
+ * extra por Render y pedimos un archivo adaptado al tamaño que se va a ver.
+ * Las URL de Dux/WordPress siguen usando el endpoint protegido del backend.
+ */
+export function productImageAsset(sourceUrl: string | null | undefined, fallbackPath: string, width: number): string {
+  if (sourceUrl) {
+    try {
+      const url = new URL(sourceUrl)
+      if (url.protocol === 'https:' && url.hostname === 'res.cloudinary.com' && url.pathname.includes('/image/upload/')) {
+        url.pathname = url.pathname.replace('/image/upload/', `/image/upload/f_auto,q_auto,dpr_auto,w_${width}/`)
+        return url.toString()
+      }
+    } catch {
+      // Una URL inválida conserva el comportamiento existente mediante el backend.
+    }
+  }
+  return apiAsset(fallbackPath)
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     headers: { Accept: 'application/json', ...authHeaders() },
