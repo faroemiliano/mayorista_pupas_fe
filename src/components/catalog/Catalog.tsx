@@ -13,6 +13,7 @@ import type { Product } from "../../types/catalog";
 type Props = {
   search: string;
   submittedSearch: string;
+  searchToken: number;
   onClearSearch: () => void;
   requestedCategory: { name: string; token: number };
 };
@@ -44,7 +45,7 @@ function PersonalProductRail({
   );
 }
 
-export function Catalog({ search, submittedSearch, onClearSearch, requestedCategory }: Props) {
+export function Catalog({ search, submittedSearch, searchToken, onClearSearch, requestedCategory }: Props) {
   const [category, setCategory] = useState(""),
     [subcategory, setSubcategory] = useState(""),
     [brand, setBrand] = useState(""),
@@ -81,8 +82,15 @@ export function Catalog({ search, submittedSearch, onClearSearch, requestedCateg
   };
 
   useEffect(() => {
-    if (submittedSearch) setMobileExpanded(true);
-  }, [submittedSearch]);
+    if (!searchToken) return;
+    // El buscador del encabezado siempre recorre el catálogo completo.
+    // No conserva una colección, marca ni página que el cliente estuviera viendo.
+    setCategory("");
+    setSubcategory("");
+    setBrand("");
+    setPage(1);
+    setMobileExpanded(true);
+  }, [searchToken]);
 
   useEffect(() => {
     if (!requestedCategory.name || !filters.data) return;

@@ -61,6 +61,7 @@ function Storefront() {
   const isHowToBuyRoute = location.pathname === "/como-comprar";
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
+  const [searchToken, setSearchToken] = useState(0);
 
   const clearSearch = () => {
     setSearch("");
@@ -73,6 +74,7 @@ function Storefront() {
 
   const runSearch = () => {
     setSubmittedSearch(search.trim());
+    setSearchToken((current) => current + 1);
     navigate("/catalogo");
   };
 
@@ -94,6 +96,7 @@ function Storefront() {
           <Catalog
             search={search}
             submittedSearch={submittedSearch}
+            searchToken={searchToken}
             onClearSearch={clearSearch}
             requestedCategory={{ name: categorySlug, token: 0 }}
           />
