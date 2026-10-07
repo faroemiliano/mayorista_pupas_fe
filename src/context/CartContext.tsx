@@ -19,7 +19,7 @@ export function CartProvider({children}:{children:ReactNode}){
  useEffect(()=>{
   if(!user)return
   const delay=firstSync.current?0:250;firstSync.current=false
-  const timer=window.setTimeout(()=>{reserveCart(items).then(()=>{confirmed.current=items;queryClient.invalidateQueries({queryKey:['products']});queryClient.invalidateQueries({queryKey:['product-detail']})}).catch(reason=>{setItems(confirmed.current);window.alert(reason instanceof Error?reason.message:'No pudimos reservar ese stock. El carrito volvió a su última cantidad disponible.')})},delay)
+  const timer=window.setTimeout(()=>{reserveCart(items).then(()=>{confirmed.current=items;queryClient.invalidateQueries({queryKey:['products']});queryClient.invalidateQueries({queryKey:['product-detail']});queryClient.invalidateQueries({queryKey:['admin-products']});queryClient.invalidateQueries({queryKey:['admin-product-stock-count']});queryClient.invalidateQueries({queryKey:['admin-dashboard']})}).catch(reason=>{setItems(confirmed.current);window.alert(reason instanceof Error?reason.message:'No pudimos reservar ese stock. El carrito volvió a su última cantidad disponible.')})},delay)
   return()=>window.clearTimeout(timer)
  },[items,user,queryClient])
  useEffect(()=>{if(!user||!items.length)return;const heartbeat=window.setInterval(()=>{reserveCart(items).catch(()=>undefined)},5*60*1000);return()=>window.clearInterval(heartbeat)},[items,user])

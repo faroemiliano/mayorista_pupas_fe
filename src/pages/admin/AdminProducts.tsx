@@ -22,6 +22,8 @@ export function AdminProducts() {
     queryKey: ['admin-products', page, submittedSearch, stockFilter, stockOrder],
     queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes'),
     placeholderData: (previous) => previous,
+    refetchOnMount: 'always',
+    refetchInterval: 15_000,
   })
   const stockCounts = useQueries({
     queries: ([
@@ -32,6 +34,8 @@ export function AdminProducts() {
       queryKey: ['admin-product-stock-count', filter, submittedSearch],
       queryFn: () => getAdminProducts(1, submittedSearch, conStock),
       select: (response: { total: number }) => response.total,
+      refetchOnMount: 'always' as const,
+      refetchInterval: 15_000,
     })),
   })
   const syncStatus = useQuery({
