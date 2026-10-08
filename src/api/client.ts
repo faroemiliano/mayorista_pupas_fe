@@ -1,4 +1,5 @@
 const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+const R2_PUBLIC_IMAGE_HOST = 'imagenes.pupasmayorista.com.ar'
 
 function errorDetail(detail: unknown): string | null {
   if (typeof detail === 'string' && detail.trim()) return detail
@@ -29,6 +30,7 @@ export function apiAsset(path: string): string {
 /**
  * Cloudinary ya es una CDN pública. Para sus imágenes evitamos el recorrido
  * extra por Render y pedimos un archivo adaptado al tamaño que se va a ver.
+ * Las URL propias de R2 también se entregan directamente desde Cloudflare.
  * Las URL de Dux/WordPress siguen usando el endpoint protegido del backend.
  */
 export function productImageAsset(
@@ -45,6 +47,9 @@ export function productImageAsset(
         // bytes transferidos. c_limit tampoco agranda originales pequeños.
         // Las acciones separadas siguen el formato recomendado por Cloudinary.
         url.pathname = url.pathname.replace('/image/upload/', `/image/upload/c_limit,w_${width}/q_auto:${quality}/f_auto/`)
+        return url.toString()
+      }
+      if (url.protocol === 'https:' && url.hostname === R2_PUBLIC_IMAGE_HOST) {
         return url.toString()
       }
     } catch {
