@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -7,6 +7,7 @@ import {
   getAdminOrders,
   sendOrderToDux,
   updateOrderStatus,
+  updateOrderStatuses,
 } from "../../api/orders";
 import type { OrderStatus } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
@@ -89,6 +90,8 @@ export function AdminOrders() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientPurchaseModalClient | null>(null);
   const [personal, setPersonal] = useState(1051689);
+  const [selectedOrderKeys, setSelectedOrderKeys] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<OrderStatus>("confirmado");
   const queryClient = useQueryClient();
   const orders = useQuery({
     queryKey: ["admin-orders", source, status, search, dateFrom, dateTo, order, page],
@@ -107,6 +110,20 @@ export function AdminOrders() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] }),
   });
+  const visibleOrders = orders.data?.items ?? [];
+  const orderKey = (item: { id: number; origen: string }) => `${item.origen}-${item.id}`;
+  const selectedOrders = visibleOrders.filter((item) => selectedOrderKeys.has(orderKey(item)));
+  const allVisibleSelected = visibleOrders.length > 0 && selectedOrders.length === visibleOrders.length;
+  const bulkUpdate = useMutation({
+    mutationFn: () => updateOrderStatuses(selectedOrders.map((item) => ({ id: item.id, origen: item.origen })), bulkStatus),
+    onSuccess: () => {
+      setSelectedOrderKeys(new Set());
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+  });
+  useEffect(() => {
+    setSelectedOrderKeys(new Set());
+  }, [source, status, search, dateFrom, dateTo, order, page]);
   const selected = requestedOrder.data ?? orders.data?.items.find((order) => order.id === selectedId);
   const sendDux = useMutation({
     mutationFn: ({ id, idPersonal }: { id: number; idPersonal: number }) =>
@@ -163,6 +180,13 @@ export function AdminOrders() {
             <p>{dateFrom||dateTo?`Período: ${dateFrom||'inicio'} al ${dateTo||'hoy'}`:'Ordenados desde el más reciente.'}</p>
           </div>
         </div>
+        {selectedOrders.length > 0 && <div className="flex flex-wrap items-center gap-3 border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
+          <strong>{selectedOrders.length} pedido{selectedOrders.length === 1 ? "" : "s"} seleccionado{selectedOrders.length === 1 ? "" : "s"}</strong>
+          <label className="ml-auto flex items-center gap-2 text-xs font-bold">Cambiar a<select className="rounded border border-amber-300 bg-white px-2 py-1.5" value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value as OrderStatus)}>{states.map((item) => <option key={item} value={item}>{stateLabels[item]}</option>)}</select></label>
+          <button type="button" className="rounded bg-neutral-950 px-3 py-2 text-xs font-bold text-white disabled:opacity-40" disabled={bulkUpdate.isPending} onClick={() => { if (window.confirm(`¿Cambiar ${selectedOrders.length} pedido${selectedOrders.length === 1 ? "" : "s"} a “${stateLabels[bulkStatus]}”?`)) bulkUpdate.mutate() }}>{bulkUpdate.isPending ? "Actualizando…" : "Aplicar a seleccionados"}</button>
+          <button type="button" className="text-xs font-bold underline" onClick={() => setSelectedOrderKeys(new Set())}>Quitar selección</button>
+        </div>}
+        {bulkUpdate.isError && <p className="border-b border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">{bulkUpdate.error.message}</p>}
         {orders.isLoading ? (
           <div className="admin-status">
             <span className="loader" />
@@ -177,6 +201,7 @@ export function AdminOrders() {
             <table>
               <thead>
                 <tr>
+                  <th><input aria-label="Seleccionar pedidos visibles" type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedOrderKeys(event.target.checked ? new Set(visibleOrders.map(orderKey)) : new Set())} /></th>
                   <th>Pedido</th>
                   <th>Cliente</th>
                   <th>Fecha</th>
@@ -190,6 +215,7 @@ export function AdminOrders() {
               <tbody>
                 {orders.data?.items.map((order) => (
                   <tr key={`${order.origen}-${order.id}`}>
+                    <td><input aria-label={`Seleccionar ${order.codigo}`} type="checkbox" checked={selectedOrderKeys.has(orderKey(order))} onChange={(event) => setSelectedOrderKeys((current) => { const next = new Set(current); if (event.target.checked) next.add(orderKey(order)); else next.delete(orderKey(order)); return next; })} /></td>
                     <td>
                       <strong>{order.codigo}</strong>
                       <small>{order.origen === 'wordpress' ? 'WordPress · histórico' : 'Nueva tienda'}</small>

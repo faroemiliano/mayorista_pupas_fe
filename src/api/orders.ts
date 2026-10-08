@@ -36,6 +36,13 @@ export function updateOrderStatus(orderId: number, status: OrderStatus, origin: 
   return apiPatch<Order>(`/api/admin/pedidos/${orderId}/estado`, { estado: status, origen: origin })
 }
 
+export function updateOrderStatuses(orders: Array<{ id: number; origen: Order['origen'] }>, status: OrderStatus) {
+  return apiPatch<{ actualizados: number; sin_cambios: number }>("/api/admin/pedidos/estado-lote", {
+    estado: status,
+    pedidos: orders,
+  })
+}
+
 export function sendOrderToDux(orderId:number,idPersonal:number){
   return apiPost<Order>(`/api/admin/pedidos/${orderId}/enviar-dux`,{id_personal:idPersonal})
 }
