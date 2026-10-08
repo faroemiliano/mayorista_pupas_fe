@@ -396,6 +396,14 @@ export const runProductR2ImageMigration = (productoId: number) =>
     { confirmar: true },
   );
 
+export type R2ImageMigrationExecution = ImageMigrationExecution;
+
+export const getR2ImageMigrationExecution = () =>
+  apiGet<R2ImageMigrationExecution>("/api/admin/migracion-wordpress/imagenes/r2/ejecucion");
+
+export const runR2ImageMigration = () =>
+  apiPost<R2ImageMigrationExecution>("/api/admin/migracion-wordpress/imagenes/r2/ejecutar", { confirmar: true });
+
 export type ProductReconciliation = {
   disponible: boolean;
   totales?: {

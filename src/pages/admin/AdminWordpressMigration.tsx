@@ -4,6 +4,7 @@ import {
   getDuxConfiguration,
   getImageMigrationDiagnostic,
   getImageMigrationExecution,
+  getR2ImageMigrationExecution,
   getProductReconciliation,
   getReconciliationCandidates,
   getWordpressMigrationExecution,
@@ -12,6 +13,7 @@ import {
   runWordpressMigration,
   runImageMigration,
   runProductR2ImageMigration,
+  runR2ImageMigration,
   setDuxStockMode,
 } from "../../api/admin";
 
@@ -84,6 +86,8 @@ export function AdminWordpressMigration() {
   const runR2Product = useMutation({
     mutationFn: (productoId: number) => runProductR2ImageMigration(productoId),
   });
+  const r2Execution = useQuery({ queryKey: ["r2-image-migration-execution"], queryFn: getR2ImageMigrationExecution, refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 3000 : false });
+  const runR2All = useMutation({ mutationFn: runR2ImageMigration, onSuccess: (data) => queryClient.setQueryData(["r2-image-migration-execution"], data) });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
     onSuccess: (data) => queryClient.setQueryData(["dux-configuration"], data),
@@ -249,6 +253,14 @@ export function AdminWordpressMigration() {
           {runR2Product.data.fallidas > 0 && " No se cambió ninguna URL para que puedas revisar el error."}
         </p>}
         {runR2Product.isError && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">No se pudo copiar el producto: {runR2Product.error.message}</p>}
+        <div className="mt-5 border-t border-sky-200 pt-4">
+          <button className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={runR2All.isPending || r2Execution.data?.estado === "en_progreso"} onClick={() => { if (window.confirm("¿Iniciar la copia gradual de todas las imágenes a R2? Se procesarán de a cinco, sin borrar Cloudinary y podés volver a esta pantalla para ver el avance.")) runR2All.mutate(); }}>
+            {r2Execution.data?.estado === "en_progreso" ? "Migrando todas las fotos…" : "Migrar todas las imágenes a R2"}
+          </button>
+          {r2Execution.data?.estado === "en_progreso" && <p className="mt-3 text-sm text-sky-900">Avance: {String(r2Execution.data.progreso?.copiadas ?? 0)} copiadas, {String(r2Execution.data.progreso?.fallidas ?? 0)} fallidas.</p>}
+          {r2Execution.data?.estado === "completada" && <p className="mt-3 text-sm text-emerald-900">Migración terminada: {String(r2Execution.data.resultado?.copiadas ?? 0)} copiadas y {String(r2Execution.data.resultado?.fallidas ?? 0)} fallidas.</p>}
+          {(r2Execution.data?.estado === "error" || runR2All.isError) && <p className="mt-3 text-sm text-red-800">{r2Execution.data?.error || runR2All.error?.message || "No se pudo iniciar la migración."}</p>}
+        </div>
       </section>
 
       <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
