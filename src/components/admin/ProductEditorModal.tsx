@@ -23,6 +23,7 @@ type SizeRow = {
   disponible: number;
   reservado: number;
   agregar: number;
+  restar: number;
 };
 type PendingImage = { file: File; preview: string; principal: boolean };
 const input =
@@ -33,6 +34,7 @@ const emptySize = (): SizeRow => ({
   disponible: 0,
   reservado: 0,
   agregar: 0,
+  restar: 0,
 });
 const rowsFromProduct = (value: Product | null): SizeRow[] =>
   value?.talles?.map((item) => ({
@@ -41,6 +43,7 @@ const rowsFromProduct = (value: Product | null): SizeRow[] =>
     disponible: item.disponible,
     reservado: Math.max(item.cantidad - item.disponible, 0),
     agregar: 0,
+    restar: 0,
   })) || [emptySize()];
 
 export function ProductEditorModal({
@@ -82,7 +85,8 @@ export function ProductEditorModal({
     filters?.categorias.find((item) => String(item.id) === category)
       ?.subcategorias || [];
   const totalDisponible = sizes.reduce(
-    (total, item) => total + item.disponible + Math.max(item.agregar, 0),
+    (total, item) =>
+      total + item.disponible + Math.max(item.agregar, 0) - Math.max(item.restar, 0),
     0,
   );
   const totalReservado = sizes.reduce(
@@ -124,6 +128,16 @@ export function ProductEditorModal({
       setSaving(false);
       return;
     }
+    const talleSinStockSuficiente = cleanSizes.find(
+      (item) =>
+        item.cantidad + Math.max(item.agregar, 0) - Math.max(item.restar, 0) <
+        item.reservado,
+    );
+    if (talleSinStockSuficiente) {
+      setError(`No podés restar esa cantidad del talle ${talleSinStockSuficiente.talle}: hay unidades reservadas.`);
+      setSaving(false);
+      return;
+    }
     const payload: ProductEditorPayload = {
       codigo: String(data.get("codigo")).trim(),
       nombre: String(data.get("nombre")).trim(),
@@ -142,7 +156,8 @@ export function ProductEditorModal({
         : null,
       talles: cleanSizes.map((item) => ({
         talle: item.talle,
-        cantidad: item.cantidad + Math.max(item.agregar, 0),
+        cantidad:
+          item.cantidad + Math.max(item.agregar, 0) - Math.max(item.restar, 0),
       })),
       habilitado: data.get("habilitado") === "on",
       visible_tienda: data.get("visible_tienda") === "on",
@@ -351,7 +366,7 @@ export function ProductEditorModal({
                 <div className="mt-4 space-y-2 overflow-x-auto pb-1">
                   {sizes.map((row, index) => (
                     <div
-                      className="grid min-w-[410px] grid-cols-[110px_78px_78px_98px_28px] items-end gap-2"
+                      className="grid min-w-[505px] grid-cols-[110px_78px_78px_98px_112px_28px] items-end gap-2"
                       key={index}
                     >
                       <label className="text-[9px] font-bold uppercase text-neutral-500">Talle<input className={`${input} mt-0`} placeholder="Ej: M" value={row.talle} onChange={(event) => updateSize(index, { talle: event.target.value })} /></label>
@@ -359,7 +374,7 @@ export function ProductEditorModal({
                         <span className="block text-[9px] uppercase text-neutral-400">
                           Disponible
                         </span>
-                        <b>{row.disponible + Math.max(row.agregar, 0)}</b>
+                        <b>{row.disponible + Math.max(row.agregar, 0) - Math.max(row.restar, 0)}</b>
                       </div>
                       <div className="mt-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2 py-2 text-center text-xs">
                         <span className="block text-[9px] uppercase text-amber-600">
@@ -386,6 +401,23 @@ export function ProductEditorModal({
                           }
                         />
                       </label>
+                      <label className="text-[9px] font-bold uppercase text-red-700">
+                        Restar
+                        <input
+                          className="mt-0 w-full rounded-lg border border-red-200 bg-red-50 px-2 py-2 text-sm outline-none focus:border-red-600 disabled:opacity-50"
+                          aria-label="Unidades a descontar por venta externa"
+                          type="number"
+                          min="1"
+                          value={row.restar || ""}
+                          placeholder="0"
+                          disabled={!detail}
+                          onChange={(event) =>
+                            updateSize(index, {
+                              restar: Math.max(Number(event.target.value) || 0, 0),
+                            })
+                          }
+                        />
+                      </label>
                       <button
                         type="button"
                         className="mt-2 text-xl text-neutral-400"
@@ -401,6 +433,7 @@ export function ProductEditorModal({
                     </div>
                   ))}
                 </div>
+                {detail && <p className="mt-4 text-xs text-neutral-500">Usá “Restar” para ventas fuera de la página y presioná “Guardar cambios”. Se descuenta del talle y del stock total, sin tocar unidades reservadas.</p>}
               </section>
             </div>
             <aside className="space-y-6">
