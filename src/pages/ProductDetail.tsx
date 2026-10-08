@@ -28,9 +28,17 @@ export function ProductDetail({ productId }: { productId: number }) {
     if (product.data.imagenes?.length) {
       return [...product.data.imagenes]
         .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)
-        .map((image) => productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 1400))
+        .map((image) => ({
+          id: image.id,
+          full: productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 1200, 'good'),
+          thumbnail: productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 180),
+        }))
     }
-    return product.data.imagen_url ? [productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 1400)] : []
+    return product.data.imagen_url ? [{
+      id: product.data.id,
+      full: productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 1200, 'good'),
+      thumbnail: productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 180),
+    }] : []
   }, [product.data])
   useEffect(()=>{setSelectedSize(product.data?.talles?.find(size=>size.disponible>0)?.talle);setQuantity(1)},[product.data])
 
@@ -57,9 +65,9 @@ export function ProductDetail({ productId }: { productId: number }) {
         <div>
           <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
             {isNew && <span className="absolute left-4 top-4 z-10 bg-black px-4 py-2 text-[9px] font-extrabold uppercase tracking-[.18em] text-white shadow-md">Nuevo</span>}
-            {images.length ? <img className="h-full w-full object-cover" src={images[imageIndex]} alt={item.nombre} decoding="async"/> : <div className="grid h-full place-items-center text-7xl">👙</div>}
+            {images.length ? <img className="h-full w-full object-cover" src={images[imageIndex]?.full} alt={item.nombre} decoding="async"/> : <div className="grid h-full place-items-center text-7xl">👙</div>}
           </div>
-          {images.length > 1 && <div className="mt-3 grid grid-cols-5 gap-2">{images.map((image, index) => <button type="button" key={image} onClick={() => setImageIndex(index)} className={`aspect-[3/4] overflow-hidden border ${index === imageIndex ? 'border-black' : 'border-transparent'}`}><img className="h-full w-full object-cover" src={image} alt={`${item.nombre}, foto ${index + 1}`} loading="lazy" decoding="async"/></button>)}</div>}
+          {images.length > 1 && <div className="mt-3 grid grid-cols-5 gap-2">{images.map((image, index) => <button type="button" key={image.id} onClick={() => setImageIndex(index)} className={`aspect-[3/4] overflow-hidden border ${index === imageIndex ? 'border-black' : 'border-transparent'}`}><img className="h-full w-full object-cover" src={image.thumbnail} alt={`${item.nombre}, foto ${index + 1}`} loading="lazy" decoding="async"/></button>)}</div>}
         </div>
 
         <div className="lg:sticky lg:top-40 lg:self-start">

@@ -31,12 +31,20 @@ export function apiAsset(path: string): string {
  * extra por Render y pedimos un archivo adaptado al tamaño que se va a ver.
  * Las URL de Dux/WordPress siguen usando el endpoint protegido del backend.
  */
-export function productImageAsset(sourceUrl: string | null | undefined, fallbackPath: string, width: number): string {
+export function productImageAsset(
+  sourceUrl: string | null | undefined,
+  fallbackPath: string,
+  width: number,
+  quality: 'eco' | 'good' = 'eco',
+): string {
   if (sourceUrl) {
     try {
       const url = new URL(sourceUrl)
       if (url.protocol === 'https:' && url.hostname === 'res.cloudinary.com' && url.pathname.includes('/image/upload/')) {
-        url.pathname = url.pathname.replace('/image/upload/', `/image/upload/f_auto,q_auto,dpr_auto,w_${width}/`)
+        // Evitamos dpr_auto: en pantallas retina puede duplicar o triplicar los
+        // bytes transferidos. c_limit tampoco agranda originales pequeños.
+        // Las acciones separadas siguen el formato recomendado por Cloudinary.
+        url.pathname = url.pathname.replace('/image/upload/', `/image/upload/c_limit,w_${width}/q_auto:${quality}/f_auto/`)
         return url.toString()
       }
     } catch {

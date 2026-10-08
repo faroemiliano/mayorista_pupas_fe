@@ -27,9 +27,9 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
     if (product.imagenes?.length) {
       return [...product.imagenes]
         .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)
-        .map((image) => productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 640))
+        .map((image) => productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 480))
     }
-    if (product.imagen_url) return [productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 640)]
+    if (product.imagen_url) return [productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 480)]
     return fallbackImage ? [fallbackImage] : []
   }, [fallbackImage, product.id, product.imagen_url, product.imagenes])
 

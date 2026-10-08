@@ -11,7 +11,7 @@ export function CompactProductCard({ product }: { product: Product }) {
   const { user } = useAuth()
   const cart = useCart()
   const tools = useShoppingTools()
-  const image = product.imagen_url ? productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 240) : null
+  const image = product.imagen_url ? productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 180) : null
   const productPath = `/producto/${product.id}/${product.slug || 'producto'}`
   const isNew = isNewProduct(product)
 

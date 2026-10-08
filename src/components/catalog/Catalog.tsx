@@ -68,6 +68,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     marcaId: brand,
     orden: order,
     page,
+    limit: 8,
   });
   const update = (callback: () => void) => {
     callback();

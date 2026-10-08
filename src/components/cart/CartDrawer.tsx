@@ -289,7 +289,7 @@ export function CartDrawer() {
                           src={productImageAsset(
                             item.product.imagen_url,
                             `/api/productos/${item.product.id}/imagen`,
-                            160,
+                            180,
                           )}
                           alt=""
                         />
