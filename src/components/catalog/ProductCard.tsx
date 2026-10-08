@@ -27,9 +27,9 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
     if (product.imagenes?.length) {
       return [...product.imagenes]
         .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)
-        .map((image) => productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 480))
+        .map((image) => productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 400))
     }
-    if (product.imagen_url) return [productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 480)]
+    if (product.imagen_url) return [productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 400)]
     return fallbackImage ? [fallbackImage] : []
   }, [fallbackImage, product.id, product.imagen_url, product.imagenes])
 
@@ -58,7 +58,7 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
         {user && <button className="absolute right-3 top-3 z-20 grid size-9 place-items-center rounded-full bg-white/95 text-xl text-neutral-900 shadow-md transition hover:scale-105" type="button" aria-label={tools.isFavorite(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'} onClick={() => tools.toggleFavorite(product)}>{tools.isFavorite(product.id) ? '♥' : '♡'}</button>}
 
         {images.length ? (
-          <img key={images[imageIndex]} className="block h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.025]" src={images[imageIndex]} alt={`${product.nombre} - foto ${imageIndex + 1}`} loading="lazy" decoding="async" />
+          <img key={images[imageIndex]} className="block h-full w-full object-contain object-center transition duration-500 group-hover:scale-[1.025]" src={images[imageIndex]} alt={`${product.nombre} - foto ${imageIndex + 1}`} loading="lazy" decoding="async" />
         ) : (
           <div className="grid h-full place-items-center bg-gradient-to-b from-neutral-50 to-neutral-200 text-6xl" aria-hidden="true">👙</div>
         )}

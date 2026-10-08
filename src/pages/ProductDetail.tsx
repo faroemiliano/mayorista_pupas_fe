@@ -30,13 +30,13 @@ export function ProductDetail({ productId }: { productId: number }) {
         .sort((a, b) => Number(b.principal) - Number(a.principal) || a.orden - b.orden || a.id - b.id)
         .map((image) => ({
           id: image.id,
-          full: productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 1200, 'good'),
+          full: productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 960, 'good'),
           thumbnail: productImageAsset(image.url, `/api/productos/${product.data!.id}/imagenes/${image.id}`, 180),
         }))
     }
     return product.data.imagen_url ? [{
       id: product.data.id,
-      full: productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 1200, 'good'),
+      full: productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 960, 'good'),
       thumbnail: productImageAsset(product.data.imagen_url, `/api/productos/${product.data.id}/imagen`, 180),
     }] : []
   }, [product.data])
