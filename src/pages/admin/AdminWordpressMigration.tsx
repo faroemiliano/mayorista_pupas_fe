@@ -11,6 +11,7 @@ import {
   linkReconciliationCandidate,
   runWordpressMigration,
   runImageMigration,
+  runProductR2ImageMigration,
   setDuxStockMode,
 } from "../../api/admin";
 
@@ -32,6 +33,7 @@ const date = (value: string | null) =>
 export function AdminWordpressMigration() {
   const [candidatePage, setCandidatePage] = useState(1);
   const [candidateSearch, setCandidateSearch] = useState("");
+  const [r2ProductId, setR2ProductId] = useState("2001");
   const queryClient = useQueryClient();
   const summary = useQuery({
     queryKey: ["wordpress-migration-summary"],
@@ -78,6 +80,9 @@ export function AdminWordpressMigration() {
       queryClient.setQueryData(["image-migration-execution"], data);
       await queryClient.invalidateQueries({ queryKey: ["image-migration-diagnostic"] });
     },
+  });
+  const runR2Product = useMutation({
+    mutationFn: (productoId: number) => runProductR2ImageMigration(productoId),
   });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
@@ -186,7 +191,7 @@ export function AdminWordpressMigration() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="eyebrow">INDEPENDENCIA DE WORDPRESS</p>
-            <h2 className="mt-1 text-xl font-bold">Imágenes propias en Cloudinary</h2>
+            <h2 className="mt-1 text-xl font-bold">Migración histórica de WordPress a Cloudinary</h2>
             <p className="mt-2 max-w-2xl text-sm text-neutral-600">
               Copia las fotos sin borrar ni modificar WordPress. La URL anterior queda guardada como respaldo.
             </p>
@@ -220,6 +225,30 @@ export function AdminWordpressMigration() {
         {imageExecution.data?.estado === "en_progreso" && <p className="mt-4 rounded bg-blue-50 p-3 text-sm text-blue-900">Copiando imágenes en segundo plano… {String(imageExecution.data.progreso?.copiadas ?? 0)} completadas, {String(imageExecution.data.progreso?.fallidas ?? 0)} fallidas.</p>}
         {imageDiagnostic.data?.independiente_wordpress && <p className="mt-4 rounded bg-emerald-50 p-3 text-sm font-bold text-emerald-900">Listo: ninguna imagen del catálogo depende de WordPress.</p>}
         {(imageExecution.data?.estado === "error" || runImages.isError) && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">{imageExecution.data?.error || runImages.error?.message || "No se pudo copiar las imágenes."}</p>}
+      </section>
+
+      <section className="rounded-md border border-sky-200 bg-sky-50 p-5">
+        <p className="eyebrow">PRUEBA CONTROLADA R2</p>
+        <h2 className="mt-1 text-xl font-bold">Copiar fotos de un solo producto</h2>
+        <p className="mt-2 max-w-2xl text-sm text-neutral-700">
+          Copia todas las fotos del producto al almacenamiento propio de Cloudflare R2. Las URLs actuales quedan guardadas como respaldo y no se borra nada de Cloudinary.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <label className="grid gap-1 text-xs font-bold text-neutral-700">ID del producto
+            <input className="w-36 rounded border border-neutral-300 bg-white px-3 py-2 text-sm font-normal" inputMode="numeric" value={r2ProductId} onChange={(event) => setR2ProductId(event.target.value.replace(/\D/g, ""))} />
+          </label>
+          <button className="rounded bg-sky-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={runR2Product.isPending || !Number(r2ProductId)} onClick={() => {
+            const productoId = Number(r2ProductId);
+            if (window.confirm(`¿Copiar a R2 todas las fotos del producto #${productoId}? Cloudinary quedará como respaldo.`)) runR2Product.mutate(productoId);
+          }}>
+            {runR2Product.isPending ? "Copiando fotos…" : "Copiar este producto a R2"}
+          </button>
+        </div>
+        {runR2Product.data && <p className={`mt-4 rounded p-3 text-sm ${runR2Product.data.actualizado ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"}`}>
+          <strong>{runR2Product.data.producto}:</strong> {runR2Product.data.copiadas} copiadas, {runR2Product.data.omitidas_r2} ya estaban en R2 y {runR2Product.data.fallidas} fallidas.
+          {runR2Product.data.fallidas > 0 && " No se cambió ninguna URL para que puedas revisar el error."}
+        </p>}
+        {runR2Product.isError && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">No se pudo copiar el producto: {runR2Product.error.message}</p>}
       </section>
 
       <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">

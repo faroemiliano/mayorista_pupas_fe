@@ -380,6 +380,22 @@ export const runImageMigration = (limit: number | null = null) =>
     { confirmar: true, limite: limit },
   );
 
+export type R2ProductImageMigration = {
+  producto_id: number;
+  producto: string;
+  copiadas: number;
+  omitidas_r2: number;
+  fallidas: number;
+  errores: Array<{ imagen_id: number; error: string }>;
+  actualizado: boolean;
+};
+
+export const runProductR2ImageMigration = (productoId: number) =>
+  apiPost<R2ProductImageMigration>(
+    `/api/admin/migracion-wordpress/imagenes/r2/producto/${productoId}`,
+    { confirmar: true },
+  );
+
 export type ProductReconciliation = {
   disponible: boolean;
   totales?: {
