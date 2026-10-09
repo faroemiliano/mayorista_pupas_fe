@@ -5,8 +5,6 @@ import { ProductCard } from "./ProductCard";
 import { CompactProductCard } from "./CompactProductCard";
 import { MobileStylePicker } from "./MobileStylePicker";
 import { useShoppingTools } from "../../context/ShoppingToolsContext";
-import { useCart } from "../../context/CartContext";
-import { formatCurrency } from "../../utils/currency";
 import { useAuth } from "../../context/AuthContext";
 import type { Product } from "../../types/catalog";
 
@@ -52,14 +50,8 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     [order, setOrder] = useState("recientes"),
     [page, setPage] = useState(1);
   const [mobileExpanded, setMobileExpanded] = useState(false);
-  const [quickMode, setQuickMode] = useState(false);
-  const [quickQuantities, setQuickQuantities] = useState<
-    Record<number, number>
-  >({});
-  const tools = useShoppingTools(),
-    cart = useCart();
+  const tools = useShoppingTools();
   const { user } = useAuth();
-  const esAdministrador = user?.rol === "admin" || user?.rol === "admin_operativo";
   const filters = useCatalogFilters();
   const products = useProducts({
     buscar: submittedSearch,
@@ -176,11 +168,16 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
         <MobileStylePicker
           categories={filters.data?.categorias}
           selectedCategory={category}
+          selectedSubcategory={subcategory}
           onSelect={(value) => {
             update(() => {
               setCategory(value);
               setSubcategory("");
             });
+            setMobileExpanded(true);
+          }}
+          onSubcategory={(value) => {
+            update(() => setSubcategory(value));
             setMobileExpanded(true);
           }}
         />
@@ -221,30 +218,22 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
                 {products.data?.total ?? 0} opciones para tu próxima compra
               </span>
             </div>
-            <div className="flex gap-2">
-              <button
-                className="h-11 rounded-xl border border-[#e5e5e5] bg-white px-4 text-xs font-bold"
-                onClick={() => setQuickMode((v) => !v)}
+            <label className="flex items-center gap-3 text-xs font-bold text-[#737373]">
+              Ordenar
+              <select
+                className="h-11 rounded-xl border border-[#e5e5e5] bg-white px-4 text-sm font-medium outline-none focus:border-[#525252]"
+                value={order}
+                onChange={(event) =>
+                  update(() => setOrder(event.target.value))
+                }
               >
-                {quickMode ? "Ver tarjetas" : "Carga rápida"}
-              </button>
-              <label className="flex items-center gap-3 text-xs font-bold text-[#737373]">
-                Ordenar
-                <select
-                  className="h-11 rounded-xl border border-[#e5e5e5] bg-white px-4 text-sm font-medium outline-none focus:border-[#525252]"
-                  value={order}
-                  onChange={(event) =>
-                    update(() => setOrder(event.target.value))
-                  }
-                >
-                  <option value="recientes">Más nuevos</option>
-                  <option value="nombre_asc">Nombre A–Z</option>
-                  <option value="nombre_desc">Nombre Z–A</option>
-                  <option value="precio_asc">Menor precio</option>
-                  <option value="precio_desc">Mayor precio</option>
-                </select>
-              </label>
-            </div>
+                <option value="recientes">Más nuevos</option>
+                <option value="nombre_asc">Nombre A–Z</option>
+                <option value="nombre_desc">Nombre Z–A</option>
+                <option value="precio_asc">Menor precio</option>
+                <option value="precio_desc">Mayor precio</option>
+              </select>
+            </label>
           </div>
 
           {products.isLoading && (
@@ -288,78 +277,13 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               </div>
             )}
 
-          {quickMode ? (
-            <div className="overflow-x-auto rounded-2xl border bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-neutral-50 text-left">
-                  <tr>
-                    <th className="p-3">Producto</th>
-                    {esAdministrador && <th>Stock</th>}
-                    <th>Precio</th>
-                    <th>Cantidad</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.data?.items.map((product) => (
-                    <tr className="border-t" key={product.id}>
-                      <td className="p-3">
-                        <strong>{product.nombre}</strong>
-                        <small className="block text-gray-400">
-                          {product.dux_codigo}
-                        </small>
-                      </td>
-                      {esAdministrador && <td>{Number(product.stock_disponible)}</td>}
-                      <td>
-                        {product.precio_mayorista
-                          ? formatCurrency(Number(product.precio_mayorista))
-                          : "—"}
-                      </td>
-                      <td>
-                        <input
-                          className="w-20 rounded-lg border p-2"
-                          type="number"
-                          min="1"
-                          max={Math.floor(Number(product.stock_disponible))}
-                          value={quickQuantities[product.id] ?? 1}
-                          onChange={(e) =>
-                            setQuickQuantities((q) => ({
-                              ...q,
-                              [product.id]: Number(e.target.value),
-                            }))
-                          }
-                        />
-                      </td>
-                      <td className="p-3">
-                        <button
-                          className="rounded-lg bg-[#111111] px-3 py-2 text-xs font-bold text-white disabled:opacity-40"
-                          disabled={
-                            !product.tiene_stock || !product.precio_mayorista
-                          }
-                          onClick={() =>
-                            cart.addItem(
-                              product,
-                              quickQuantities[product.id] ?? 1,
-                            )
-                          }
-                        >
-                          Agregar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div
-              className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${products.isFetching ? "opacity-50" : ""}`}
-            >
-              {products.data?.items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <div
+            className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${products.isFetching ? "opacity-50" : ""}`}
+          >
+            {products.data?.items.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
           {products.data && products.data.total_paginas > 1 && (
             <nav
               className="mt-12 flex items-center justify-center gap-3"

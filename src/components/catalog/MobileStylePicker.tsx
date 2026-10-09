@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
 import { productImageAsset } from '../../api/client'
@@ -6,7 +7,9 @@ import type { CatalogCategory, Product } from '../../types/catalog'
 type Props = {
   categories?: CatalogCategory[]
   selectedCategory: string
+  selectedSubcategory: string
   onSelect: (categoryId: string) => void
+  onSubcategory: (subcategoryId: string) => void
 }
 
 const styles = [
@@ -24,7 +27,8 @@ function productImage(product: Product | undefined) {
   return product.imagen_url ? productImageAsset(product.imagen_url, `/api/productos/${product.id}/imagen`, 400) : null
 }
 
-export function MobileStylePicker({ categories = [], selectedCategory, onSelect }: Props) {
+export function MobileStylePicker({ categories = [], selectedCategory, selectedSubcategory, onSelect, onSubcategory }: Props) {
+  const [showCategoryChoices, setShowCategoryChoices] = useState(false)
   const featured = styles.map((style) => ({
     ...style,
     category: categories.find((category) =>
@@ -44,7 +48,7 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
         page: 1,
         limit: 100,
       }),
-      enabled: Boolean(style.category),
+      enabled: Boolean(style.category) && !selectedCategory,
       staleTime: 60_000,
     })),
   })
@@ -54,6 +58,23 @@ export function MobileStylePicker({ categories = [], selectedCategory, onSelect 
     window.requestAnimationFrame(() => {
       document.getElementById('productos-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
+  }
+
+  const activeCategory = categories.find((category) => String(category.id) === selectedCategory)
+
+  if (activeCategory) {
+    return (
+      <section className="mt-6 border border-neutral-200 bg-neutral-50 p-5 md:hidden" aria-label="Colección seleccionada">
+        <p className="text-[9px] font-semibold tracking-[0.2em] text-neutral-500">COLECCIÓN SELECCIONADA</p>
+        <div className="mt-2 flex items-end justify-between gap-4">
+          <div><h3 className="font-serif text-3xl font-semibold">{activeCategory.nombre}</h3><p className="mt-1 text-sm text-neutral-500">Estás viendo los productos de esta colección.</p></div>
+          <button type="button" className="shrink-0 border border-neutral-300 bg-white px-3 py-2 text-[9px] font-bold uppercase tracking-[.12em] text-neutral-800" onClick={() => setShowCategoryChoices((visible) => !visible)}>{showCategoryChoices ? 'Ocultar' : 'Cambiar'}</button>
+        </div>
+        {showCategoryChoices && <div className="mt-4 flex gap-2 overflow-x-auto pb-1">{categories.map((category) => <button key={category.id} type="button" className={`shrink-0 border px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${String(category.id) === selectedCategory ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white text-neutral-700'}`} onClick={() => select(String(category.id))}>{category.nombre}</button>)}<button type="button" className="shrink-0 border border-neutral-300 bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-neutral-700" onClick={() => select('')}>Ver todo</button></div>}
+        {activeCategory.subcategorias.length > 0 && <div className="mt-4 border-t border-neutral-200 pt-4"><p className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-neutral-500">Filtrar dentro de {activeCategory.nombre}</p><div className="flex gap-2 overflow-x-auto pb-1"><button type="button" className={`shrink-0 border px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${!selectedSubcategory ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white text-neutral-700'}`} onClick={() => onSubcategory('')}>Todos</button>{activeCategory.subcategorias.map((subcategory) => <button key={subcategory.id} type="button" className={`shrink-0 border px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${String(subcategory.id) === selectedSubcategory ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white text-neutral-700'}`} onClick={() => onSubcategory(String(subcategory.id))}>{subcategory.nombre}</button>)}</div></div>}
+        <p className="mt-4 border-t border-neutral-200 pt-3 text-xs leading-5 text-neutral-500">¿Buscás un modelo puntual? Usá la lupa del encabezado para buscar en todo el catálogo.</p>
+      </section>
+    )
   }
 
   return (

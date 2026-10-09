@@ -63,7 +63,7 @@ export function AdminMaterials() {
     <section className="admin-panel-card p-5 sm:p-7">
       <form className="grid gap-5" onSubmit={submit}>
         <label className="text-xs font-bold">Título que verán los clientes
-          <input className="admin-filter mt-2 w-full" required name="title" maxLength={160} placeholder="Ej.: Drive de fotos" defaultValue="Drive de fotos" />
+          <input className="admin-filter mt-2 w-full" required name="title" maxLength={160} placeholder="Ej.: Drive de fotos y videos" defaultValue="Drive de fotos y videos" />
         </label>
         <label className="text-xs font-bold">Enlace de la carpeta de Google Drive
           <input className="admin-filter mt-2 w-full" required type="url" name="drive_url" placeholder="https://drive.google.com/drive/folders/..." />
@@ -80,7 +80,7 @@ export function AdminMaterials() {
       {materials.isLoading
         ? <div className="admin-status"><span className="loader"/></div>
         : driveLinks.length > 0
-          ? <div className="mt-4 grid gap-3">{driveLinks.map(drive => <div key={drive.id} className="flex flex-col gap-4 border border-neutral-200 p-5 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><strong className="block">{drive.titulo === 'Carpeta de material Pupas' ? 'Drive de fotos' : drive.titulo}</strong><a className="mt-2 block truncate text-xs text-neutral-500" href={drive.descripcion || '#'} target="_blank" rel="noreferrer">{drive.descripcion}</a></div><button className="shrink-0 border border-red-200 px-4 py-2 text-[10px] font-bold uppercase text-red-700" disabled={remove.isPending} onClick={() => { if (window.confirm(`¿Quitar “${drive.titulo === 'Carpeta de material Pupas' ? 'Drive de fotos' : drive.titulo}” para todos los clientes?`)) remove.mutate(drive.id) }}>Quitar enlace</button></div>)}</div>
+          ? <div className="mt-4 grid gap-3">{driveLinks.map(drive => <div key={drive.id} className="flex flex-col gap-4 border border-neutral-200 p-5 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><strong className="block">{drive.titulo === 'Carpeta de material Pupas' ? 'Drive de fotos y videos' : drive.titulo}</strong><a className="mt-2 block truncate text-xs text-neutral-500" href={drive.descripcion || '#'} target="_blank" rel="noreferrer">{drive.descripcion}</a></div><button className="shrink-0 border border-red-200 px-4 py-2 text-[10px] font-bold uppercase text-red-700" disabled={remove.isPending} onClick={() => { if (window.confirm(`¿Quitar “${drive.titulo === 'Carpeta de material Pupas' ? 'Drive de fotos y videos' : drive.titulo}” para todos los clientes?`)) remove.mutate(drive.id) }}>Quitar enlace</button></div>)}</div>
           : <div className="mt-4 border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500">Todavía no publicaste una carpeta de Drive.</div>}
     </section>
   </div>
