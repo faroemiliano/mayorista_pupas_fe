@@ -127,6 +127,7 @@ export function AdminWordpressMigration() {
       </div>
     );
   const data = summary.data;
+  const accionesHabilitadas = data.acciones_habilitadas;
 
   return (
     <div className="space-y-6">
@@ -140,7 +141,7 @@ export function AdminWordpressMigration() {
         </div>
         <div className="flex flex-wrap gap-3"><button
           className="rounded bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-40"
-          disabled={runMigration.isPending || (execution.data?.estado === "en_progreso" && !ejecucionEstancada)}
+          disabled={!accionesHabilitadas || runMigration.isPending || (execution.data?.estado === "en_progreso" && !ejecucionEstancada)}
           onClick={() => {
             if (
               window.confirm(
@@ -153,8 +154,10 @@ export function AdminWordpressMigration() {
           {execution.data?.estado === "en_progreso"
             ? ejecucionEstancada ? "Reanudar importación…" : "Importando…"
             : "Actualización final WordPress"}
-        </button><button className={`rounded px-4 py-3 text-xs font-bold text-white disabled:opacity-40 ${duxConfiguration.data?.sincronizacion_habilitada ? 'bg-amber-700' : 'bg-emerald-700'}`} disabled={toggleDux.isPending} onClick={() => { const activo=duxConfiguration.data?.sincronizacion_habilitada===true; if(window.confirm(activo?'¿Volver a usar el stock temporal de WordPress?':'¿Usar Dux como fuente única del stock total? Los productos sin vínculo no tendrán stock.')) toggleDux.mutate(!activo) }}>{duxConfiguration.data?.sincronizacion_habilitada?'Pausar Dux':'Activar Dux como stock'}</button></div>
+        </button><button className={`rounded px-4 py-3 text-xs font-bold text-white disabled:opacity-40 ${duxConfiguration.data?.sincronizacion_habilitada ? 'bg-amber-700' : 'bg-emerald-700'}`} disabled={!accionesHabilitadas || toggleDux.isPending} onClick={() => { const activo=duxConfiguration.data?.sincronizacion_habilitada===true; if(window.confirm(activo?'¿Volver a usar el stock temporal de WordPress?':'¿Usar Dux como fuente única del stock total? Los productos sin vínculo no tendrán stock.')) toggleDux.mutate(!activo) }}>{duxConfiguration.data?.sincronizacion_habilitada?'Pausar Dux':'Activar Dux como stock'}</button></div>
       </header>
+
+      {!accionesHabilitadas && <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Acciones de migración bloqueadas.</strong><span className="mt-1 block">La información histórica se puede consultar, pero no se puede importar, vincular ni modificar nada desde esta pantalla.</span></div>}
 
       {toggleDux.isError&&<p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">No se pudo cambiar el modo Dux: {toggleDux.error.message}</p>}
 
@@ -205,7 +208,7 @@ export function AdminWordpressMigration() {
           <div className="flex flex-wrap gap-2">
             <button
               className="rounded border border-neutral-300 px-4 py-2.5 text-xs font-bold disabled:opacity-40"
-              disabled={runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
+              disabled={!accionesHabilitadas || runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
               onClick={() => {
                 if (window.confirm("Se copiarán solamente 10 fotos para revisar que cada producto conserve su imagen correcta. ¿Continuar?")) runImages.mutate(10);
               }}
@@ -214,7 +217,7 @@ export function AdminWordpressMigration() {
             </button>
             <button
               className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40"
-              disabled={runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
+              disabled={!accionesHabilitadas || runImages.isPending || imageExecution.data?.estado === "en_progreso" || !imageDiagnostic.data?.wordpress}
               onClick={() => {
                 if (window.confirm("Se copiarán todas las fotos pendientes a Cloudinary. WordPress no será modificado. ¿Continuar?")) runImages.mutate(null);
               }}
@@ -243,7 +246,7 @@ export function AdminWordpressMigration() {
           <label className="grid gap-1 text-xs font-bold text-neutral-700">ID del producto
             <input className="w-36 rounded border border-neutral-300 bg-white px-3 py-2 text-sm font-normal" inputMode="numeric" value={r2ProductId} onChange={(event) => setR2ProductId(event.target.value.replace(/\D/g, ""))} />
           </label>
-          <button className="rounded bg-sky-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={runR2Product.isPending || !Number(r2ProductId)} onClick={() => {
+          <button className="rounded bg-sky-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={!accionesHabilitadas || runR2Product.isPending || !Number(r2ProductId)} onClick={() => {
             const productoId = Number(r2ProductId);
             if (window.confirm(`¿Copiar a R2 todas las fotos del producto #${productoId}? Cloudinary quedará como respaldo.`)) runR2Product.mutate(productoId);
           }}>
@@ -257,7 +260,7 @@ export function AdminWordpressMigration() {
         {runR2Product.isError && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">No se pudo copiar el producto: {runR2Product.error.message}</p>}
         <div className="mt-5 border-t border-sky-200 pt-4">
           {r2Diagnostic.data && <p className="mb-3 text-sm text-sky-900">Pendientes de migrar: <strong>{r2Diagnostic.data.total_pendientes}</strong> ({r2Diagnostic.data.imagenes_galeria_pendientes} de galería y {r2Diagnostic.data.principales_directas_pendientes} principales antiguas).</p>}
-          <button className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={runR2All.isPending || r2Execution.data?.estado === "en_progreso"} onClick={() => { if (window.confirm("¿Iniciar la copia gradual de todas las imágenes a R2? Se procesarán de a cinco, sin borrar Cloudinary y podés volver a esta pantalla para ver el avance.")) runR2All.mutate(); }}>
+          <button className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={!accionesHabilitadas || runR2All.isPending || r2Execution.data?.estado === "en_progreso"} onClick={() => { if (window.confirm("¿Iniciar la copia gradual de todas las imágenes a R2? Se procesarán de a cinco, sin borrar Cloudinary y podés volver a esta pantalla para ver el avance.")) runR2All.mutate(); }}>
             {r2Execution.data?.estado === "en_progreso" ? "Migrando todas las fotos…" : "Migrar todas las imágenes a R2"}
           </button>
           {r2Execution.data?.estado === "en_progreso" && <p className="mt-3 text-sm text-sky-900">Avance: {String(r2Execution.data.progreso?.copiadas ?? 0)} copiadas, {String(r2Execution.data.progreso?.fallidas ?? 0)} fallidas.</p>}
@@ -456,7 +459,7 @@ export function AdminWordpressMigration() {
                   </div>
                   <button
                     className="bg-black px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
-                    disabled={linkCandidate.isPending || Boolean(item.motivo)}
+                    disabled={!accionesHabilitadas || linkCandidate.isPending || Boolean(item.motivo)}
                     onClick={() => {
                       if (
                         window.confirm(
@@ -501,89 +504,6 @@ export function AdminWordpressMigration() {
           )}
         </section>
       )}
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">Producto de prueba</h2>
-        {data.productos.map((product) => (
-          <article
-            key={product.id}
-            className="grid gap-5 border border-neutral-200 bg-white p-5 sm:grid-cols-[120px_1fr]"
-          >
-            {product.imagen ? (
-              <img
-                className="aspect-square w-full object-cover"
-                src={product.imagen}
-                alt={product.nombre}
-              />
-            ) : (
-              <div className="grid aspect-square place-items-center bg-neutral-100 text-xs text-neutral-500">
-                Sin imagen
-              </div>
-            )}
-            <div>
-              <small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-                WooCommerce #{product.id} · {product.estado}
-              </small>
-              <h3 className="mt-1 text-xl font-bold">{product.nombre}</h3>
-              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                <p>
-                  <strong className="block">Variaciones</strong>
-                  {product.cantidad_variaciones}
-                </p>
-                <p>
-                  <strong className="block">Talles</strong>
-                  {product.talles.join(", ") || "Sin talles"}
-                </p>
-                <p>
-                  <strong className="block">Stock total</strong>
-                  {product.stock_total}
-                </p>
-              </div>
-              <p className="mt-3 text-sm">
-                <strong>Precios:</strong>{" "}
-                {product.precios_variaciones
-                  .map((value) => money(value))
-                  .join(" · ") || money(product.precio)}
-              </p>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-xl font-bold">Últimos clientes copiados</h2>
-          <p className="text-xs text-neutral-500">
-            Vista previa de {data.clientes.length} sobre {data.totales.clientes}{" "}
-            registros.
-          </p>
-        </div>
-        {data.clientes.map((client) => (
-          <article
-            key={client.id}
-            className="border border-neutral-200 bg-white p-5"
-          >
-            <small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-              WooCommerce #{client.id}
-            </small>
-            <h3 className="mt-1 text-lg font-bold">
-              {client.nombre || "Sin nombre"}
-            </h3>
-            <p className="mt-2 text-sm">{client.email}</p>
-            <p className="text-sm text-neutral-600">
-              {client.telefono || "Sin teléfono"} ·{" "}
-              {[client.localidad, client.provincia]
-                .filter(Boolean)
-                .join(", ") || "Sin localidad"}
-            </p>
-            <p className="mt-2 text-xs text-neutral-500">
-              Dirección:{" "}
-              {client.tiene_direccion ? "disponible" : "no informada"} · Alta:{" "}
-              {date(client.creado_en)}
-            </p>
-          </article>
-        ))}
-      </section>
 
       <section className="space-y-3">
         <div>

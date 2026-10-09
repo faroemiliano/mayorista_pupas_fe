@@ -287,30 +287,9 @@ export const saveSizeStocks = (id: number, talles: Record<string, number>) =>
 
 export type WordpressMigrationSummary = {
   solo_lectura: boolean;
+  acciones_habilitadas: boolean;
   totales: { productos: number; clientes: number; pedidos: number };
-  limite_vista_previa: { productos: number; clientes: number; pedidos: number };
-  productos: Array<{
-    id: string;
-    nombre: string;
-    estado: string | null;
-    tipo: string | null;
-    precio: string | null;
-    precios_variaciones: string[];
-    cantidad_variaciones: number;
-    talles: string[];
-    stock_total: number;
-    imagen: string | null;
-  }>;
-  clientes: Array<{
-    id: string;
-    email: string | null;
-    nombre: string;
-    telefono: string | null;
-    localidad: string | null;
-    provincia: string | null;
-    tiene_direccion: boolean;
-    creado_en: string | null;
-  }>;
+  limite_vista_previa: { pedidos: number };
   pedidos: Array<{
     id: string;
     numero: string | null;
