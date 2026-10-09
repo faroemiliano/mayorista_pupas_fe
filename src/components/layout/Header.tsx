@@ -21,7 +21,11 @@ export function Header({ search, onSearchChange, onSearch, onCategoryNavigate }:
     queryKey: [esAdministrador ? 'admin-notifications' : 'my-notifications'],
     queryFn: esAdministrador ? getAdminNotifications : getMyNotifications,
     enabled: Boolean(user),
-    refetchInterval: 30_000,
+    // Sigue actualizándose mientras la sesión está abierta, pero evita dos
+    // consultas por minuto desde cada pestaña del cliente.
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   })
   const unread = notifications.data?.no_leidas ?? 0
 

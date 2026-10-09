@@ -44,9 +44,11 @@ export function MobileStylePicker({ categories = [], selectedCategory, selectedS
         categoriaId: String(style.category?.id),
         subcategoriaId: '',
         marcaId: '',
-        orden: 'nombre_asc',
+        // Sólo necesitamos una foto representativa para cada tarjeta móvil.
+        // Pedir 100 productos por colección multiplicaba tráfico sin mostrarlos.
+        orden: 'recientes',
         page: 1,
-        limit: 100,
+        limit: 1,
       }),
       enabled: Boolean(style.category) && !selectedCategory,
       staleTime: 60_000,

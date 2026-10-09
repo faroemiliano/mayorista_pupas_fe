@@ -4,6 +4,7 @@ import {
   getDuxConfiguration,
   getImageMigrationDiagnostic,
   getImageMigrationExecution,
+  getR2ImageMigrationDiagnostic,
   getR2ImageMigrationExecution,
   getProductReconciliation,
   getReconciliationCandidates,
@@ -87,7 +88,8 @@ export function AdminWordpressMigration() {
     mutationFn: (productoId: number) => runProductR2ImageMigration(productoId),
   });
   const r2Execution = useQuery({ queryKey: ["r2-image-migration-execution"], queryFn: getR2ImageMigrationExecution, refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 3000 : false });
-  const runR2All = useMutation({ mutationFn: runR2ImageMigration, onSuccess: (data) => queryClient.setQueryData(["r2-image-migration-execution"], data) });
+  const r2Diagnostic = useQuery({ queryKey: ["r2-image-migration-diagnostic"], queryFn: getR2ImageMigrationDiagnostic, refetchInterval: r2Execution.data?.estado === "en_progreso" ? 3000 : false });
+  const runR2All = useMutation({ mutationFn: runR2ImageMigration, onSuccess: async (data) => { queryClient.setQueryData(["r2-image-migration-execution"], data); await queryClient.invalidateQueries({ queryKey: ["r2-image-migration-diagnostic"] }); } });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
     onSuccess: (data) => queryClient.setQueryData(["dux-configuration"], data),
@@ -254,6 +256,7 @@ export function AdminWordpressMigration() {
         </p>}
         {runR2Product.isError && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">No se pudo copiar el producto: {runR2Product.error.message}</p>}
         <div className="mt-5 border-t border-sky-200 pt-4">
+          {r2Diagnostic.data && <p className="mb-3 text-sm text-sky-900">Pendientes de migrar: <strong>{r2Diagnostic.data.total_pendientes}</strong> ({r2Diagnostic.data.imagenes_galeria_pendientes} de galería y {r2Diagnostic.data.principales_directas_pendientes} principales antiguas).</p>}
           <button className="rounded bg-black px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40" disabled={runR2All.isPending || r2Execution.data?.estado === "en_progreso"} onClick={() => { if (window.confirm("¿Iniciar la copia gradual de todas las imágenes a R2? Se procesarán de a cinco, sin borrar Cloudinary y podés volver a esta pantalla para ver el avance.")) runR2All.mutate(); }}>
             {r2Execution.data?.estado === "en_progreso" ? "Migrando todas las fotos…" : "Migrar todas las imágenes a R2"}
           </button>

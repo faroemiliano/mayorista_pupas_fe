@@ -398,8 +398,17 @@ export const runProductR2ImageMigration = (productoId: number) =>
 
 export type R2ImageMigrationExecution = ImageMigrationExecution;
 
+export type R2ImageMigrationDiagnostic = {
+  imagenes_galeria_pendientes: number;
+  principales_directas_pendientes: number;
+  total_pendientes: number;
+};
+
 export const getR2ImageMigrationExecution = () =>
   apiGet<R2ImageMigrationExecution>("/api/admin/migracion-wordpress/imagenes/r2/ejecucion");
+
+export const getR2ImageMigrationDiagnostic = () =>
+  apiGet<R2ImageMigrationDiagnostic>("/api/admin/migracion-wordpress/imagenes/r2/diagnostico");
 
 export const runR2ImageMigration = () =>
   apiPost<R2ImageMigrationExecution>("/api/admin/migracion-wordpress/imagenes/r2/ejecutar", { confirmar: true });
