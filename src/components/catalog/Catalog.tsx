@@ -108,6 +108,14 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
         ?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
   };
+  const totalPages = products.data?.total_paginas ?? 0;
+  const firstVisiblePage = totalPages <= 10
+    ? 1
+    : Math.min(Math.max(1, page - 4), totalPages - 9);
+  const visiblePages = Array.from(
+    { length: Math.min(10, totalPages) },
+    (_, index) => firstVisiblePage + index,
+  );
 
   return (
     <section
@@ -284,27 +292,29 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-          {products.data && products.data.total_paginas > 1 && (
+          {products.data && totalPages > 1 && (
             <nav
-              className="mt-12 flex items-center justify-center gap-3"
+              className="mt-12 flex flex-wrap items-center justify-center gap-2"
               aria-label="Paginación"
             >
               <button
-                className="rounded-full border border-[#e5e5e5] bg-white px-5 py-2.5 text-sm font-bold disabled:opacity-40"
+                className="rounded-full border border-[#e5e5e5] bg-white px-4 py-2.5 text-sm font-bold disabled:opacity-40"
                 disabled={page === 1}
                 onClick={() => setPage((value) => value - 1)}
+                aria-label="Página anterior"
               >
-                ← Anterior
+                ←
               </button>
-              <span className="px-2 text-sm text-[#737373]">
-                {page} / {products.data.total_paginas}
-              </span>
+              {firstVisiblePage > 1 && <><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(1)}>1</button><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span></>}
+              {visiblePages.map((pageNumber, index) => <button key={pageNumber} aria-current={pageNumber === page ? 'page' : undefined} className={`grid size-10 place-items-center border text-sm font-bold transition ${index >= 5 ? 'hidden sm:grid' : ''} ${pageNumber === page ? 'border-black bg-black text-white' : 'border-[#e5e5e5] bg-white hover:border-black'}`} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}
+              {visiblePages.at(-1)! < totalPages && <><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(totalPages)}>{totalPages}</button></>}
               <button
-                className="rounded-full border border-[#e5e5e5] bg-white px-5 py-2.5 text-sm font-bold disabled:opacity-40"
-                disabled={page >= products.data.total_paginas}
+                className="rounded-full border border-[#e5e5e5] bg-white px-4 py-2.5 text-sm font-bold disabled:opacity-40"
+                disabled={page >= totalPages}
                 onClick={() => setPage((value) => value + 1)}
+                aria-label="Página siguiente"
               >
-                Siguiente →
+                →
               </button>
             </nav>
           )}
