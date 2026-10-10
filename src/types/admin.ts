@@ -60,3 +60,32 @@ export type ProductAnalytics = {
     }
   } | null
 }
+
+export type TrafficAnalytics = {
+  dias: number
+  fecha: string | null
+  resumen: {
+    usuarios: number
+    sesiones: number
+    vistas_paginas: number
+    usuarios_activos_ahora: number | null
+  }
+  serie_diaria: Array<{
+    fecha: string
+    etiqueta: string
+    usuarios: number
+    sesiones: number
+    vistas_paginas: number
+  }>
+  paginas_populares: Array<{
+    ruta: string
+    vistas_paginas: number
+    usuarios: number
+  }>
+  dispositivos: Array<{
+    dispositivo: string
+    usuarios: number
+  }>
+  actualizado_en: string
+  fuente: string
+}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useIsFetching } from '@tanstack/react-query'
+import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { useLocation } from 'react-router-dom'
 
 const MINIMUM_VISIBLE_MS = 450
@@ -8,10 +8,18 @@ const MAXIMUM_VISIBLE_MS = 8_000
 export function RouteLoadingOverlay() {
   const location = useLocation()
   const isFetching = useIsFetching()
+  const isMutating = useIsMutating()
   const fetchingRef = useRef(isFetching)
   const [visible, setVisible] = useState(true)
 
   useEffect(() => { fetchingRef.current = isFetching }, [isFetching])
+
+  useEffect(() => {
+    // Toda consulta o guardado muestra un cursor de espera. El usuario recibe
+    // una confirmación instantánea incluso cuando la acción no cambia de ruta.
+    document.documentElement.classList.toggle('app-working', isFetching > 0 || isMutating > 0)
+    return () => document.documentElement.classList.remove('app-working')
+  }, [isFetching, isMutating])
 
   useEffect(() => {
     const startedAt = Date.now()

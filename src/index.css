@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Un botón debe sentirse accionable y, mientras la app procesa una petición,
+   el cursor confirma que el clic fue recibido. */
+button:not(:disabled),
+[role="button"],
+a[href] {
+  cursor: pointer;
+}
+
+button:not(:disabled):active,
+[role="button"]:active {
+  transform: scale(.985);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+html.app-working,
+html.app-working * {
+  cursor: progress !important;
+}
+
 .order-print-invoice { display: none; }
 
 @media print {

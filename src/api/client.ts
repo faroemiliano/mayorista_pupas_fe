@@ -65,7 +65,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   })
 
   if (!response.ok) {
-    throw new Error(`No se pudo cargar la información (${response.status})`)
+    throw await responseError(response, "No se pudo cargar la información")
   }
 
   return response.json() as Promise<T>

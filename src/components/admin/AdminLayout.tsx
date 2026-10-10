@@ -13,6 +13,7 @@ const navigation = [
   { to: "/admin/productos", label: "Productos", icon: "◇" },
   { to: "/admin/stock-talles", label: "Stock por talles", icon: "▦" },
   { to: "/admin/analitica", label: "Analítica", icon: "↗", soloAdminTotal: true },
+  { to: "/admin/trafico", label: "Tráfico", icon: "◌", soloAdminTotal: true },
   { to: "/admin/clientes", label: "Clientes", icon: "♙" },
   { to: "/admin/migracion-wordpress", label: "Migración WordPress", icon: "⇄", soloAdminTotal: true },
   { to: "/admin/materiales", label: "Material para clientes", icon: "▧" },

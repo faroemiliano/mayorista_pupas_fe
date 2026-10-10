@@ -5,6 +5,7 @@ import type {
   AdminFiltersData,
   AdminProductsData,
   ProductAnalytics,
+  TrafficAnalytics,
 } from "../types/admin";
 import type {
   DuxClientPage,
@@ -145,6 +146,12 @@ export function getProductAnalytics(
   if (fechaDesde) params.set("fecha_desde", fechaDesde);
   if (fechaHasta) params.set("fecha_hasta", fechaHasta);
   return apiGet<ProductAnalytics>(`/api/admin/productos/analitica?${params}`);
+}
+
+export function getTrafficAnalytics(days: 7 | 30, date = "") {
+  const params = new URLSearchParams({ dias: String(days) });
+  if (date) params.set("fecha", date);
+  return apiGet<TrafficAnalytics>(`/api/admin/trafico?${params}`);
 }
 
 export function getDuxClients(page: number, search = "") {

@@ -25,6 +25,7 @@ import { AdminPlaceholder } from "./pages/admin/AdminPlaceholder";
 import { AdminProducts } from "./pages/admin/AdminProducts";
 import { AdminOrders } from "./pages/admin/AdminOrders";
 import { AdminProductAnalytics } from "./pages/admin/AdminProductAnalytics";
+import { AdminTrafficAnalytics } from "./pages/admin/AdminTrafficAnalytics";
 import { AdminConfirmations } from "./pages/admin/AdminConfirmations";
 import { AdminClients } from "./pages/admin/AdminClients";
 import { MyAccount } from "./pages/MyAccount";
@@ -146,6 +147,7 @@ export default function App() {
         <Route path="productos" element={<AdminProducts />} />
         <Route path="stock-talles" element={<AdminSizeStock />} />
         <Route path="analitica" element={esAdminTotal ? <AdminProductAnalytics /> : <Navigate to="/admin" replace />} />
+        <Route path="trafico" element={esAdminTotal ? <AdminTrafficAnalytics /> : <Navigate to="/admin" replace />} />
         <Route path="pedidos" element={<AdminOrders />} />
         <Route path="confirmaciones" element={<AdminConfirmations />} />
         <Route path="notificaciones" element={<AdminNotifications />} />
