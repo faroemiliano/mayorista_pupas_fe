@@ -136,7 +136,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
       <div className="pointer-events-none absolute -left-32 top-40 size-80 rounded-full bg-neutral-100/60 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-24 size-72 rounded-full bg-neutral-100/60 blur-3xl" />
       <div className="relative mx-auto max-w-360">
-        <header className="mb-10 !min-h-0 !flex-nowrap !border-0 !bg-transparent !p-0">
+        <header className="relative mb-10 !min-h-0 !flex-nowrap !border-0 !bg-transparent !p-0">
           <div className="max-w-180">
             <p className="mb-3 text-[10px] font-semibold tracking-[0.25em] text-neutral-500">
               COLECCIÓN MAYORISTA
@@ -153,12 +153,15 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               tu negocio.
             </p>
           </div>
-          <div className="ml-auto hidden size-50 items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 text-center text-[12px] font-semibold leading-10 tracking-[.2em] text-neutral-700 md:flex">
-            VENTA
-            <br />
-            100%
-            <br />
-            MAYORISTA
+          <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rotate-[10deg] lg:block">
+            <div className="relative grid size-60 place-items-center rounded-full border border-[#806b58]/35 bg-[#f5f0e9]/50 shadow-[8px_10px_0_rgba(128,107,88,.10),18px_24px_32px_rgba(70,52,36,.12)] backdrop-blur-[2px] xl:size-72">
+              <span className="absolute inset-3 rounded-full border border-[#806b58]/35" />
+              <div className="relative -rotate-[4deg] text-center text-[#604e3d]/75">
+                <strong className="block font-serif text-xl leading-none tracking-[.12em] xl:text-2xl">VENTA</strong>
+                <b className="my-1.5 block font-serif text-4xl leading-none xl:my-2 xl:text-5xl">100%</b>
+                <small className="block text-[9px] font-bold tracking-[.24em] xl:text-[10px]">MAYORISTA</small>
+              </div>
+            </div>
           </div>
         </header>
 
