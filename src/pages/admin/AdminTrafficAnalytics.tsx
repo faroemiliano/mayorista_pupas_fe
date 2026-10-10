@@ -56,7 +56,7 @@ function TrafficTable({ title, children }: { title: string; children: ReactNode 
 
 export function AdminTrafficAnalytics() {
   const [days, setDays] = useState<7 | 30>(7);
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(fechaActualArgentina);
   const traffic = useQuery({
     queryKey: ["admin-traffic", days, selectedDate],
     queryFn: () => getTrafficAnalytics(days, selectedDate),
