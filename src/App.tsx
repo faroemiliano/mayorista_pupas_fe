@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Navigate,
   Route,
@@ -64,10 +64,10 @@ function Storefront() {
   const [submittedSearch, setSubmittedSearch] = useState("");
   const [searchToken, setSearchToken] = useState(0);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearch("");
     setSubmittedSearch("");
-  };
+  }, []);
 
   const openCategory = (category: string) => {
     navigate(`/coleccion/${encodeURIComponent(category)}`);

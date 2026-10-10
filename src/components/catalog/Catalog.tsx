@@ -86,7 +86,18 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
   }, [searchToken]);
 
   useEffect(() => {
-    if (!requestedCategory.name || !filters.data) return;
+    if (!filters.data) return;
+    // Al entrar en /catalogo desde una colección, Catalog conserva su estado
+    // montado. Restablecemos todo para que “Catálogo” sea realmente completo.
+    if (!requestedCategory.name) {
+      setCategory("");
+      setSubcategory("");
+      setBrand("");
+      setPage(1);
+      setMobileExpanded(true);
+      onClearSearch();
+      return;
+    }
     const normalize = (value: string) =>
       value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
     const normalized = normalize(requestedCategory.name);
@@ -98,7 +109,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     setSubcategory("");
     setPage(1);
     setMobileExpanded(true);
-  }, [requestedCategory, filters.data]);
+  }, [requestedCategory.name, requestedCategory.token, filters.data, onClearSearch]);
 
   const showProducts = () => {
     setMobileExpanded(true);
