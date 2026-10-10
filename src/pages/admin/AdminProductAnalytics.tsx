@@ -13,6 +13,15 @@ function RankingTable({ title, description, items }: { title: string; descriptio
   </section>
 }
 
+function ClientRankingTable({ items }: { items: ProductAnalytics['mejores_clientes'] }) {
+  return <section className="admin-panel-card admin-table-card analytics-table">
+    <div className="admin-card-header"><div><h2>Top 10 clientes</h2><p>Ordenados por el importe total comprado en el período seleccionado.</p></div></div>
+    {!items.length
+      ? <div className="analytics-empty">No hay compras registradas para este período.</div>
+      : <div className="admin-table-wrap"><table><thead><tr><th>Cliente</th><th>Pedidos</th><th>Unidades</th><th>Importe comprado</th></tr></thead><tbody>{items.map((item, index) => <tr key={`${item.email || item.cliente}-${index}`}><td><strong>{index + 1}. {item.cliente}</strong>{item.email && <small>{item.email}</small>}</td><td>{item.pedidos}</td><td>{item.unidades}</td><td><strong>{formatCurrency(Number(item.importe_comprado))}</strong></td></tr>)}</tbody></table></div>}
+  </section>
+}
+
 type Metric = 'importe' | 'unidades' | 'pedidos'
 
 function SalesLineChart({ points }: { points: ProductAnalytics['serie_ventas'] }) {
@@ -88,7 +97,7 @@ export function AdminProductAnalytics() {
         {data.comparacion_anterior && <section className="admin-metrics"><article><span>PERÍODO ANTERIOR</span><strong>{formatCurrency(importeAnterior)}</strong><small>{data.comparacion_anterior.resumen.unidades} unidades · {data.comparacion_anterior.resumen.pedidos} pedidos</small></article><article><span>VARIACIÓN DE FACTURACIÓN</span><strong className={variacionPeriodo != null && variacionPeriodo < 0 ? 'text-red-700' : 'text-emerald-700'}>{variacionPeriodo == null ? 'Sin base comparable' : `${variacionPeriodo > 0 ? '+' : ''}${variacionPeriodo.toFixed(1)}%`}</strong><small>Respecto del período anterior</small></article></section>}
         <SalesLineChart points={data.serie_ventas}/>
         <div className="analytics-grid"><RankingTable title="Más vendidos" description="Ordenados por cantidad de unidades." items={data.mas_vendidos}/><RankingTable title="Menor rotación" description="Productos vendidos con menos unidades." items={data.menos_vendidos}/></div>
-        <div className="analytics-last"><RankingTable title="Productos sin ventas" description="Habilitados en Dux que no registraron ventas en el período." items={data.sin_ventas}/></div>
+        <div className="analytics-last"><ClientRankingTable items={data.mejores_clientes}/></div>
       </>}
   </div>
 }
