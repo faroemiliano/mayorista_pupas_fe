@@ -12,7 +12,7 @@ import { isNewProduct } from '../../utils/product'
 export function ProductCard({ product, fallbackImage }: { product: Product; fallbackImage?: string }) {
   const cart = useCart()
   const { user } = useAuth()
-  const esAdministrador = user?.rol === 'admin' || user?.rol === 'admin_operativo'
+  const esAdministrador = user?.rol === 'admin_tecnico' || user?.rol === 'admin' || user?.rol === 'admin_operativo'
   const tools = useShoppingTools()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)

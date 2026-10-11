@@ -11,18 +11,29 @@ type Value={items:CartItem[];isOpen:boolean;totalUnits:number;addItem:(p:Product
 const Context=createContext<Value|null>(null)
 const load=():CartItem[]=>{try{return (JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]') as CartItem[]).filter(item=>item.talle)}catch{return[]}}
 const firstSize=(product:Product,requested?:string)=>requested??product.talles?.find(item=>item.disponible>0)?.talle
+const adjustUnavailableItem=(items:CartItem[],message:string):CartItem[]|null=>{
+ const match=message.match(/El producto (\d+), talle (.+?), tiene (\d+) unidades disponibles\.?/i)
+ if(!match)return null
+ const productId=Number(match[1]),size=match[2].trim(),available=Number(match[3])
+ const current=items.find(item=>item.product.id===productId&&item.talle===size)
+ if(!current||current.quantity<=available)return null
+ return items
+  .map(item=>item===current?{...item,quantity:available}:item)
+  .filter(item=>item.quantity>0)
+}
 
 export function CartProvider({children}:{children:ReactNode}){
  const [items,setItems]=useState<CartItem[]>(load),[isOpen,setOpen]=useState(false)
  const {user}=useAuth(),queryClient=useQueryClient(),confirmed=useRef<CartItem[]>(load()),firstSync=useRef(true)
+ const canReserve=Boolean(user?.rol==="cliente")
  useEffect(()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(items)),[items])
  useEffect(()=>{
-  if(!user)return
+  if(!canReserve)return
   const delay=firstSync.current?0:250;firstSync.current=false
-  const timer=window.setTimeout(()=>{reserveCart(items).then(()=>{confirmed.current=items;queryClient.invalidateQueries({queryKey:['products']});queryClient.invalidateQueries({queryKey:['product-detail']});queryClient.invalidateQueries({queryKey:['admin-products']});queryClient.invalidateQueries({queryKey:['admin-product-stock-count']});queryClient.invalidateQueries({queryKey:['admin-dashboard']})}).catch(reason=>{setItems(confirmed.current);window.alert(reason instanceof Error?reason.message:'No pudimos reservar ese stock. El carrito volvió a su última cantidad disponible.')})},delay)
+  const timer=window.setTimeout(()=>{reserveCart(items).then(()=>{confirmed.current=items;queryClient.invalidateQueries({queryKey:['products']});queryClient.invalidateQueries({queryKey:['product-detail']});queryClient.invalidateQueries({queryKey:['admin-products']});queryClient.invalidateQueries({queryKey:['admin-product-stock-count']});queryClient.invalidateQueries({queryKey:['admin-dashboard']})}).catch(reason=>{const message=reason instanceof Error?reason.message:'No pudimos reservar ese stock.';const adjusted=adjustUnavailableItem(items,message);if(adjusted){confirmed.current=adjusted;setItems(adjusted);window.alert('Actualizamos tu carrito porque cambió el stock disponible. Revisá las cantidades antes de continuar.')}else{setItems(confirmed.current);window.alert(`${message} El carrito volvió a su última cantidad disponible.`)}})},delay)
   return()=>window.clearTimeout(timer)
- },[items,user,queryClient])
- useEffect(()=>{if(!user||!items.length)return;const heartbeat=window.setInterval(()=>{reserveCart(items).catch(()=>undefined)},5*60*1000);return()=>window.clearInterval(heartbeat)},[items,user])
+ },[items,canReserve,queryClient])
+ useEffect(()=>{if(!canReserve||!items.length)return;const heartbeat=window.setInterval(()=>{reserveCart(items).catch(()=>undefined)},5*60*1000);return()=>window.clearInterval(heartbeat)},[items,canReserve])
  const value=useMemo<Value>(()=>({items,isOpen,totalUnits:items.reduce((n,x)=>n+x.quantity,0),
   addItem(product,quantity,requested){const talle=firstSize(product,requested);if(!talle)return;const available=product.talles.find(x=>x.talle===talle)?.disponible??0;if(quantity<1||available<1)return;setItems(current=>{const found=current.find(x=>x.product.id===product.id&&x.talle===talle);return found?current.map(x=>x===found?{...x,product,quantity:Math.min(x.quantity+quantity,x.quantity+available)}:x):[...current,{product,quantity:Math.min(quantity,available),talle}]});setOpen(true)},
   addMany(entries){setItems(current=>{const result=[...current];for(const entry of entries){const talle=firstSize(entry.product,entry.talle);if(!talle)continue;const max=entry.product.talles.find(x=>x.talle===talle)?.disponible??0;if(max<1)continue;const found=result.find(x=>x.product.id===entry.product.id&&x.talle===talle);if(found)found.quantity=Math.min(found.quantity+entry.quantity,max);else result.push({product:entry.product,quantity:Math.min(entry.quantity,max),talle})}return [...result]});setOpen(true)},

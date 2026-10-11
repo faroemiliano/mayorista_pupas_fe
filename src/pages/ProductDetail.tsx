@@ -12,7 +12,7 @@ import { htmlToPlainText } from '../utils/text'
 
 export function ProductDetail({ productId }: { productId: number }) {
   const { user } = useAuth()
-  const esAdministrador = user?.rol === 'admin' || user?.rol === 'admin_operativo'
+  const esAdministrador = user?.rol === 'admin_tecnico' || user?.rol === 'admin' || user?.rol === 'admin_operativo'
   const cart = useCart()
   const [imageIndex, setImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)

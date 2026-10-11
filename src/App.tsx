@@ -12,6 +12,7 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 import { Catalog } from "./components/catalog/Catalog";
 import { CartDrawer } from "./components/cart/CartDrawer";
 import { Benefits } from "./components/home/Benefits";
+import { CustomerTestimonials } from "./components/home/CustomerTestimonials";
 import { HeroCarousel } from "./components/home/HeroCarousel";
 import { EditorialCollections } from "./components/home/EditorialCollections";
 import { FeaturedProducts } from "./components/home/FeaturedProducts";
@@ -37,6 +38,7 @@ import { AdminMaterials } from "./pages/admin/AdminMaterials";
 import { storeStyles } from "./styles/tailwind";
 import { ResetPassword } from "./pages/ResetPassword";
 import { AdminWordpressMigration } from "./pages/admin/AdminWordpressMigration";
+import { AdminReviews } from "./pages/admin/AdminReviews";
 import { RouteLoadingOverlay } from "./components/layout/RouteLoadingOverlay";
 import { trackPageView } from "./lib/googleAnalytics";
 
@@ -106,6 +108,7 @@ function Storefront() {
             <HeroCarousel />
             <EditorialCollections onCategoryNavigate={openCategory} />
             <FeaturedProducts />
+            <CustomerTestimonials />
             <BrandManifesto />
             <Benefits />
           </>
@@ -120,8 +123,9 @@ function Storefront() {
 
 export default function App() {
   const { user, loading } = useAuth();
-  const esAdministrador = user?.rol === "admin" || user?.rol === "admin_operativo";
-  const esAdminTotal = user?.rol === "admin";
+  const esAdministrador = user?.rol === "admin_tecnico" || user?.rol === "admin" || user?.rol === "admin_operativo";
+  const puedeVerAnalitica = user?.rol === "admin_tecnico" || user?.rol === "admin";
+  const esAdminTecnico = user?.rol === "admin_tecnico";
   if (loading)
     return (
       <div className="grid min-h-screen place-items-center">
@@ -145,21 +149,22 @@ export default function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="productos" element={<AdminProducts />} />
-        <Route path="stock-talles" element={<AdminSizeStock />} />
-        <Route path="analitica" element={esAdminTotal ? <AdminProductAnalytics /> : <Navigate to="/admin" replace />} />
-        <Route path="trafico" element={esAdminTotal ? <AdminTrafficAnalytics /> : <Navigate to="/admin" replace />} />
+        <Route path="stock-talles" element={esAdminTecnico ? <AdminSizeStock /> : <Navigate to="/admin" replace />} />
+        <Route path="analitica" element={puedeVerAnalitica ? <AdminProductAnalytics /> : <Navigate to="/admin" replace />} />
+        <Route path="trafico" element={puedeVerAnalitica ? <AdminTrafficAnalytics /> : <Navigate to="/admin" replace />} />
         <Route path="pedidos" element={<AdminOrders />} />
         <Route path="confirmaciones" element={<AdminConfirmations />} />
         <Route path="notificaciones" element={<AdminNotifications />} />
+        <Route path="opiniones" element={<AdminReviews />} />
         <Route path="clientes" element={<AdminClients />} />
         <Route
           path="migracion-wordpress"
-          element={esAdminTotal ? <AdminWordpressMigration /> : <Navigate to="/admin" replace />}
+          element={esAdminTecnico ? <AdminWordpressMigration /> : <Navigate to="/admin" replace />}
         />
         <Route path="materiales" element={<AdminMaterials />} />
         <Route
           path="configuracion"
-          element={esAdminTotal ? <AdminPlaceholder
+          element={esAdminTecnico ? <AdminPlaceholder
               title="Configuración"
               description="Reglas comerciales, sincronización y preferencias de la tienda."
               icon="⚙"
