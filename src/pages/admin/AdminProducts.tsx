@@ -23,7 +23,9 @@ export function AdminProducts() {
     queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes'),
     placeholderData: (previous) => previous,
     refetchOnMount: 'always',
-    refetchInterval: 15_000,
+    // Mantiene el stock visible actualizado sin consultar cuatro veces por
+    // minuto mientras el administrador deja esta pantalla abierta.
+    refetchInterval: 60_000,
   })
   const stockCounts = useQueries({
     queries: ([
@@ -35,7 +37,7 @@ export function AdminProducts() {
       queryFn: () => getAdminProducts(1, submittedSearch, conStock),
       select: (response: { total: number }) => response.total,
       refetchOnMount: 'always' as const,
-      refetchInterval: 15_000,
+      refetchInterval: 60_000,
     })),
   })
   const syncStatus = useQuery({
