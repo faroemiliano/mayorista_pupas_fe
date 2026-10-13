@@ -91,6 +91,14 @@ function CollectionProducts({ keyword, provisional }: { keyword: string; provisi
 
 export function EditorialCollections({ onCategoryNavigate }: { onCategoryNavigate: (category: string) => void }) {
   return <section id="colecciones" className="overflow-hidden bg-white">
+    <div className="border-y border-neutral-200 bg-[#faf9f7] px-5 py-4 sm:px-8 lg:px-[7vw]">
+      <div className="mx-auto flex max-w-360 flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-[10px] font-bold uppercase tracking-[.16em] text-neutral-700 sm:text-left">
+        <span className="size-2 rounded-full bg-[#b28a5a] shadow-[0_0_10px_rgba(178,138,90,.55)]" aria-hidden="true" />
+        <span>Comprá directo de fábrica</span>
+        <span className="hidden h-3 w-px bg-neutral-300 sm:block" aria-hidden="true" />
+        <span className="text-neutral-500">Colecciones y precios pensados para mayoristas</span>
+      </div>
+    </div>
     {collections.map((collection, index) => {
       const dark = collection.background.includes('text-white')
       return <article key={collection.title} className={`relative overflow-hidden px-5 py-18 sm:px-8 lg:px-[7vw] lg:py-26 ${collection.background}`}>

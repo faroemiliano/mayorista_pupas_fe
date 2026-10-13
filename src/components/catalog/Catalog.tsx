@@ -158,7 +158,8 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               <span className="absolute inset-3 rounded-full border border-[#806b58]/35" />
               <div className="relative -rotate-[4deg] text-center text-[#604e3d]/75">
                 <strong className="block font-serif text-xl leading-none tracking-[.12em] xl:text-2xl">VENTA</strong>
-                <b className="my-1.5 block font-serif text-4xl leading-none xl:my-2 xl:text-5xl">100%</b>
+                <span className="mt-1 block text-[9px] font-bold tracking-[.14em] xl:text-[11px]">DIRECTO DE FÁBRICA</span>
+                <b className="my-1 block font-serif text-4xl leading-none xl:my-1.5 xl:text-5xl">100%</b>
                 <small className="block text-[9px] font-bold tracking-[.24em] xl:text-[10px]">MAYORISTA</small>
               </div>
             </div>

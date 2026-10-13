@@ -129,11 +129,16 @@ export function HeroCarousel() {
       >
         ›
       </button>
-      <div className="absolute right-7 top-7 z-20 hidden items-center gap-3 text-white/80 lg:flex">
-        <span className="h-px w-10 bg-white/50" />
-        <span className="text-[8px] font-bold uppercase tracking-[.28em] [writing-mode:vertical-rl]">
-          Indumentaria mayorista
-        </span>
+      <div className="pointer-events-none absolute right-5 top-5 z-20 rotate-[10deg] sm:right-7 sm:top-7">
+        <div className="relative grid size-34 place-items-center rounded-full border border-white/50 bg-[#f5f0e9]/80 shadow-[6px_8px_0_rgba(23,18,13,.18),12px_16px_26px_rgba(0,0,0,.22)] backdrop-blur-[2px] sm:size-42">
+          <span className="absolute inset-2 rounded-full border border-[#806b58]/35" />
+          <div className="relative -rotate-[4deg] text-center text-[#604e3d]/85">
+            <strong className="block font-serif text-sm leading-none tracking-[.1em] sm:text-lg">VENTA</strong>
+            <span className="mt-0.5 block text-[6px] font-bold tracking-[.1em] sm:text-[8px]">DIRECTO DE FÁBRICA</span>
+            <b className="my-0.5 block font-serif text-2xl leading-none sm:my-1 sm:text-3xl">100%</b>
+            <small className="block text-[7px] font-bold tracking-[.18em] sm:text-[8px]">MAYORISTA</small>
+          </div>
+        </div>
       </div>
       <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
         {heroSlides.map((slide, index) => (

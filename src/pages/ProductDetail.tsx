@@ -77,6 +77,10 @@ export function ProductDetail({ productId }: { productId: number }) {
           <p className="mt-7 whitespace-pre-line border-t border-neutral-200 pt-6 text-sm leading-7 text-neutral-600">{description || 'Producto de nuestra colección mayorista.'}</p>
 
           {user ? <div className="mt-7 border-y border-neutral-200 py-6">
+            <p className="mb-4 inline-flex items-center gap-2 border border-[#dbc3a4] bg-[#fcf7ef] px-3 py-2 text-[9px] font-bold uppercase tracking-[.14em] text-[#6c5136]">
+              <span className="size-1.5 rounded-full bg-[#b28a5a]" aria-hidden="true" />
+              Precio mayorista directo de fábrica
+            </p>
             <strong className="text-2xl">{price ? formatCurrency(price) : 'Consultar precio'}</strong>
             <span className="mt-1 block text-[9px] uppercase tracking-[.15em] text-neutral-500">Precio mayorista</span>
             <div className="mt-5"><span className="text-[10px] font-bold uppercase tracking-wider">Talle</span><div className="mt-2 flex flex-wrap gap-2">{item.talles.map(size=><button type="button" key={size.talle} disabled={!size.disponible} onClick={()=>{setSelectedSize(size.talle);setQuantity(1)}} className={`min-w-10 border px-2 py-2 text-sm font-bold ${selectedSize===size.talle?'bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size.talle}</button>)}</div></div>
