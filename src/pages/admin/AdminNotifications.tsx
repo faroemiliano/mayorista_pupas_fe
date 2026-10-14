@@ -25,7 +25,6 @@ export function AdminNotifications() {
       mensaje:String(form.get('mensaje')),
       destinatarios:audience,
       usuario_ids:form.getAll('usuario_ids').map(Number),
-      enviar_email:form.get('enviar_email')==='on',
     },{onSuccess:()=>event.currentTarget.reset()})
   }
 
@@ -41,8 +40,7 @@ export function AdminNotifications() {
           <label className="text-xs font-bold">Mensaje<textarea className={field} name="mensaje" required minLength={5} maxLength={2000} rows={4} placeholder="Contales la novedad a tus clientes…"/></label>
           <fieldset><legend className="mb-2 text-xs font-bold">Destinatarios</legend><div className="flex gap-2"><button type="button" className={`rounded-full px-4 py-2 text-xs font-bold ${audience==='todos'?'bg-[#111111] text-white':'bg-gray-100'}`} onClick={()=>setAudience('todos')}>Todos los aprobados ({clients.data?.length??0})</button><button type="button" className={`rounded-full px-4 py-2 text-xs font-bold ${audience==='seleccionados'?'bg-[#111111] text-white':'bg-gray-100'}`} onClick={()=>setAudience('seleccionados')}>Seleccionar clientes</button></div></fieldset>
           {audience==='seleccionados'&&<label className="text-xs font-bold">Clientes<select className={`${field} min-h-32`} name="usuario_ids" multiple required>{clients.data?.map(client=><option key={client.id} value={client.id}>{client.nombre} · {client.email}</option>)}</select><small className="mt-1 block font-normal text-gray-400">Usá Ctrl/Cmd para seleccionar más de uno.</small></label>}
-          <label className="flex items-start gap-3 rounded-lg bg-neutral-50 p-4 text-sm"><input className="mt-1 size-4 accent-[#111111]" type="checkbox" name="enviar_email"/><span><strong className="block">Enviar también por email</strong><small className="text-gray-500">Solo se enviará a clientes que hayan aceptado promociones.</small></span></label>
-          {campaign.isSuccess&&<p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Campaña enviada: {campaign.data.notificaciones_creadas} notificaciones y {campaign.data.emails_programados} emails programados.</p>}
+          {campaign.isSuccess&&<p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Notificación enviada: {campaign.data.notificaciones_creadas} clientes la verán en Mi cuenta.</p>}
           {campaign.isError&&<p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{campaign.error.message}</p>}
           <button className="rounded-lg bg-[#111111] px-5 py-3 text-sm font-extrabold text-white disabled:opacity-50" disabled={campaign.isPending}>{campaign.isPending?'Enviando campaña…':'Enviar notificación'}</button>
         </div>
