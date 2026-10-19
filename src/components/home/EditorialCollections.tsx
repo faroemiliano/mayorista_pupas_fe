@@ -77,7 +77,9 @@ function CollectionProducts({ keyword, provisional }: { keyword: string; provisi
   const category = filters.data?.categorias.find((item) => normalize(item.nombre).includes(keyword))
   const products = useQuery({
     queryKey: ['home-collection-products', category?.id],
-    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'recientes', page: 1, limit: 24 }),
+    // La portada exhibe sólo dos fotos. Pedimos cuatro para poder omitir
+    // eventualmente un producto sin imagen, sin descargar 24 registros.
+    queryFn: () => getProducts({ buscar: '', categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'recientes', page: 1, limit: 4 }),
     enabled: Boolean(category),
     staleTime: 60_000,
   })
