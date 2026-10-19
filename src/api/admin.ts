@@ -57,6 +57,7 @@ export function getAdminProducts(
   search = "",
   conStock?: boolean,
   order = "recientes",
+  categoryId?: string,
 ) {
   const params = new URLSearchParams({
     solo_habilitados: "false",
@@ -66,6 +67,7 @@ export function getAdminProducts(
   });
   if (search.trim()) params.set("buscar", search.trim());
   if (conStock !== undefined) params.set("con_stock", String(conStock));
+  if (categoryId) params.set("categoria_id", categoryId);
   return apiGet<AdminProductsData>(`/api/productos/?${params}`);
 }
 

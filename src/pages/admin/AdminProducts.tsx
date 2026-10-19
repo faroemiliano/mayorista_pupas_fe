@@ -6,11 +6,15 @@ import { ProductEditorModal } from '../../components/admin/ProductEditorModal'
 import { useCatalogFilters } from '../../hooks/useCatalog'
 import type { Product } from '../../types/catalog'
 
+type StockFilter = 'todos' | 'con_stock' | 'sin_stock'
+type PopularCategoryFilter = '' | 'bikinis' | 'pijamas'
+
 export function AdminProducts() {
   const [page, setPage] = useState(1)
   const [search,setSearch]=useState('')
   const [submittedSearch,setSubmittedSearch]=useState('')
-  const [stockFilter, setStockFilter] = useState<'todos'|'con_stock'|'sin_stock'>('todos')
+  const [stockFilter, setStockFilter] = useState<StockFilter>('todos')
+  const [popularCategory, setPopularCategory] = useState<PopularCategoryFilter>('')
   const [stockOrder, setStockOrder] = useState<'recientes'|'stock_desc'|'stock_asc'>('recientes')
   const [editing,setEditing]=useState<Product|null|undefined>(undefined)
   const queryClient = useQueryClient()
@@ -18,9 +22,13 @@ export function AdminProducts() {
   const filters=useCatalogFilters()
   const duxSyncEnabled = duxConfiguration.data?.sincronizacion_habilitada === true
   const stockFilterValue = stockFilter === 'todos' ? undefined : stockFilter === 'con_stock'
+  const popularCategoryId = popularCategory
+    ? String(filters.data?.categorias.find((category) => category.nombre.toLocaleLowerCase('es').includes(popularCategory.slice(0, -1)))?.id || '')
+    : ''
+  const popularCategoryLabel = popularCategory === 'bikinis' ? 'Bikinis con stock' : popularCategory === 'pijamas' ? 'Pijamas con stock' : ''
   const products = useQuery({
-    queryKey: ['admin-products', page, submittedSearch, stockFilter, stockOrder],
-    queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes'),
+    queryKey: ['admin-products', page, submittedSearch, stockFilter, stockOrder, popularCategoryId],
+    queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes', popularCategoryId),
     placeholderData: (previous) => previous,
     refetchOnMount: 'always',
     // Mantiene el stock visible actualizado sin consultar cuatro veces por
@@ -88,15 +96,25 @@ export function AdminProducts() {
             : value === 'sin_stock'
               ? 'border-red-200 bg-red-50 text-red-800'
               : 'border-[#111111] bg-[#111111] text-white'
-          return <button key={value} type="button" className={`rounded-full border px-4 py-2 text-xs font-bold transition ${selected ? style : `${style} opacity-75 hover:opacity-100`}`} onClick={() => { setStockFilter(value); if (value === 'con_stock') setStockOrder('recientes'); setPage(1) }}>{label} ({count})</button>
+          return <button key={value} type="button" className={`rounded-full border px-4 py-2 text-xs font-bold transition ${selected && !popularCategory ? style : `${style} opacity-75 hover:opacity-100`}`} onClick={() => { setStockFilter(value); setPopularCategory(''); if (value === 'con_stock') setStockOrder('recientes'); setPage(1) }}>{label} ({count})</button>
         })}
+      </div>
+      <div className="border-t border-gray-100 px-4 py-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[.16em] text-neutral-500">Más solicitados</p>
+        <div className="flex flex-wrap gap-2">
+          {(['bikinis', 'pijamas'] as const).map((category) => {
+            const available = filters.data?.categorias.some((item) => item.nombre.toLocaleLowerCase('es').includes(category.slice(0, -1)))
+            const selected = popularCategory === category
+            return <button key={category} type="button" disabled={!available} className={`rounded-full border px-4 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${selected ? 'border-violet-700 bg-violet-700 text-white' : 'border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100'}`} onClick={() => { setPopularCategory(current => current === category ? '' : category); setStockFilter(current => current === 'con_stock' ? current : 'con_stock'); setStockOrder('recientes'); setPage(1) }}>{category === 'bikinis' ? 'Bikinis con stock' : 'Pijamas con stock'}</button>
+          })}
+        </div>
       </div>
     </section>
     <section className="admin-panel-card admin-table-card">
       <div className="admin-card-header flex-col items-stretch gap-4 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <h2>{products.data?.total ?? 0} productos</h2>
-          <p>{submittedSearch ? `Resultados para “${submittedSearch}”` : 'Catálogo importado desde WordPress y guardado en la nueva página.'}</p>
+          <p>{submittedSearch ? `Resultados para “${submittedSearch}”` : popularCategoryLabel || 'Catálogo importado desde WordPress y guardado en la nueva página.'}</p>
         </div>
         <form className="grid w-full grid-cols-2 gap-2 sm:flex sm:max-w-md" onSubmit={event=>{event.preventDefault();setPage(1);setSubmittedSearch(search.trim())}}>
           <input className="admin-filter col-span-2 h-11 w-full min-w-0 sm:col-auto sm:grow" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Buscar por nombre o código…" aria-label="Buscar productos"/>
