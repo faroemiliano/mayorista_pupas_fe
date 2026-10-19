@@ -49,6 +49,18 @@ export type ProductAnalytics = {
   }>
   mas_vendidos: ProductSalesRanking[]
   menos_vendidos: ProductSalesRanking[]
+  ventas_por_categoria: Array<{
+    slug: string
+    categoria: string
+    unidades_vendidas: number
+    importe_vendido: string
+    productos: Array<{
+      producto_id: number
+      nombre: string
+      unidades_vendidas: number
+      importe_vendido: string
+    }>
+  }>
   mejores_clientes: Array<{
     cliente: string
     email: string | null

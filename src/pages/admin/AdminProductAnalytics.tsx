@@ -22,6 +22,32 @@ function ClientRankingTable({ items }: { items: ProductAnalytics['mejores_client
   </section>
 }
 
+type CategorySalesData = ProductAnalytics['ventas_por_categoria'][number]
+
+function CategorySales({ items, onSelect }: { items: ProductAnalytics['ventas_por_categoria']; onSelect: (category: CategorySalesData) => void }) {
+  const [visibleRevenue, setVisibleRevenue] = useState<Record<string, boolean>>({})
+  return <section className="space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow">CATEGORÍAS PRINCIPALES</p><h2 className="text-xl font-bold">Qué se vendió por colección</h2><p className="mt-1 text-sm text-neutral-500">Unidades, importe y modelos vendidos en el período seleccionado.</p></div><span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-500">Bikinis y Pijamas</span></div>
+    <div className="analytics-grid">
+      {items.map(category => <article className="admin-panel-card shadow-sm" key={category.slug}>
+        <div className="flex items-start justify-between gap-4 border-b border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5"><div><span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-neutral-500">{category.categoria}</span><strong className="mt-2 block text-4xl leading-none tracking-tight">{category.unidades_vendidas.toLocaleString('es-AR')}</strong><small className="mt-2 block font-medium text-neutral-500">unidades vendidas</small></div><button type="button" className="rounded-lg bg-black px-3 py-2 text-right text-white transition hover:bg-neutral-800" onClick={() => setVisibleRevenue(current => ({ ...current, [category.slug]: !current[category.slug] }))} aria-pressed={Boolean(visibleRevenue[category.slug])}><small className="block text-[9px] font-bold uppercase tracking-wider text-neutral-300">Facturación</small><strong className="mt-1 block text-sm">{visibleRevenue[category.slug] ? formatCurrency(Number(category.importe_vendido)) : 'Ver importe'}</strong><small className="mt-1 block text-[9px] text-neutral-300">{visibleRevenue[category.slug] ? 'Ocultar' : 'Tocar para ver'}</small></button></div>
+        <div className="p-5">{!category.productos.length ? <div className="analytics-empty">No hubo ventas en este período.</div> : <ol className="space-y-2">{category.productos.slice(0, 6).map((product, index) => <li className="flex items-center justify-between gap-3 text-sm" key={product.producto_id}><span className="min-w-0 truncate"><b className="mr-1 text-neutral-400">{index + 1}.</b>{product.nombre}</span><strong className="shrink-0">{product.unidades_vendidas}</strong></li>)}</ol>}
+        {category.productos.length > 6 && <button type="button" className="mt-4 w-full border-t border-neutral-200 pt-3 text-left text-xs font-bold uppercase tracking-wider text-neutral-700 transition hover:text-black" onClick={() => onSelect(category)}>Ver los {category.productos.length} modelos vendidos <span aria-hidden="true">→</span></button>}
+        {category.productos.length > 0 && category.productos.length <= 6 && <small className="mt-4 block border-t border-neutral-100 pt-3 text-neutral-500">{category.productos.length} modelo{category.productos.length === 1 ? '' : 's'} vendido{category.productos.length === 1 ? '' : 's'} en el período</small>}</div>
+      </article>)}
+    </div>
+  </section>
+}
+
+function CategorySalesModal({ category, onClose }: { category: CategorySalesData; onClose: () => void }) {
+  return <div className="fixed inset-0 z-60 grid place-items-center bg-black/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Modelos vendidos de ${category.categoria}`} onMouseDown={onClose}>
+    <section className="max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl" onMouseDown={event => event.stopPropagation()}>
+      <header className="flex items-start justify-between gap-4 border-b border-neutral-200 bg-neutral-50 p-5 sm:p-6"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-neutral-500">Ventas por categoría</p><h2 className="mt-1 text-2xl font-bold">{category.categoria}</h2><p className="mt-1 text-sm text-neutral-500">{category.unidades_vendidas.toLocaleString('es-AR')} unidades · {formatCurrency(Number(category.importe_vendido))}</p></div><button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-full border border-neutral-300 bg-white text-xl leading-none transition hover:bg-neutral-100" aria-label="Cerrar listado">×</button></header>
+      <div className="max-h-[65vh] overflow-y-auto p-4 sm:p-6"><div className="mb-3 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-neutral-500"><span>Modelo</span><span>Unidades</span></div><ol className="divide-y divide-neutral-100">{category.productos.map((product, index) => <li className="flex items-center justify-between gap-4 py-3" key={product.producto_id}><span className="min-w-0 text-sm font-medium"><b className="mr-2 text-neutral-400">{index + 1}.</b>{product.nombre}</span><div className="shrink-0 text-right"><strong className="block text-sm">{product.unidades_vendidas}</strong><small className="text-xs text-neutral-500">{formatCurrency(Number(product.importe_vendido))}</small></div></li>)}</ol></div>
+    </section>
+  </div>
+}
+
 type Metric = 'importe' | 'unidades' | 'pedidos'
 
 function SalesLineChart({ points }: { points: ProductAnalytics['serie_ventas'] }) {
@@ -69,6 +95,7 @@ export function AdminProductAnalytics() {
   const [grouping, setGrouping] = useState<'dia' | 'semana' | 'mes' | 'anio'>('dia')
   const [fechaDesde, setFechaDesde] = useState('')
   const [fechaHasta, setFechaHasta] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<CategorySalesData | null>(null)
   // Una sola fecha se interpreta como el día completo elegido.
   const fechaConsultaDesde = fechaDesde || fechaHasta
   const fechaConsultaHasta = fechaHasta || fechaDesde
@@ -86,8 +113,9 @@ export function AdminProductAnalytics() {
     {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Calculando ventas…</p></div>
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
-        <div className="analytics-scope"><strong>Origen: WordPress histórico + pedidos de la tienda</strong><span>{data.alcance}</span></div>
-        {customRange && <div className="analytics-scope"><strong>{fechaConsultaDesde === fechaConsultaHasta ? `Día elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}` : `Período elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })} a ${new Date(`${fechaConsultaHasta}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}`}</strong><span>La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
+        <div className="grid gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:grid-cols-[auto_1fr]"><strong className="text-sm">Origen: WordPress histórico + pedidos de la tienda</strong><span className="text-sm text-neutral-500">{data.alcance}</span></div>
+        {customRange && <div className="rounded-xl border border-neutral-200 bg-neutral-100 px-4 py-3 text-sm"><strong>{fechaConsultaDesde === fechaConsultaHasta ? `Día elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}` : `Período elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })} a ${new Date(`${fechaConsultaHasta}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}`}</strong><span className="mt-1 block text-neutral-500">La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
+        <div><p className="eyebrow">VISTA GENERAL</p><h2 className="text-xl font-bold">Resumen del período</h2></div>
         <section className="admin-metrics">
           <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
           <article><span>IMPORTE VENDIDO</span><strong>{formatCurrency(Number(data.resumen.importe_vendido))}</strong><small>Total confirmado en la web</small></article>
@@ -96,8 +124,10 @@ export function AdminProductAnalytics() {
         </section>
         {data.comparacion_anterior && <section className="admin-metrics"><article><span>PERÍODO ANTERIOR</span><strong>{formatCurrency(importeAnterior)}</strong><small>{data.comparacion_anterior.resumen.unidades} unidades · {data.comparacion_anterior.resumen.pedidos} pedidos</small></article><article><span>VARIACIÓN DE FACTURACIÓN</span><strong className={variacionPeriodo != null && variacionPeriodo < 0 ? 'text-red-700' : 'text-emerald-700'}>{variacionPeriodo == null ? 'Sin base comparable' : `${variacionPeriodo > 0 ? '+' : ''}${variacionPeriodo.toFixed(1)}%`}</strong><small>Respecto del período anterior</small></article></section>}
         <SalesLineChart points={data.serie_ventas}/>
+        <CategorySales items={data.ventas_por_categoria} onSelect={setSelectedCategory}/>
         <div className="analytics-grid"><RankingTable title="Más vendidos" description="Ordenados por cantidad de unidades." items={data.mas_vendidos}/><RankingTable title="Menor rotación" description="Productos vendidos con menos unidades." items={data.menos_vendidos}/></div>
         <div className="analytics-last"><ClientRankingTable items={data.mejores_clientes}/></div>
+        {selectedCategory ? <CategorySalesModal category={selectedCategory} onClose={() => setSelectedCategory(null)}/> : null}
       </>}
   </div>
 }
