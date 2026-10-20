@@ -2,12 +2,13 @@ import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
 import { productImageAsset } from '../../api/client'
-import { getPortadasInicio, updatePortadaInicio, usarImagenProductoEnPortada } from '../../api/portada'
+import { getImagenesCatalogoParaPortada, getPortadasInicio, updatePortadaInicio, usarImagenProductoEnPortada } from '../../api/portada'
 import { useCatalogFilters } from '../../hooks/useCatalog'
 import type { Product } from '../../types/catalog'
 import { useNavigate } from 'react-router-dom'
 import { useShoppingTools } from '../../context/ShoppingToolsContext'
 import { useAuth } from '../../context/AuthContext'
+import { Pagination } from '../Pagination'
 
 const collections = [
   {
@@ -91,6 +92,7 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
   const [pickerSlot, setPickerSlot] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  const [pickerPage, setPickerPage] = useState(1)
   const filters = useCatalogFilters()
   const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es')
   const category = filters.data?.categorias.find((item) => normalize(item.nombre).includes(keyword))
@@ -104,8 +106,8 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
   })
   const portadas = useQuery({ queryKey: ['portadas-inicio'], queryFn: getPortadasInicio })
   const catalogoParaElegir = useQuery({
-    queryKey: ['home-collection-image-picker', category?.id, search],
-    queryFn: () => getProducts({ buscar: search, categoriaId: String(category?.id), subcategoriaId: '', marcaId: '', orden: 'recientes', page: 1, limit: 24 }),
+    queryKey: ['home-collection-image-picker', category?.id, search, pickerPage],
+    queryFn: () => getImagenesCatalogoParaPortada(Number(category?.id), search, pickerPage),
     enabled: Boolean(pickerSlot && category),
     staleTime: 30_000,
   })
@@ -136,6 +138,7 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
     setSlotPending(slotId)
     setSearchInput('')
     setSearch('')
+    setPickerPage(1)
     setPickerSlot(slotId)
   }
   const subirDesdePc = () => {
@@ -158,12 +161,13 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
         </header>
         <form className="flex gap-2 border-b border-neutral-200 px-5 py-3 sm:px-7" onSubmit={(event) => { event.preventDefault(); setSearch(searchInput.trim()) }}>
           <input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-700" placeholder={`Buscar foto de ${title.toLowerCase()}`} autoFocus />
-          <button type="submit" className="rounded-lg bg-neutral-900 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white">Buscar</button>
+          <button type="submit" className="rounded-lg bg-neutral-900 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white" onClick={() => setPickerPage(1)}>Buscar</button>
         </form>
         <div className="overflow-y-auto p-5 sm:p-7">
-          {catalogoParaElegir.isLoading && <p className="py-12 text-center text-sm text-neutral-500">Cargando fotos del catálogo…</p>}
-          {!catalogoParaElegir.isLoading && <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{catalogoParaElegir.data?.items.flatMap((product) => (product.imagenes || []).map((image) => <button key={image.id} type="button" className="group overflow-hidden rounded-lg border border-neutral-200 bg-white text-left transition hover:border-neutral-700 hover:shadow-lg disabled:opacity-60" disabled={cargandoSlot} onClick={() => usarImagenExistente.mutate({ slotId: pickerSlot, imageId: image.id })}><img className="aspect-[3/4] w-full object-cover" src={productImageAsset(image.url, `/api/productos/${product.id}/imagenes/${image.id}`, 480)} alt={product.nombre} loading="lazy" /><span className="block truncate px-2 py-2 text-[9px] font-bold uppercase tracking-wide text-neutral-600">{product.nombre}</span></button>))}</div>}
-          {!catalogoParaElegir.isLoading && !catalogoParaElegir.data?.items.some((product) => product.imagenes?.length) && <p className="py-12 text-center text-sm text-neutral-500">No encontramos fotos para esta búsqueda.</p>}
+          {catalogoParaElegir.isLoading && <p className="py-12 text-center text-sm text-neutral-500">Cargando 10 fotos del catálogo…</p>}
+          {!catalogoParaElegir.isLoading && <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{catalogoParaElegir.data?.items.map((image) => <button key={image.id} type="button" className="group overflow-hidden rounded-lg border border-neutral-200 bg-white text-left transition hover:border-neutral-700 hover:shadow-lg disabled:opacity-60" disabled={cargandoSlot} onClick={() => usarImagenExistente.mutate({ slotId: pickerSlot, imageId: image.id })}><img className="aspect-[3/4] w-full object-cover" src={productImageAsset(image.url, `/api/productos/${image.producto_id}/imagenes/${image.id}`, 480)} alt={image.producto_nombre} loading="lazy" /><span className="block truncate px-2 py-2 text-[9px] font-bold uppercase tracking-wide text-neutral-600">{image.producto_nombre}</span></button>)}</div>}
+          {!catalogoParaElegir.isLoading && !catalogoParaElegir.data?.items.length && <p className="py-12 text-center text-sm text-neutral-500">No encontramos fotos para esta búsqueda.</p>}
+          {!catalogoParaElegir.isLoading && <div className="mt-5 flex justify-center"><Pagination page={catalogoParaElegir.data?.page || 1} totalPages={catalogoParaElegir.data?.total_paginas || 1} onPageChange={setPickerPage} disabled={cargandoSlot} className="pagination" /></div>}
         </div>
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 bg-white px-5 py-4 sm:px-7"><p className="text-xs text-neutral-500">¿La foto todavía no está en el catálogo?</p><button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-neutral-800" onClick={subirDesdePc} disabled={cargandoSlot}>Subir desde PC</button></footer>
         {usarImagenExistente.isError && <p className="mx-5 mb-4 rounded-lg bg-red-50 p-3 text-center text-xs font-semibold text-red-700">{usarImagenExistente.error.message}</p>}
