@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { heroSlides } from "../../data/heroSlides";
+import { getPortadasInicio, updatePortadaInicio } from "../../api/portada";
+import { useAuth } from "../../context/AuthContext";
 
 const ROTATION_TIME = 6500;
 
@@ -22,23 +25,63 @@ function EmptyMedia({ kind }: { kind: string }) {
 }
 
 export function HeroCarousel() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const [editingSlideId, setEditingSlideId] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const portadas = useQuery({ queryKey: ["portadas-inicio"], queryFn: getPortadasInicio });
+  const actualizarPortada = useMutation({
+    mutationFn: ({ slideId, file }: { slideId: string; file: File }) => new Promise<{ slideId: string; nombre: string; mediaType: string; contenido: string }>((resolve, reject) => {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        reject(new Error('Elegí una imagen JPG, PNG o WEBP.'));
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        reject(new Error('La imagen puede pesar hasta 8 MB.'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      reader.onload = () => resolve({
+        slideId,
+        nombre: file.name,
+        mediaType: file.type,
+        contenido: String(reader.result).split(',')[1] || '',
+      });
+      reader.readAsDataURL(file);
+    }).then(({ slideId, nombre, mediaType, contenido }) => updatePortadaInicio(slideId, {
+      nombre,
+      media_type: mediaType,
+      contenido_base64: contenido,
+    })),
+    onSuccess: () => {
+      setFailed({});
+      queryClient.invalidateQueries({ queryKey: ["portadas-inicio"] });
+    },
+    onSettled: () => setEditingSlideId(null),
+  });
+  const puedeEditarPortada = user?.rol === 'admin' || user?.rol === 'admin_tecnico';
+  const slides = heroSlides.map((slide) => ({
+    ...slide,
+    mediaUrl: portadas.data?.imagenes[slide.id] || slide.mediaUrl,
+  }));
 
   useEffect(() => {
     if (paused) return;
     const timer = window.setInterval(
-      () => setActive((current) => (current + 1) % heroSlides.length),
+      () => setActive((current) => (current + 1) % slides.length),
       ROTATION_TIME,
     );
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [paused, slides.length]);
 
   const move = (direction: number) =>
     setActive(
       (current) =>
-        (current + direction + heroSlides.length) % heroSlides.length,
+        (current + direction + slides.length) % slides.length,
     );
   const markFailed = (id: string) =>
     setFailed((current) => ({ ...current, [id]: true }));
@@ -55,7 +98,7 @@ export function HeroCarousel() {
         className="flex h-full transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${active * 100}%)` }}
       >
-        {heroSlides.map((slide, index) => (
+        {slides.map((slide, index) => (
           <article
             className="relative h-full min-w-full overflow-hidden"
             key={slide.id}
@@ -91,6 +134,20 @@ export function HeroCarousel() {
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+            {puedeEditarPortada && index === active && (
+              <button
+                type="button"
+                className="absolute left-5 top-5 z-30 inline-flex items-center gap-2 rounded-full border border-white/70 bg-black/55 px-4 py-2 text-[10px] font-bold uppercase tracking-[.14em] text-white backdrop-blur transition hover:bg-black disabled:cursor-wait disabled:opacity-70 sm:left-7 sm:top-7"
+                disabled={actualizarPortada.isPending}
+                onClick={() => {
+                  setEditingSlideId(slide.id);
+                  fileInput.current?.click();
+                }}
+              >
+                <span className="text-lg leading-none">＋</span>
+                {actualizarPortada.isPending && editingSlideId === slide.id ? 'Guardando…' : 'Cambiar foto'}
+              </button>
+            )}
             <div className="absolute inset-x-0 bottom-14 z-10 mx-auto max-w-360 px-7 text-white sm:px-12 lg:bottom-18 lg:px-[7vw]">
               <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.24em]">
                 {slide.eyebrow}
@@ -140,7 +197,7 @@ export function HeroCarousel() {
         </div>
       </div>
       <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-        {heroSlides.map((slide, index) => (
+        {slides.map((slide, index) => (
           <button
             key={slide.id}
             className={`h-0.5 transition-all ${index === active ? "w-8 bg-white" : "w-4 bg-white/50"}`}
@@ -150,6 +207,19 @@ export function HeroCarousel() {
           />
         ))}
       </div>
+      {puedeEditarPortada && <input
+        ref={fileInput}
+        className="hidden"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          const slideId = editingSlideId;
+          event.currentTarget.value = '';
+          if (file && slideId) actualizarPortada.mutate({ slideId, file });
+        }}
+      />}
+      {actualizarPortada.isError && <p className="absolute bottom-14 left-1/2 z-30 max-w-[90vw] -translate-x-1/2 rounded-lg bg-red-700/95 px-4 py-2 text-center text-xs font-semibold text-white">{actualizarPortada.error.message}</p>}
     </section>
   );
 }
