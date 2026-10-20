@@ -117,8 +117,11 @@ export function AdminProducts() {
     <section className="admin-panel-card admin-table-card">
       <div className="admin-card-header flex-col items-stretch gap-4 sm:flex-row sm:items-center">
         <div className="min-w-0">
-          <h2>{products.data?.total ?? 0} productos</h2>
-          <p>{submittedSearch ? `Resultados para “${submittedSearch}”` : 'Catálogo importado desde WordPress y guardado en la nueva página.'}</p>
+          <div className="flex items-center gap-2">
+            <h2>Productos</h2>
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-600">{products.data?.total ?? 0}</span>
+          </div>
+          {submittedSearch && <p>Resultados para “{submittedSearch}”</p>}
         </div>
         <form className="grid w-full grid-cols-2 gap-2 sm:flex sm:max-w-md" onSubmit={event=>{event.preventDefault();setPage(1);setSubmittedSearch(search.trim())}}>
           <input className="admin-filter col-span-2 h-11 w-full min-w-0 sm:col-auto sm:grow" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Buscar por nombre o código…" aria-label="Buscar productos"/>
