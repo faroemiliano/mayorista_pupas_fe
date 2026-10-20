@@ -43,7 +43,6 @@ function VideoSlot({ file, title, dark }: { file: string; title: string; dark: b
         <div><span className="mx-auto grid size-12 place-items-center rounded-full border border-current text-lg">▶</span><strong className="mt-4 block font-serif text-xl font-medium">Video de {title}</strong><small className="mt-2 block text-[9px] uppercase tracking-[.2em]">Campaña de la colección</small></div>
       </div>
       {!failed && <video className="relative h-full w-full object-contain" src={`/videos/home/collections/${file}`} autoPlay muted loop playsInline preload="metadata" aria-label={`Video de la colección ${title}`} onError={() => setFailed(true)}/>}
-      <span className="absolute bottom-4 left-4 bg-white px-3 py-2 text-[8px] font-bold uppercase tracking-[.18em] text-black">En movimiento</span>
     </div>
   </div>
 }
@@ -58,12 +57,16 @@ function productImage(product: Product, fallback?: string) {
   return fallback
 }
 
-function CollectionProductPhoto({ product, fallback, manualImage, title, slotId, onChangeImage, uploading, canEdit }: { product?: Product; fallback?: string; manualImage?: string; title: string; slotId: string; onChangeImage: (slotId: string) => void; uploading: boolean; canEdit: boolean }) {
+function CollectionProductPhoto({ product, fallback, manualImage, manualProduct, title, slotId, onChangeImage, uploading, canEdit }: { product?: Product; fallback?: string; manualImage?: string; manualProduct?: { id: number; slug: string }; title: string; slotId: string; onChangeImage: (slotId: string) => void; uploading: boolean; canEdit: boolean }) {
   const navigate = useNavigate()
   const tools = useShoppingTools()
   const image = manualImage || (product ? productImage(product, fallback) : fallback)
 
   const openProduct = () => {
+    if (manualProduct) {
+      navigate(`/producto/${manualProduct.id}/${manualProduct.slug || 'producto'}`)
+      return
+    }
     if (!product) return
     tools.view(product)
     navigate(`/producto/${product.id}/${product.slug || 'producto'}`)
@@ -76,7 +79,7 @@ function CollectionProductPhoto({ product, fallback, manualImage, title, slotId,
     {canEdit && <button type="button" className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/55 px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.12em] text-white backdrop-blur transition hover:bg-black disabled:cursor-wait disabled:opacity-70" disabled={uploading} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onChangeImage(slotId) }}><span className="text-sm leading-none">＋</span>{uploading ? 'Guardando…' : 'Cambiar foto'}</button>}
   </>
 
-  if (product && !manualImage) return <button className="group relative block aspect-[3/4] w-full overflow-hidden bg-white/40 text-left" type="button" aria-label={`Ver ${product.nombre}`} onClick={openProduct}>{content}</button>
+  if (manualProduct || product) return <button className="group relative block aspect-[3/4] w-full overflow-hidden bg-white/40 text-left" type="button" aria-label={`Ver ${manualProduct ? 'producto seleccionado' : product?.nombre}`} onClick={openProduct}>{content}</button>
   return <div className="group relative aspect-[3/4] w-full overflow-hidden bg-white/40">{content}</div>
 }
 
@@ -144,7 +147,7 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
 
   return <div className="grid grid-cols-2 items-start gap-3 pb-8 sm:grid-cols-12 sm:gap-5 sm:pb-16">
     {products.isLoading && !slots.some((slot) => portadas.data?.imagenes[slot]) && [0, 1].map((item) => <div key={item} className={`aspect-[3/4] animate-pulse bg-white/40 ${item === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5'}`}/>)}
-    {!products.isLoading && slots.map((slotId, index) => <div key={slotId} className={`relative transition duration-500 hover:z-10 hover:-translate-y-2 hover:drop-shadow-2xl ${index === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5 sm:-translate-y-2'}`}><CollectionProductPhoto product={productosConImagen[index]} fallback={provisional[index]} manualImage={portadas.data?.imagenes[slotId]} title={title} slotId={slotId} onChangeImage={seleccionarImagen} uploading={cargandoSlot && slotPending === slotId} canEdit={puedeEditar}/></div>)}
+    {!products.isLoading && slots.map((slotId, index) => <div key={slotId} className={`relative transition duration-500 hover:z-10 hover:-translate-y-2 hover:drop-shadow-2xl ${index === 0 ? 'sm:col-span-7 sm:mt-12' : 'sm:col-span-5 sm:-translate-y-2'}`}><CollectionProductPhoto product={productosConImagen[index]} fallback={provisional[index]} manualImage={portadas.data?.imagenes[slotId]} manualProduct={portadas.data?.productos[slotId]} title={title} slotId={slotId} onChangeImage={seleccionarImagen} uploading={cargandoSlot && slotPending === slotId} canEdit={puedeEditar}/></div>)}
     {puedeEditar && <input ref={input} className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; const slotId = slotPending; event.currentTarget.value = ''; if (file && slotId) actualizarPortada.mutate({ slotId, file }) }} />}
     {(actualizarPortada.isError || usarImagenExistente.isError) && <p className="col-span-2 rounded-lg bg-red-50 p-3 text-center text-xs font-semibold text-red-700">{(actualizarPortada.error || usarImagenExistente.error)?.message}</p>}
     {pickerSlot && <div className="fixed inset-0 z-[110] grid place-items-center bg-black/65 p-4" role="dialog" aria-modal="true" aria-label={`Elegir foto para ${title}`} onMouseDown={(event) => { if (event.target === event.currentTarget && !cargandoSlot) setPickerSlot(null) }}>

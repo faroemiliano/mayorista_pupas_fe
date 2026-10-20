@@ -2,6 +2,7 @@ import { apiGet, apiPut } from './client'
 
 export type PortadasInicio = {
   imagenes: Record<string, string>
+  productos: Record<string, { id: number; slug: string }>
 }
 
 export type PortadaActualizada = {
