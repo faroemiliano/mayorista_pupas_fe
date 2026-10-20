@@ -37,6 +37,7 @@ export type ProductPage = {
   page: number
   limit: number
   total_paginas: number
+  stock_unidades_total: string
 }
 
 export type ProductQuery = {

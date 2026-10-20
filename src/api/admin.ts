@@ -58,16 +58,20 @@ export function getAdminProducts(
   conStock?: boolean,
   order = "recientes",
   categoryId?: string,
+  soloEnTienda = false,
+  limit = 20,
+  categoryName = '',
 ) {
   const params = new URLSearchParams({
-    solo_habilitados: "false",
+    solo_habilitados: String(soloEnTienda),
     page: String(page),
-    limit: "20",
+    limit: String(limit),
     orden: order,
   });
   if (search.trim()) params.set("buscar", search.trim());
   if (conStock !== undefined) params.set("con_stock", String(conStock));
   if (categoryId) params.set("categoria_id", categoryId);
+  if (categoryName) params.set("categoria_nombre", categoryName);
   return apiGet<AdminProductsData>(`/api/productos/?${params}`);
 }
 

@@ -22,17 +22,21 @@ export function AdminProducts() {
   const filters=useCatalogFilters()
   const duxSyncEnabled = duxConfiguration.data?.sincronizacion_habilitada === true
   const stockFilterValue = stockFilter === 'todos' ? undefined : stockFilter === 'con_stock'
-  const popularCategoryId = popularCategory
-    ? String(filters.data?.categorias.find((category) => category.nombre.toLocaleLowerCase('es').includes(popularCategory.slice(0, -1)))?.id || '')
-    : ''
-  const popularCategoryLabel = popularCategory === 'bikinis' ? 'Bikinis con stock' : popularCategory === 'pijamas' ? 'Pijamas con stock' : ''
+  const popularCategoryName = popularCategory || ''
   const products = useQuery({
-    queryKey: ['admin-products', page, submittedSearch, stockFilter, stockOrder, popularCategoryId],
-    queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes', popularCategoryId),
+    queryKey: ['admin-products', page, submittedSearch, stockFilter, stockOrder, popularCategoryName],
+    queryFn: () => getAdminProducts(page,submittedSearch,stockFilterValue,stockFilter === 'con_stock' ? stockOrder : 'recientes', undefined, Boolean(popularCategory), 20, popularCategoryName),
     placeholderData: (previous) => previous,
     refetchOnMount: 'always',
     // Mantiene el stock visible actualizado sin consultar cuatro veces por
     // minuto mientras el administrador deja esta pantalla abierta.
+    refetchInterval: 60_000,
+  })
+  const totalCategoryStock = useQuery({
+    queryKey: ['admin-products-category-total-stock', popularCategoryName],
+    queryFn: () => getAdminProducts(1, '', true, 'recientes', undefined, false, 1, popularCategoryName),
+    enabled: Boolean(popularCategoryName),
+    select: (response) => response.stock_unidades_total,
     refetchInterval: 60_000,
   })
   const stockCounts = useQueries({
@@ -114,7 +118,7 @@ export function AdminProducts() {
       <div className="admin-card-header flex-col items-stretch gap-4 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <h2>{products.data?.total ?? 0} productos</h2>
-          <p>{submittedSearch ? `Resultados para “${submittedSearch}”` : popularCategoryLabel || 'Catálogo importado desde WordPress y guardado en la nueva página.'}</p>
+          <p>{submittedSearch ? `Resultados para “${submittedSearch}”` : 'Catálogo importado desde WordPress y guardado en la nueva página.'}</p>
         </div>
         <form className="grid w-full grid-cols-2 gap-2 sm:flex sm:max-w-md" onSubmit={event=>{event.preventDefault();setPage(1);setSubmittedSearch(search.trim())}}>
           <input className="admin-filter col-span-2 h-11 w-full min-w-0 sm:col-auto sm:grow" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Buscar por nombre o código…" aria-label="Buscar productos"/>
@@ -122,6 +126,10 @@ export function AdminProducts() {
           {submittedSearch&&<button className="h-11 rounded-md bg-gray-100 px-3 text-sm font-bold sm:shrink-0" type="button" onClick={()=>{setSearch('');setSubmittedSearch('');setPage(1)}}>Limpiar</button>}
         </form>
       </div>
+      {popularCategory && <div className="mx-4 mb-4 flex items-center gap-4 rounded-xl border border-violet-200 bg-violet-50 px-5 py-4 text-violet-950">
+        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-violet-700 text-xl text-white" aria-hidden="true">✓</span>
+        <div className="grid min-w-0 flex-1 gap-4 sm:grid-cols-2"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-violet-700">Unidades disponibles en web</p><strong className="mt-1 block text-3xl leading-none">{products.data ? Number(products.data.stock_unidades_total).toLocaleString('es-AR') : '—'}</strong><small className="mt-1 block text-violet-800">Solo productos publicados.</small></div><div className="border-t border-violet-200 pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0"><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-violet-700">Unidades totales</p><strong className="mt-1 block text-3xl leading-none">{totalCategoryStock.data !== undefined ? Number(totalCategoryStock.data).toLocaleString('es-AR') : '—'}</strong><small className="mt-1 block text-violet-800">Incluye deshabilitados u ocultos.</small></div></div>
+      </div>}
       {(visibility.isError||featured.isError)&&<p className="m-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{(visibility.error||featured.error)?.message}</p>}
       {products.isLoading ? <div className="admin-status"><span className="loader"/></div> : !products.data?.items.length?<div className="admin-status"><strong>No encontramos productos</strong><p>Probá con otro nombre o código.</p></div>:<div className="admin-table-wrap"><table><thead><tr><th>Producto</th><th>Código / origen</th><th>Estado</th><th>En la tienda</th><th>Destacado</th><th>{stockFilter === 'con_stock' ? <button type="button" className="font-bold hover:underline" onClick={() => { setStockOrder(current => current === 'recientes' ? 'stock_desc' : current === 'stock_desc' ? 'stock_asc' : 'recientes'); setPage(1) }}>Stock {stockOrder === 'stock_desc' ? '↓' : stockOrder === 'stock_asc' ? '↑' : '↕'}</button> : 'Stock'}</th><th>Mayorista</th><th>24 productos</th><th></th></tr></thead><tbody>{products.data.items.map((product) => <tr key={product.id}><td><strong>{product.nombre}</strong><small>{product.marca?.nombre || 'Sin marca'}</small></td><td><strong>{product.dux_codigo}</strong><small>{product.origen==='web'?'Creado en esta página':product.origen}</small></td><td><span className={product.habilitado ? 'admin-state active' : 'admin-state'}>{product.habilitado ? 'Habilitado' : 'Deshabilitado'}</span></td><td><div className="flex items-center gap-2"><span className={product.visible_tienda?'admin-state active':'admin-state'}>{product.visible_tienda?'Visible':'Oculto'}</span><button className={`rounded-md px-3 py-1.5 text-xs font-bold ${product.visible_tienda?'bg-neutral-200 text-neutral-800':'bg-emerald-100 text-emerald-800'}`} disabled={visibility.isPending} onClick={()=>visibility.mutate({id:product.id,visible:!product.visible_tienda})}>{product.visible_tienda?'Ocultar':'Mostrar'}</button></div></td><td><button className={`rounded-md px-3 py-1.5 text-xs font-bold ${product.destacado?'bg-amber-100 text-amber-900':'bg-neutral-100 text-neutral-700'}`} disabled={featured.isPending} onClick={()=>featured.mutate({id:product.id,destacado:!product.destacado})}>{product.destacado?'★ Destacado':'☆ Destacar'}</button></td><td>{Number(product.stock_disponible)}</td><td>{product.precio_mayorista ? formatCurrency(Number(product.precio_mayorista)) : '—'}</td><td>{product.precio_24_productos ? formatCurrency(Number(product.precio_24_productos)) : '—'}</td><td><button className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-bold" onClick={()=>setEditing(product)}>Editar</button></td></tr>)}</tbody></table></div>}
       {products.data && products.data.total_paginas > 1 && <nav className="pagination"><button disabled={page === 1} onClick={() => setPage((value) => value - 1)}>← Anterior</button><span>Página {page} de {products.data.total_paginas}</span><button disabled={page >= products.data.total_paginas} onClick={() => setPage((value) => value + 1)}>Siguiente →</button></nav>}
