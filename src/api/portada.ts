@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from './client'
+import { apiGet, apiPost, apiPut } from './client'
 
 export type PortadasInicio = {
   imagenes: Record<string, string>
@@ -8,6 +8,12 @@ export type PortadasInicio = {
 export type PortadaActualizada = {
   slide_id: string
   imagen_url: string
+}
+
+export type CargaVideoPortada = {
+  clave: string
+  upload_url: string
+  video_url: string
 }
 
 export type ImagenCatalogoPortada = {
@@ -47,3 +53,13 @@ export const getImagenesCatalogoParaPortada = (
   if (buscar) params.set('buscar', buscar)
   return apiGet<ImagenesCatalogoPortadaPage>(`/api/admin/portada/imagenes-producto?${params}`)
 }
+
+export const prepararCargaVideoPortada = (videoId: string, file: File) =>
+  apiPost<CargaVideoPortada>(`/api/admin/portada/${videoId}/video/carga`, {
+    nombre: file.name,
+    media_type: file.type,
+    tamano: file.size,
+  })
+
+export const confirmarCargaVideoPortada = (videoId: string, clave: string) =>
+  apiPut<PortadaActualizada>(`/api/admin/portada/${videoId}/video/confirmar`, { clave })

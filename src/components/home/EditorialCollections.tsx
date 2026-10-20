@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
 import { productImageAsset } from '../../api/client'
-import { getImagenesCatalogoParaPortada, getPortadasInicio, updatePortadaInicio, usarImagenProductoEnPortada } from '../../api/portada'
+import { confirmarCargaVideoPortada, getImagenesCatalogoParaPortada, getPortadasInicio, prepararCargaVideoPortada, updatePortadaInicio, usarImagenProductoEnPortada } from '../../api/portada'
 import { useCatalogFilters } from '../../hooks/useCatalog'
 import type { Product } from '../../types/catalog'
 import { useNavigate } from 'react-router-dom'
@@ -36,15 +36,55 @@ const collections = [
 ] as const
 
 function VideoSlot({ file, title, dark }: { file: string; title: string; dark: boolean }) {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const input = useRef<HTMLInputElement>(null)
   const [failed, setFailed] = useState(false)
+  const videoId = `video-${title.toLowerCase()}`
+  const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico'
+  const portadas = useQuery({ queryKey: ['portadas-inicio'], queryFn: getPortadasInicio })
+  const videoUrl = portadas.data?.imagenes[videoId] || `/videos/home/collections/${file}`
+  const actualizarVideo = useMutation({
+    mutationFn: async (video: File) => {
+      if (video.type !== 'video/mp4') throw new Error('Elegí un video MP4.')
+      if (video.size > 50 * 1024 * 1024) throw new Error('El video puede pesar hasta 50 MB.')
+      const carga = await prepararCargaVideoPortada(videoId, video)
+      const respuesta = await fetch(carga.upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': video.type, 'Cache-Control': 'public, max-age=31536000, immutable' },
+        body: video,
+      })
+      if (!respuesta.ok) throw new Error('No se pudo subir el video a R2. Verificá la configuración de carga.')
+      return confirmarCargaVideoPortada(videoId, carga.clave)
+    },
+    onSuccess: () => {
+      setFailed(false)
+      queryClient.invalidateQueries({ queryKey: ['portadas-inicio'] })
+    },
+  })
   return <div className="relative mx-auto w-full max-w-135">
     <div className={`absolute -left-4 -top-4 size-20 border-l border-t ${dark ? 'border-white/30' : 'border-black/25'}`}/>
     <div className="relative aspect-[9/16] overflow-hidden bg-black">
       <div className="absolute inset-0 grid place-items-center px-7 text-center text-neutral-500">
         <div><span className="mx-auto grid size-12 place-items-center rounded-full border border-current text-lg">▶</span><strong className="mt-4 block font-serif text-xl font-medium">Video de {title}</strong><small className="mt-2 block text-[9px] uppercase tracking-[.2em]">Campaña de la colección</small></div>
       </div>
-      {!failed && <video className="relative h-full w-full object-contain" src={`/videos/home/collections/${file}`} autoPlay muted loop playsInline preload="metadata" aria-label={`Video de la colección ${title}`} onError={() => setFailed(true)}/>}
+      {!failed && (
+        <video
+          className="relative h-full w-full object-contain"
+          src={videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-label={`Video de la colección ${title}`}
+          onError={() => setFailed(true)}
+        />
+      )}
+      {puedeEditar && <button type="button" className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/55 px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.12em] text-white backdrop-blur transition hover:bg-black disabled:cursor-wait disabled:opacity-70" disabled={actualizarVideo.isPending} onClick={() => input.current?.click()}><span className="text-sm leading-none">＋</span>{actualizarVideo.isPending ? 'Subiendo…' : 'Cambiar video'}</button>}
     </div>
+    {puedeEditar && <input ref={input} className="hidden" type="file" accept="video/mp4" onChange={(event) => { const video = event.target.files?.[0]; event.currentTarget.value = ''; if (video) actualizarVideo.mutate(video) }} />}
+    {actualizarVideo.isError && <p className="mt-3 rounded-lg bg-red-50 p-3 text-center text-xs font-semibold text-red-700">{actualizarVideo.error.message}</p>}
   </div>
 }
 
