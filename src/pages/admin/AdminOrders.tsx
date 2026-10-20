@@ -13,6 +13,7 @@ import type { OrderStatus } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { getDuxConfiguration } from "../../api/admin";
 import { ClientPurchaseModal, type ClientPurchaseModalClient } from "../../components/admin/ClientPurchaseModal";
+import { Pagination } from "../../components/Pagination";
 
 const states: OrderStatus[] = [
   "pendiente",
@@ -277,25 +278,7 @@ export function AdminOrders() {
             </table>
           </div>
         )}
-        {orders.data && orders.data.total_paginas > 1 && (
-          <nav className="pagination">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              ← Anterior
-            </button>
-            <span>
-              Página {page} de {orders.data.total_paginas}
-            </span>
-            <button
-              disabled={page >= orders.data.total_paginas}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              Siguiente →
-            </button>
-          </nav>
-        )}
+        {orders.data && <Pagination page={page} totalPages={orders.data.total_paginas} onPageChange={setPage} />}
       </section>
       {selectedClient ? <ClientPurchaseModal client={selectedClient} onClose={() => setSelectedClient(null)} /> : null}
       {selected && <>

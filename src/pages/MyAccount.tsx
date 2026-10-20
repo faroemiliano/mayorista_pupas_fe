@@ -15,6 +15,7 @@ import { Brand } from "../components/layout/Brand";
 import { ClientMaterials } from "../components/account/ClientMaterials";
 import { whatsappUrl } from "../config/contact";
 import { getMyReview, saveMyReview } from "../api/reviews";
+import { Pagination } from "../components/Pagination";
 
 function ReviewEditor() {
   const queryClient = useQueryClient();
@@ -1093,25 +1094,7 @@ export function MyAccount() {
                     </table>
                   </div>
                 )}
-                {orders.data && orders.data.total_paginas > 1 && (
-                  <div className="flex items-center justify-center gap-4 border-t p-4">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => setPage((v) => v - 1)}
-                    >
-                      ← Anterior
-                    </button>
-                    <span className="text-sm">
-                      Página {page} de {orders.data.total_paginas}
-                    </span>
-                    <button
-                      disabled={page >= orders.data.total_paginas}
-                      onClick={() => setPage((v) => v + 1)}
-                    >
-                      Siguiente →
-                    </button>
-                  </div>
-                )}
+                {orders.data && <Pagination page={page} totalPages={orders.data.total_paginas} onPageChange={setPage} className="pagination border-t p-4" />}
               </section>
             )}
             {active === "favorites" && (

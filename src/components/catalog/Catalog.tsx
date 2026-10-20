@@ -120,11 +120,11 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     );
   };
   const totalPages = products.data?.total_paginas ?? 0;
-  const firstVisiblePage = totalPages <= 10
+  const firstVisiblePage = totalPages <= 4
     ? 1
-    : Math.min(Math.max(1, page - 4), totalPages - 9);
+    : Math.min(Math.max(1, page - 1), totalPages - 3);
   const visiblePages = Array.from(
-    { length: Math.min(10, totalPages) },
+    { length: Math.min(4, totalPages) },
     (_, index) => firstVisiblePage + index,
   );
 
@@ -320,7 +320,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
                 ←
               </button>
               {firstVisiblePage > 1 && <><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(1)}>1</button><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span></>}
-              {visiblePages.map((pageNumber, index) => <button key={pageNumber} aria-current={pageNumber === page ? 'page' : undefined} className={`grid size-10 place-items-center border text-sm font-bold transition ${index >= 5 ? 'hidden sm:grid' : ''} ${pageNumber === page ? 'border-black bg-black text-white' : 'border-[#e5e5e5] bg-white hover:border-black'}`} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}
+              {visiblePages.map((pageNumber) => <button key={pageNumber} aria-current={pageNumber === page ? 'page' : undefined} className={`grid size-10 place-items-center border text-sm font-bold transition ${pageNumber === page ? 'border-black bg-black text-white' : 'border-[#e5e5e5] bg-white hover:border-black'}`} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}
               {visiblePages.at(-1)! < totalPages && <><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(totalPages)}>{totalPages}</button></>}
               <button
                 className="rounded-full border border-[#e5e5e5] bg-white px-4 py-2.5 text-sm font-bold disabled:opacity-40"

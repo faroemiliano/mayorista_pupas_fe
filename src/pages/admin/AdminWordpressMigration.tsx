@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Pagination } from "../../components/Pagination";
 import {
   getDuxConfiguration,
   getImageMigrationDiagnostic,
@@ -478,25 +479,7 @@ export function AdminWordpressMigration() {
               ))}
             </div>
           )}
-          {candidates.data && candidates.data.total_paginas > 1 && (
-            <nav className="pagination">
-              <button
-                disabled={candidatePage === 1}
-                onClick={() => setCandidatePage((value) => value - 1)}
-              >
-                ← Anterior
-              </button>
-              <span>
-                Página {candidatePage} de {candidates.data.total_paginas}
-              </span>
-              <button
-                disabled={candidatePage >= candidates.data.total_paginas}
-                onClick={() => setCandidatePage((value) => value + 1)}
-              >
-                Siguiente →
-              </button>
-            </nav>
-          )}
+          {candidates.data && <Pagination page={candidatePage} totalPages={candidates.data.total_paginas} onPageChange={setCandidatePage} />}
           {linkCandidate.isError && (
             <p className="text-sm text-red-700">
               {linkCandidate.error.message}

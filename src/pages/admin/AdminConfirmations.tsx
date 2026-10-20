@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch } from "../../api/client";
 import type { AuthUser } from "../../types/auth";
+import { Pagination } from "../../components/Pagination";
 
 type StatusFilter = "todos" | "pendiente" | "aprobado" | "rechazado";
 const labels = {
@@ -228,25 +229,7 @@ export function AdminConfirmations() {
             </table>
           </div>
         )}
-        {users.data && users.data.total_paginas > 1 && (
-          <nav className="pagination">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((current) => current - 1)}
-            >
-              ← Anterior
-            </button>
-            <span>
-              Página {page} de {users.data.total_paginas}
-            </span>
-            <button
-              disabled={page >= users.data.total_paginas}
-              onClick={() => setPage((current) => current + 1)}
-            >
-              Siguiente →
-            </button>
-          </nav>
-        )}
+        {users.data && <Pagination page={page} totalPages={users.data.total_paginas} onPageChange={setPage} />}
       </section>
     </div>
   );

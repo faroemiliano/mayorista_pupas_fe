@@ -10,6 +10,7 @@ import {
 } from "../../api/admin";
 import { formatCurrency } from "../../utils/currency";
 import type { AuthUser } from "../../types/auth";
+import { Pagination } from "../../components/Pagination";
 
 export function ClientPurchaseModal({ client, onClose }: { client: AuthUser; onClose: () => void }) {
   const [desde, setDesde] = useState("");
@@ -335,28 +336,7 @@ export function AdminClients() {
                 </table>
               </div>
             )}
-            {webClients.data && webClients.data.total_paginas > 1 && (
-              <nav className="pagination">
-                <button
-                  disabled={page === 1 || webClients.isFetching}
-                  onClick={() => setPage((current) => current - 1)}
-                >
-                  ← Anterior
-                </button>
-                <span>
-                  Página {page} de {webClients.data.total_paginas}
-                </span>
-                <button
-                  disabled={
-                    page >= webClients.data.total_paginas ||
-                    webClients.isFetching
-                  }
-                  onClick={() => setPage((current) => current + 1)}
-                >
-                  Siguiente →
-                </button>
-              </nav>
-            )}
+            {webClients.data && <Pagination page={page} totalPages={webClients.data.total_paginas} onPageChange={setPage} disabled={webClients.isFetching} />}
           </>
         ) : (
           <>
@@ -444,15 +424,17 @@ export function AdminClients() {
               <button
                 disabled={page === 1 || clients.isFetching}
                 onClick={() => setPage((value) => value - 1)}
+                aria-label="Página anterior"
               >
-                ← Anterior
+                ←
               </button>
-              <span>Página {page}</span>
+              <span className="text-sm">{page}</span>
               <button
                 disabled={!clients.data?.hay_mas || clients.isFetching}
                 onClick={() => setPage((value) => value + 1)}
+                aria-label="Página siguiente"
               >
-                Siguiente →
+                →
               </button>
             </div>
           </>
