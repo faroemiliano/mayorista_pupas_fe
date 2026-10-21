@@ -191,6 +191,7 @@ export type ClientPurchaseBalance = {
   cliente: string;
   acumulado: { pedidos: number; unidades: number; importe: number };
   periodo: { pedidos: number; unidades: number; importe: number };
+  ultima_compra: string | null;
   fecha_desde: string | null;
   fecha_hasta: string | null;
   alcance: string;

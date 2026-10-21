@@ -31,6 +31,9 @@ export function ClientPurchaseModal({
     queryFn: () => getClientPurchaseBalance(client.id, periodo.desde, periodo.hasta),
   });
   const resumen = balance.data?.periodo ?? { pedidos: 0, unidades: 0, importe: 0 };
+  const ultimaCompra = balance.data?.ultima_compra
+    ? new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(new Date(balance.data.ultima_compra))
+    : null;
 
   const aplicarPeriodo = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,6 +70,10 @@ export function ClientPurchaseModal({
           {balance.isLoading ? <div className="admin-status"><span className="loader" /><p>Cargando balance…</p></div> : null}
           {balance.isError ? <div className="rounded-xl bg-red-50 p-4 text-sm text-red-800">No se pudo cargar el balance. <button className="font-bold underline" onClick={() => balance.refetch()}>Reintentar</button></div> : null}
           {balance.data ? <>
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
+              <small className="block text-[10px] font-bold uppercase tracking-[.16em] text-amber-800">Última compra realizada</small>
+              <strong className="mt-1 block text-base">{ultimaCompra || "Todavía no registra compras"}</strong>
+            </div>
             {cards("Balance acumulado", balance.data.acumulado)}
             <form className="rounded-xl border border-neutral-200 p-4" onSubmit={aplicarPeriodo}>
               <div className="flex flex-wrap items-end gap-3">
