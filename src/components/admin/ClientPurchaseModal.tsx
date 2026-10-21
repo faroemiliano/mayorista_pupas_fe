@@ -16,6 +16,19 @@ type PurchaseSummary = {
   importe: number;
 };
 
+function tiempoDesdeUltimaCompra(fecha: string | null | undefined) {
+  if (!fecha) return null;
+  const diferencia = Math.max(0, Date.now() - new Date(fecha).getTime());
+  const horas = Math.floor(diferencia / (1000 * 60 * 60));
+  const dias = Math.floor(horas / 24);
+  if (dias === 0) return horas < 1 ? "Compró hace menos de una hora" : `Compró hace ${horas} ${horas === 1 ? "hora" : "horas"}`;
+  if (dias < 30) return `Hace ${dias} ${dias === 1 ? "día" : "días"} sin comprar`;
+  const meses = Math.floor(dias / 30);
+  if (meses < 12) return `Hace ${meses} ${meses === 1 ? "mes" : "meses"} sin comprar`;
+  const anios = Math.floor(dias / 365);
+  return `Hace ${anios} ${anios === 1 ? "año" : "años"} sin comprar`;
+}
+
 export function ClientPurchaseModal({
   client,
   onClose,
@@ -34,6 +47,7 @@ export function ClientPurchaseModal({
   const ultimaCompra = balance.data?.ultima_compra
     ? new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(new Date(balance.data.ultima_compra))
     : null;
+  const tiempoSinComprar = tiempoDesdeUltimaCompra(balance.data?.ultima_compra);
 
   const aplicarPeriodo = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,6 +87,7 @@ export function ClientPurchaseModal({
             <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm">
               <small className="block text-[10px] font-bold uppercase tracking-[.16em] text-amber-800">Última compra realizada</small>
               <strong className="mt-1 block text-base">{ultimaCompra || "Todavía no registra compras"}</strong>
+              {tiempoSinComprar ? <span className="mt-1 block text-sm font-semibold text-amber-800">{tiempoSinComprar}</span> : null}
             </div>
             {cards("Balance acumulado", balance.data.acumulado)}
             <form className="rounded-xl border border-neutral-200 p-4" onSubmit={aplicarPeriodo}>
