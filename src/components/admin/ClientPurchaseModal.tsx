@@ -29,12 +29,6 @@ function tiempoDesdeUltimaCompra(fecha: string | null | undefined) {
   return `Hace ${anios} ${anios === 1 ? "año" : "años"} sin comprar`;
 }
 
-function esHoyEnArgentina(fecha: string | null | undefined) {
-  if (!fecha) return false;
-  const formato = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
-  return formato.format(new Date(fecha)) === formato.format(new Date());
-}
-
 function tiempoEntreCompras(anterior: string, actual: string) {
   const dias = Math.max(0, Math.floor((new Date(actual).getTime() - new Date(anterior).getTime()) / (1000 * 60 * 60 * 24)));
   if (dias < 1) return "Volvió a comprar el mismo día";
@@ -67,7 +61,6 @@ export function ClientPurchaseModal({
   const ultimaCompraAnterior = balance.data?.ultima_compra_anterior
     ? new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(new Date(balance.data.ultima_compra_anterior))
     : null;
-  const comproHoy = esHoyEnArgentina(balance.data?.ultima_compra);
 
   const aplicarPeriodo = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -109,8 +102,8 @@ export function ClientPurchaseModal({
               <strong className="mt-1 block text-base">{ultimaCompra || "Todavía no registra compras"}</strong>
               {tiempoSinComprar ? <span className="mt-1 block text-sm font-semibold text-amber-800">{tiempoSinComprar}</span> : null}
             </div>
-            {comproHoy && balance.data.ultima_compra_anterior ? <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
-              <small className="block text-[10px] font-bold uppercase tracking-[.16em] text-sky-800">Compra anterior a la de hoy</small>
+            {balance.data.ultima_compra_anterior ? <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+              <small className="block text-[10px] font-bold uppercase tracking-[.16em] text-sky-800">Compra anterior</small>
               <strong className="mt-1 block text-base">{ultimaCompraAnterior}</strong>
               <span className="mt-1 block text-sm font-semibold text-sky-800">{tiempoEntreCompras(balance.data.ultima_compra_anterior, balance.data.ultima_compra!)}</span>
             </div> : null}
