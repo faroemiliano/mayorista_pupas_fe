@@ -29,6 +29,22 @@ function tiempoDesdeUltimaCompra(fecha: string | null | undefined) {
   return `Hace ${anios} ${anios === 1 ? "año" : "años"} sin comprar`;
 }
 
+function esHoyEnArgentina(fecha: string | null | undefined) {
+  if (!fecha) return false;
+  const formato = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+  return formato.format(new Date(fecha)) === formato.format(new Date());
+}
+
+function tiempoEntreCompras(anterior: string, actual: string) {
+  const dias = Math.max(0, Math.floor((new Date(actual).getTime() - new Date(anterior).getTime()) / (1000 * 60 * 60 * 24)));
+  if (dias < 1) return "Volvió a comprar el mismo día";
+  if (dias < 30) return `Volvió a comprar tras ${dias} ${dias === 1 ? "día" : "días"}`;
+  const meses = Math.floor(dias / 30);
+  if (meses < 12) return `Volvió a comprar tras ${meses} ${meses === 1 ? "mes" : "meses"}`;
+  const anios = Math.floor(dias / 365);
+  return `Volvió a comprar tras ${anios} ${anios === 1 ? "año" : "años"}`;
+}
+
 export function ClientPurchaseModal({
   client,
   onClose,
@@ -48,6 +64,10 @@ export function ClientPurchaseModal({
     ? new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(new Date(balance.data.ultima_compra))
     : null;
   const tiempoSinComprar = tiempoDesdeUltimaCompra(balance.data?.ultima_compra);
+  const ultimaCompraAnterior = balance.data?.ultima_compra_anterior
+    ? new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short" }).format(new Date(balance.data.ultima_compra_anterior))
+    : null;
+  const comproHoy = esHoyEnArgentina(balance.data?.ultima_compra);
 
   const aplicarPeriodo = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -89,6 +109,11 @@ export function ClientPurchaseModal({
               <strong className="mt-1 block text-base">{ultimaCompra || "Todavía no registra compras"}</strong>
               {tiempoSinComprar ? <span className="mt-1 block text-sm font-semibold text-amber-800">{tiempoSinComprar}</span> : null}
             </div>
+            {comproHoy && balance.data.ultima_compra_anterior ? <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+              <small className="block text-[10px] font-bold uppercase tracking-[.16em] text-sky-800">Compra anterior a la de hoy</small>
+              <strong className="mt-1 block text-base">{ultimaCompraAnterior}</strong>
+              <span className="mt-1 block text-sm font-semibold text-sky-800">{tiempoEntreCompras(balance.data.ultima_compra_anterior, balance.data.ultima_compra!)}</span>
+            </div> : null}
             {cards("Balance acumulado", balance.data.acumulado)}
             <form className="rounded-xl border border-neutral-200 p-4" onSubmit={aplicarPeriodo}>
               <div className="flex flex-wrap items-end gap-3">
