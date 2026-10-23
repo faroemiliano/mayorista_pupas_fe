@@ -67,6 +67,32 @@ function rangoSemanaActual() {
   return { desde, hasta }
 }
 
+function WeeklyBalanceModal({ onClose, showRevenue }: { onClose: () => void; showRevenue: boolean }) {
+  const semana = rangoSemanaActual()
+  const analytics = useQuery({
+    queryKey: ['admin-weekly-sales-balance', semana.desde, semana.hasta],
+    queryFn: () => getProductAnalytics(7, 'dia', semana.desde, semana.hasta),
+  })
+  const data = analytics.data
+  const pedidosSemana = data?.serie_ventas.reduce((total, punto) => total + punto.pedidos, 0) ?? 0
+  const fechaDesde = new Date(`${semana.desde}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+  const fechaHasta = new Date(`${semana.hasta}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  return <div className="fixed inset-0 z-60 grid place-items-center bg-black/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Balance semanal de ventas" onMouseDown={onClose}>
+    <section className="max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl" onMouseDown={event => event.stopPropagation()}>
+      <header className="flex items-start justify-between gap-4 border-b border-neutral-200 bg-neutral-50 p-5 sm:p-6"><div><p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-neutral-500">BALANCE SEMANAL</p><h2 className="mt-1 text-2xl font-bold">Ventas de esta semana</h2><p className="mt-1 text-sm text-neutral-500">Del {fechaDesde} al {fechaHasta}.</p></div><button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-full border border-neutral-300 bg-white text-xl leading-none transition hover:bg-neutral-100" aria-label="Cerrar balance semanal">×</button></header>
+      <div className="max-h-[65vh] overflow-y-auto p-5 sm:p-6">
+        {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Preparando el balance semanal…</p></div>
+          : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar el balance.</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
+          : <div className="space-y-6"><section className="admin-metrics"><article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article><article><span>PEDIDOS</span><strong>{pedidosSemana}</strong><small>Registrados en la semana</small></article><article><span>FACTURACIÓN</span><strong>{formatRevenue(Number(data.resumen.importe_vendido), showRevenue)}</strong><small>{showRevenue ? 'Total confirmado' : 'Oculta hasta revelar facturación'}</small></article><article><span>MODELOS VENDIDOS</span><strong>{data.resumen.productos_con_ventas}</strong><small>Con movimiento</small></article></section>
+            <section className="rounded-xl border border-neutral-200 p-4"><div className="flex items-baseline justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-neutral-500">PRODUCTOS DESTACADOS</p><h3 className="mt-1 text-lg font-bold">Los más vendidos</h3></div><span className="text-xs text-neutral-500">Unidades</span></div>{data.mas_vendidos.length ? <ol className="mt-3 divide-y divide-neutral-100">{data.mas_vendidos.slice(0, 5).map((product, index) => <li className="flex items-center justify-between gap-4 py-2.5" key={product.producto_id}><span className="min-w-0 truncate text-sm"><b className="mr-2 text-neutral-400">{index + 1}.</b>{product.nombre}</span><strong className="shrink-0">{product.unidades_vendidas}</strong></li>)}</ol> : <p className="mt-3 text-sm text-neutral-500">Aún no hay ventas registradas esta semana.</p>}</section>
+            <p className="text-center text-xs text-neutral-500">Este resumen no cambia los filtros de la Analítica principal.</p>
+          </div>}
+      </div>
+    </section>
+  </div>
+}
+
 function SalesLineChart({ points, showRevenue }: { points: ProductAnalytics['serie_ventas']; showRevenue: boolean }) {
   const [metric, setMetric] = useState<Metric>('importe')
   const [selected, setSelected] = useState(Math.max(points.length - 1, 0))
@@ -109,13 +135,13 @@ function SalesLineChart({ points, showRevenue }: { points: ProductAnalytics['ser
 
 export function AdminProductAnalytics() {
   const [searchParams] = useSearchParams()
-  const semanaInicial = searchParams.get('periodo') === 'semana' ? rangoSemanaActual() : null
-  const [days, setDays] = useState<number | null>(semanaInicial ? 7 : 30)
+  const [days, setDays] = useState<number | null>(30)
   const [grouping, setGrouping] = useState<'dia' | 'semana' | 'mes' | 'anio'>('dia')
-  const [fechaDesde, setFechaDesde] = useState(semanaInicial?.desde || '')
-  const [fechaHasta, setFechaHasta] = useState(semanaInicial?.hasta || '')
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<CategorySalesData | null>(null)
   const [showRevenue, setShowRevenue] = useState(false)
+  const [weeklyBalanceOpen, setWeeklyBalanceOpen] = useState(searchParams.get('periodo') === 'semana')
   // Una sola fecha se interpreta como el día completo elegido.
   const fechaConsultaDesde = fechaDesde || fechaHasta
   const fechaConsultaHasta = fechaHasta || fechaDesde
@@ -129,7 +155,7 @@ export function AdminProductAnalytics() {
   const variacionPeriodo = importeAnterior === 0 ? null : ((Number(data?.resumen.importe_vendido ?? 0) - importeAnterior) / importeAnterior) * 100
 
   return <div className="admin-page">
-    <header className="admin-page-header"><div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Evolución, facturación, pedidos y rotación por producto.</span></div><div className="flex flex-wrap items-end gap-2"><button type="button" className="admin-filter" onClick={() => setShowRevenue(current => !current)} aria-pressed={showRevenue}>{showRevenue ? 'Ocultar facturación' : 'Mostrar facturación'}</button><button type="button" className="admin-filter" onClick={() => { const semana = rangoSemanaActual(); setDays(7); setGrouping('dia'); setFechaDesde(semana.desde); setFechaHasta(semana.hasta) }}>Balance de esta semana</button><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Desde<input aria-label="Fecha inicial" className="admin-filter mt-1 block" type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={event => setFechaDesde(event.target.value)}/></label><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Hasta<input aria-label="Fecha final" className="admin-filter mt-1 block" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={event => setFechaHasta(event.target.value)}/></label>{(fechaDesde || fechaHasta) && <button type="button" className="admin-filter" onClick={() => { setFechaDesde(''); setFechaHasta('') }}>Limpiar período</button>}<select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} disabled={customRange} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div></header>
+    <header className="admin-page-header"><div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Evolución, facturación, pedidos y rotación por producto.</span></div><div className="flex flex-wrap items-end gap-2"><button type="button" className="admin-filter" onClick={() => setShowRevenue(current => !current)} aria-pressed={showRevenue}>{showRevenue ? 'Ocultar facturación' : 'Mostrar facturación'}</button><button type="button" className="admin-filter" onClick={() => setWeeklyBalanceOpen(true)}>Balance de esta semana</button><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Desde<input aria-label="Fecha inicial" className="admin-filter mt-1 block" type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={event => setFechaDesde(event.target.value)}/></label><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Hasta<input aria-label="Fecha final" className="admin-filter mt-1 block" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={event => setFechaHasta(event.target.value)}/></label>{(fechaDesde || fechaHasta) && <button type="button" className="admin-filter" onClick={() => { setFechaDesde(''); setFechaHasta('') }}>Limpiar período</button>}<select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} disabled={customRange} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div></header>
     {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Calculando ventas…</p></div>
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
@@ -149,5 +175,6 @@ export function AdminProductAnalytics() {
         <div className="analytics-last"><ClientRankingTable items={data.mejores_clientes} showRevenue={showRevenue}/></div>
         {selectedCategory ? <CategorySalesModal category={selectedCategory} onClose={() => setSelectedCategory(null)} showRevenue={showRevenue}/> : null}
       </>}
+    {weeklyBalanceOpen ? <WeeklyBalanceModal onClose={() => setWeeklyBalanceOpen(false)} showRevenue={showRevenue}/> : null}
   </div>
 }
