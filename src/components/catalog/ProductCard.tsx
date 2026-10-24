@@ -79,9 +79,12 @@ export function ProductCard({ product, fallbackImage }: { product: Product; fall
       </div>
 
       {user && price > 0 && <div className="border-t border-neutral-200 bg-white px-3 py-3"><span className="mb-2 block text-[9px] font-bold uppercase tracking-wider">Elegí el talle</span><div className="flex flex-wrap gap-1.5">{product.talles.map(size=><button key={size.talle} type="button" disabled={!size.disponible} onClick={()=>{setSelectedSize(size.talle);setQuantity(1)}} className={`grid min-w-8 place-items-center border px-2 py-2 text-xs font-bold ${selectedSize===size.talle?'border-black bg-black text-white':'border-neutral-300'} disabled:bg-neutral-100 disabled:text-neutral-300`}>{size.talle}</button>)}</div>{!availableSizes.length&&<small className="mt-2 block text-amber-700">Sin stock disponible por talle.</small>}</div>}
-      {user && maxStock > 0 && price > 0 && <div className="flex min-h-12 border-y border-black bg-black text-white">
-        <div className="border-r border-white/25 bg-white px-1 py-1 text-black"><QuantityControl value={quantity} max={maxStock} onChange={setQuantity} /></div>
-        <button className="grow px-3 text-[11px] font-extrabold uppercase tracking-[.14em] transition hover:bg-neutral-700" type="button" onClick={addToCart}>Agregar al carrito</button>
+      {user && maxStock > 0 && price > 0 && <div className="border-y border-black bg-white">
+        <div className="flex min-h-12 items-center justify-between gap-2 px-2 py-1.5 text-black sm:px-3">
+          <span className="text-[9px] font-extrabold uppercase tracking-[.12em] text-neutral-600">Cantidad</span>
+          <QuantityControl value={quantity} max={maxStock} onChange={setQuantity} />
+        </div>
+        <button className="min-h-11 w-full whitespace-nowrap bg-black px-2 text-[9px] font-extrabold uppercase tracking-[.1em] text-white transition hover:bg-neutral-700 sm:text-[11px] sm:tracking-[.14em]" type="button" onClick={addToCart}>Agregar al carrito</button>
       </div>}
 
       <div className="relative z-10 flex grow flex-col bg-white px-4 pb-5 pt-4">
