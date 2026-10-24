@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getProductAnalytics } from '../../api/admin'
 import type { ProductAnalytics, ProductSalesRanking } from '../../types/admin'
@@ -53,6 +53,15 @@ function CategorySalesModal({ category, onClose, showRevenue }: { category: Cate
 }
 
 type Metric = 'importe' | 'unidades' | 'pedidos'
+
+function AnalyticsSection({ step, title, description, children }: { step: string; title: string; description: string; children: ReactNode }) {
+  return <section className="space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3 border-b border-neutral-200 pb-3">
+      <div><p className="eyebrow">{step}</p><h2 className="mt-1 text-xl font-bold">{title}</h2><p className="mt-1 text-sm text-neutral-500">{description}</p></div>
+    </div>
+    {children}
+  </section>
+}
 
 function rangoSemanaActual() {
   const partes = new Intl.DateTimeFormat('en-CA', {
@@ -155,24 +164,37 @@ export function AdminProductAnalytics() {
   const variacionPeriodo = importeAnterior === 0 ? null : ((Number(data?.resumen.importe_vendido ?? 0) - importeAnterior) / importeAnterior) * 100
 
   return <div className="admin-page">
-    <header className="admin-page-header"><div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Evolución, facturación, pedidos y rotación por producto.</span></div><div className="flex flex-wrap items-end gap-2"><button type="button" className="admin-filter" onClick={() => setShowRevenue(current => !current)} aria-pressed={showRevenue}>{showRevenue ? 'Ocultar facturación' : 'Mostrar facturación'}</button><button type="button" className="admin-filter" onClick={() => setWeeklyBalanceOpen(true)}>Balance de esta semana</button><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Desde<input aria-label="Fecha inicial" className="admin-filter mt-1 block" type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={event => setFechaDesde(event.target.value)}/></label><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Hasta<input aria-label="Fecha final" className="admin-filter mt-1 block" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={event => setFechaHasta(event.target.value)}/></label>{(fechaDesde || fechaHasta) && <button type="button" className="admin-filter" onClick={() => { setFechaDesde(''); setFechaHasta('') }}>Limpiar período</button>}<select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} disabled={customRange} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div></header>
+    <header className="admin-page-header items-start">
+      <div><p className="eyebrow">RENDIMIENTO DE PRODUCTOS</p><h1>Analítica de ventas</h1><span>Ventas, rotación y clientes en un orden más claro.</span></div>
+      <div className="w-full max-w-3xl space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+        <div className="flex flex-wrap gap-2"><button type="button" className="admin-filter" onClick={() => setShowRevenue(current => !current)} aria-pressed={showRevenue}>{showRevenue ? 'Ocultar facturación' : 'Mostrar facturación'}</button><button type="button" className="admin-filter !border-neutral-300 !bg-white !text-neutral-700 shadow-none" onClick={() => setWeeklyBalanceOpen(true)}>Balance de esta semana</button></div>
+        <div className="flex flex-wrap items-end gap-2 border-t border-neutral-100 pt-2"><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Desde<input aria-label="Fecha inicial" className="admin-filter mt-1 block" type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={event => setFechaDesde(event.target.value)}/></label><label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Hasta<input aria-label="Fecha final" className="admin-filter mt-1 block" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={event => setFechaHasta(event.target.value)}/></label>{(fechaDesde || fechaHasta) && <button type="button" className="admin-filter" onClick={() => { setFechaDesde(''); setFechaHasta('') }}>Limpiar período</button>}<select aria-label="Período analizado" className="admin-filter" value={days ?? 'all'} disabled={customRange} onChange={(event) => setDays(event.target.value === 'all' ? null : Number(event.target.value))}><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Último año</option><option value="all">Todo el historial</option></select><select aria-label="Agrupación del gráfico" className="admin-filter" value={grouping} onChange={event => setGrouping(event.target.value as typeof grouping)}><option value="dia">Separar por días</option><option value="semana">Separar por semanas</option><option value="mes">Separar por meses</option><option value="anio">Separar por años</option></select></div>
+      </div>
+    </header>
     {analytics.isLoading ? <div className="admin-status"><span className="loader"/><p>Calculando ventas…</p></div>
       : analytics.isError || !data ? <div className="admin-status"><strong>No se pudo cargar la analítica</strong><button onClick={() => analytics.refetch()}>Reintentar</button></div>
       : <>
         <div className="grid gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:grid-cols-[auto_1fr]"><strong className="text-sm">Origen: WordPress histórico + pedidos de la tienda</strong><span className="text-sm text-neutral-500">{data.alcance}</span></div>
         {customRange && <div className="rounded-xl border border-neutral-200 bg-neutral-100 px-4 py-3 text-sm"><strong>{fechaConsultaDesde === fechaConsultaHasta ? `Día elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}` : `Período elegido: ${new Date(`${fechaConsultaDesde}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })} a ${new Date(`${fechaConsultaHasta}T00:00:00`).toLocaleDateString('es-AR', { dateStyle: 'long' })}`}</strong><span className="mt-1 block text-neutral-500">La comparación se realiza contra el período inmediatamente anterior de igual duración.</span></div>}
-        <div><p className="eyebrow">VISTA GENERAL</p><h2 className="text-xl font-bold">Resumen del período</h2></div>
-        <section className="admin-metrics">
-          <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
-          <article><span>IMPORTE VENDIDO</span><strong>{formatRevenue(Number(data.resumen.importe_vendido), showRevenue)}</strong><small>{showRevenue ? 'Total confirmado en la web' : 'Tocá “Mostrar facturación” para verlo'}</small></article>
-          <article><span>PRODUCTOS CON VENTAS</span><strong>{data.resumen.productos_con_ventas}</strong><small>Con movimiento en el período</small></article>
-          <article className="attention"><span>SIN VENTAS</span><strong>{data.resumen.productos_sin_ventas}</strong><small>Productos habilitados sin rotación</small></article>
-        </section>
-        {data.comparacion_anterior && <section className="admin-metrics"><article><span>PERÍODO ANTERIOR</span><strong>{formatRevenue(importeAnterior, showRevenue)}</strong><small>{data.comparacion_anterior.resumen.unidades} unidades · {data.comparacion_anterior.resumen.pedidos} pedidos</small></article><article><span>VARIACIÓN DE FACTURACIÓN</span><strong className={variacionPeriodo != null && variacionPeriodo < 0 ? 'text-red-700' : 'text-emerald-700'}>{showRevenue ? (variacionPeriodo == null ? 'Sin base comparable' : `${variacionPeriodo > 0 ? '+' : ''}${variacionPeriodo.toFixed(1)}%`) : '••••••'}</strong><small>Respecto del período anterior</small></article></section>}
-        <SalesLineChart points={data.serie_ventas} showRevenue={showRevenue}/>
-        <CategorySales items={data.ventas_por_categoria} onSelect={setSelectedCategory} showRevenue={showRevenue}/>
-        <div className="analytics-grid"><RankingTable title="Más vendidos" description="Ordenados por cantidad de unidades." items={data.mas_vendidos} showRevenue={showRevenue}/><RankingTable title="Menor rotación" description="Productos vendidos con menos unidades." items={data.menos_vendidos} showRevenue={showRevenue}/></div>
-        <div className="analytics-last"><ClientRankingTable items={data.mejores_clientes} showRevenue={showRevenue}/></div>
+        <AnalyticsSection step="01 · VISTA GENERAL" title="Resumen del período" description="Los indicadores principales para entender el movimiento de un vistazo.">
+          <section className="admin-metrics">
+            <article><span>UNIDADES VENDIDAS</span><strong>{data.resumen.unidades_vendidas}</strong><small>Sin pedidos cancelados</small></article>
+            <article><span>IMPORTE VENDIDO</span><strong>{formatRevenue(Number(data.resumen.importe_vendido), showRevenue)}</strong><small>{showRevenue ? 'Total confirmado en la web' : 'Tocá “Mostrar facturación” para verlo'}</small></article>
+            <article><span>PRODUCTOS CON VENTAS</span><strong>{data.resumen.productos_con_ventas}</strong><small>Con movimiento en el período</small></article>
+            <article className="attention"><span>SIN VENTAS</span><strong>{data.resumen.productos_sin_ventas}</strong><small>Productos habilitados sin rotación</small></article>
+          </section>
+          {data.comparacion_anterior && <section className="grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 sm:grid-cols-2"><article><span className="text-[10px] font-bold tracking-wider text-neutral-500">PERÍODO ANTERIOR</span><strong className="mt-1 block text-xl">{formatRevenue(importeAnterior, showRevenue)}</strong><small className="mt-1 block text-neutral-500">{data.comparacion_anterior.resumen.unidades} unidades · {data.comparacion_anterior.resumen.pedidos} pedidos</small></article><article className="border-t border-neutral-200 pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0"><span className="text-[10px] font-bold tracking-wider text-neutral-500">VARIACIÓN DE FACTURACIÓN</span><strong className={`mt-1 block text-xl ${variacionPeriodo != null && variacionPeriodo < 0 ? 'text-red-700' : 'text-emerald-700'}`}>{showRevenue ? (variacionPeriodo == null ? 'Sin base comparable' : `${variacionPeriodo > 0 ? '+' : ''}${variacionPeriodo.toFixed(1)}%`) : '••••••'}</strong><small className="mt-1 block text-neutral-500">Respecto del período anterior de igual duración</small></article></section>}
+        </AnalyticsSection>
+        <AnalyticsSection step="02 · EVOLUCIÓN" title="Cómo se comportaron las ventas" description="Elegí una métrica y tocá un punto del gráfico para consultar su detalle.">
+          <SalesLineChart points={data.serie_ventas} showRevenue={showRevenue}/>
+        </AnalyticsSection>
+        <AnalyticsSection step="03 · QUÉ SE VENDIÓ" title="Ventas por colección" description="Bikinis y pijamas, con el detalle de modelos disponibles al tocar cada colección.">
+          <CategorySales items={data.ventas_por_categoria} onSelect={setSelectedCategory} showRevenue={showRevenue}/>
+        </AnalyticsSection>
+        <details className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5"><div><p className="eyebrow">04 · RANKINGS Y OPORTUNIDADES</p><h2 className="mt-1 text-xl font-bold">Productos y clientes destacados</h2><p className="mt-1 text-sm text-neutral-500">Abrí esta sección para consultar los listados detallados.</p></div><span className="shrink-0 rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold text-neutral-600">Ver detalle ↓</span></summary>
+          <div className="space-y-6 border-t border-neutral-200 p-4 sm:p-6"><div className="analytics-grid"><RankingTable title="Más vendidos" description="Ordenados por cantidad de unidades." items={data.mas_vendidos} showRevenue={showRevenue}/><RankingTable title="Menor rotación" description="Productos vendidos con menos unidades." items={data.menos_vendidos} showRevenue={showRevenue}/></div><div className="analytics-last"><ClientRankingTable items={data.mejores_clientes} showRevenue={showRevenue}/></div></div>
+        </details>
         {selectedCategory ? <CategorySalesModal category={selectedCategory} onClose={() => setSelectedCategory(null)} showRevenue={showRevenue}/> : null}
       </>}
     {weeklyBalanceOpen ? <WeeklyBalanceModal onClose={() => setWeeklyBalanceOpen(false)} showRevenue={showRevenue}/> : null}
