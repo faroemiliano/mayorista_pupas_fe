@@ -300,7 +300,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
             )}
 
           <div
-            className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${products.isFetching ? "opacity-50" : ""}`}
+            className={`grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 ${products.isFetching ? "opacity-50" : ""}`}
           >
             {products.data?.items.map((product) => (
               <ProductCard key={product.id} product={product} />
