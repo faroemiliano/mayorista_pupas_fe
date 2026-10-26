@@ -179,6 +179,7 @@ export function AdminOrders() {
           <div>
             <h2>{orders.data?.total ?? 0} pedidos encontrados</h2>
             <p>{dateFrom||dateTo?`Período: ${dateFrom||'inicio'} al ${dateTo||'hoy'}`:'Ordenados desde el más reciente.'}</p>
+            {orders.data && <p className="mt-1 text-sm font-semibold text-amber-800">Valor total del filtro: {formatCurrency(Number(orders.data.importe_total))}</p>}
           </div>
         </div>
         {selectedOrders.length > 0 && <div className="flex flex-wrap items-center gap-3 border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
