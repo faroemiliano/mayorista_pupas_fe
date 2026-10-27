@@ -9,6 +9,7 @@ import {
   getR2ImageMigrationDiagnostic,
   getR2ImageMigrationExecution,
   getR2ImageAudit,
+  getR2ImageOptimization,
   getProductReconciliation,
   getReconciliationCandidates,
   getWordpressMigrationExecution,
@@ -20,6 +21,7 @@ import {
   runProductR2ImageMigration,
   runR2ImageMigration,
   runR2ImageAudit,
+  runR2ImageOptimization,
   setDuxStockMode,
 } from "../../api/admin";
 
@@ -112,6 +114,15 @@ export function AdminWordpressMigration() {
   const runR2Audit = useMutation({
     mutationFn: runR2ImageAudit,
     onSuccess: (data) => queryClient.setQueryData(["r2-image-audit"], data),
+  });
+  const r2Optimization = useQuery({
+    queryKey: ["r2-image-optimization"],
+    queryFn: getR2ImageOptimization,
+    refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 3000 : false,
+  });
+  const runR2Optimization = useMutation({
+    mutationFn: runR2ImageOptimization,
+    onSuccess: (data) => queryClient.setQueryData(["r2-image-optimization"], data),
   });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
@@ -317,6 +328,21 @@ export function AdminWordpressMigration() {
               <div className="rounded bg-emerald-50 p-4"><small className="font-bold uppercase text-emerald-800">Ahorro posible</small><strong className="mt-1 block text-2xl">{informe.ahorro_estimado_mb} MB</strong></div>
             </div>
             <p className="mt-4 text-sm text-neutral-700">Peso total: <strong>{informe.peso_total_mb} MB</strong>. En R2: <strong>{informe.urls_r2}</strong>; externas o servidas por backend: <strong>{informe.urls_externas_o_backend}</strong>; inaccesibles: <strong>{informe.imagenes_inaccesibles}</strong>.</p>
+            {(informe.mayores_a_mb["1"] ?? 0) > 0 && r2Optimization.data?.estado !== "completada" && <button
+              className="mt-4 rounded bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40"
+              disabled={runR2Optimization.isPending || r2Optimization.data?.estado === "en_progreso"}
+              onClick={() => {
+                const cantidad = informe.mayores_a_mb["1"] ?? 0;
+                if (window.confirm(`¿Optimizar las ${cantidad} fotos de más de 1 MB? Se crearán versiones WebP más livianas y se conservarán los originales de R2 como respaldo.`)) {
+                  runR2Optimization.mutate();
+                }
+              }}
+            >
+              {r2Optimization.data?.estado === "en_progreso" ? "Optimizando imágenes…" : `Optimizar ${informe.mayores_a_mb["1"]} fotos pesadas`}
+            </button>}
+            {r2Optimization.data?.estado === "en_progreso" && <p className="mt-3 text-sm text-emerald-900">Avance: {r2Optimization.data.progreso?.optimizadas ?? 0} optimizadas de {r2Optimization.data.progreso?.total ?? 0}; {r2Optimization.data.progreso?.fallidas ?? 0} fallidas.</p>}
+            {r2Optimization.data?.estado === "completada" && r2Optimization.data.resultado && <p className="mt-3 rounded bg-emerald-100 p-3 text-sm text-emerald-900">Optimización terminada: <strong>{r2Optimization.data.resultado.optimizadas}</strong> fotos mejoradas, ahorro estimado real de <strong>{r2Optimization.data.resultado.ahorro_mb} MB</strong> y {r2Optimization.data.resultado.fallidas} fallidas. Los originales se conservaron en R2.</p>}
+            {(r2Optimization.data?.estado === "error" || runR2Optimization.isError) && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">{r2Optimization.data?.error || runR2Optimization.error?.message || "No se pudo iniciar la optimización."}</p>}
             {informe.imagenes_pesadas.length > 0 && <div className="mt-4 overflow-hidden rounded border border-violet-100 bg-white">
               <p className="border-b border-violet-100 px-4 py-3 text-sm font-bold text-violet-950">Las 10 fotos más pesadas detectadas</p>
               <ul className="divide-y divide-neutral-100">

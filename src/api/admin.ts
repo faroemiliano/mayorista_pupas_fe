@@ -478,6 +478,26 @@ export const getR2ImageAudit = () =>
 export const runR2ImageAudit = () =>
   apiPost<R2ImageAuditExecution>("/api/admin/imagenes/diagnostico-r2/ejecutar", {});
 
+export type R2ImageOptimizationExecution = {
+  estado: "pendiente" | "en_progreso" | "completada" | "error";
+  progreso: Record<string, number> | null;
+  resultado: {
+    procesadas: number;
+    optimizadas: number;
+    sin_ahorro: number;
+    fallidas: number;
+    ahorro_mb: number;
+    originales_conservados: boolean;
+  } | null;
+  error: string | null;
+};
+
+export const getR2ImageOptimization = () =>
+  apiGet<R2ImageOptimizationExecution>("/api/admin/imagenes/optimizacion-r2");
+
+export const runR2ImageOptimization = () =>
+  apiPost<R2ImageOptimizationExecution>("/api/admin/imagenes/optimizacion-r2/ejecutar", {});
+
 export type ProductReconciliation = {
   disponible: boolean;
   totales?: {
