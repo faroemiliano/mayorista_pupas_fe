@@ -407,6 +407,77 @@ export const getR2ImageMigrationDiagnostic = () =>
 export const runR2ImageMigration = () =>
   apiPost<R2ImageMigrationExecution>("/api/admin/migracion-wordpress/imagenes/r2/ejecutar", { confirmar: true });
 
+export type CatalogImageAuditExecution = {
+  estado: "pendiente" | "en_progreso" | "completado" | "error";
+  resultado: {
+    productos_total: number;
+    imagenes_total: number;
+    urls_r2: number;
+    urls_externas_o_backend: number;
+    imagenes_inaccesibles: number;
+    mayores_a_mb: Record<string, number>;
+    peso_total_mb: number;
+    ahorro_estimado_mb: number;
+    ahorro_estimado_porcentaje: number;
+    imagenes_pesadas: Array<{
+      imagen_id: number | null;
+      producto_id: number;
+      producto: string | null;
+      peso_mb: number;
+      url: string;
+    }>;
+  } | null;
+  error: string | null;
+  iniciada_en?: string | null;
+  finalizada_en?: string | null;
+};
+
+export const getCatalogImageAudit = () =>
+  apiGet<CatalogImageAuditExecution>("/api/admin/imagenes/diagnostico-r2");
+
+export const runCatalogImageAudit = () =>
+  apiPost<CatalogImageAuditExecution>("/api/admin/imagenes/diagnostico-r2/ejecutar", {});
+
+export type R2ImageAuditDetail = {
+  producto_id: number;
+  producto: string | null;
+  peso_bytes: number;
+  peso_mb?: number;
+  ancho?: number;
+  alto?: number;
+  formato?: string;
+  ahorro_estimado_bytes?: number;
+  error?: string;
+};
+
+export type R2ImageAuditResult = {
+  solo_lectura: true;
+  productos_total: number;
+  imagenes_total: number;
+  urls_r2: number;
+  urls_externas_o_backend: number;
+  imagenes_inaccesibles: number;
+  mayores_a_mb: Record<string, number>;
+  peso_total_mb: number;
+  ahorro_estimado_mb: number;
+  ahorro_estimado_porcentaje: number;
+  imagenes_pesadas: R2ImageAuditDetail[];
+};
+
+export type R2ImageAuditExecution = {
+  estado: "pendiente" | "en_progreso" | "completado" | "error";
+  resultado: R2ImageAuditResult | null;
+  error: string | null;
+  iniciada_en?: string | null;
+  finalizada_en?: string | null;
+};
+
+export const getR2ImageAudit = () =>
+  apiGet<R2ImageAuditExecution>("/api/admin/imagenes/diagnostico-r2");
+
+export const runR2ImageAudit = () =>
+  apiPost<R2ImageAuditExecution>("/api/admin/imagenes/diagnostico-r2/ejecutar", {});
+
 export type ProductReconciliation = {
   disponible: boolean;
   totales?: {

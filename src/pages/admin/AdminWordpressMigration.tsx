@@ -5,8 +5,10 @@ import {
   getDuxConfiguration,
   getImageMigrationDiagnostic,
   getImageMigrationExecution,
+  getCatalogImageAudit,
   getR2ImageMigrationDiagnostic,
   getR2ImageMigrationExecution,
+  getR2ImageAudit,
   getProductReconciliation,
   getReconciliationCandidates,
   getWordpressMigrationExecution,
@@ -14,8 +16,10 @@ import {
   linkReconciliationCandidate,
   runWordpressMigration,
   runImageMigration,
+  runCatalogImageAudit,
   runProductR2ImageMigration,
   runR2ImageMigration,
+  runR2ImageAudit,
   setDuxStockMode,
 } from "../../api/admin";
 
@@ -91,6 +95,24 @@ export function AdminWordpressMigration() {
   const r2Execution = useQuery({ queryKey: ["r2-image-migration-execution"], queryFn: getR2ImageMigrationExecution, refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 3000 : false });
   const r2Diagnostic = useQuery({ queryKey: ["r2-image-migration-diagnostic"], queryFn: getR2ImageMigrationDiagnostic, refetchInterval: r2Execution.data?.estado === "en_progreso" ? 3000 : false });
   const runR2All = useMutation({ mutationFn: runR2ImageMigration, onSuccess: async (data) => { queryClient.setQueryData(["r2-image-migration-execution"], data); await queryClient.invalidateQueries({ queryKey: ["r2-image-migration-diagnostic"] }); } });
+  const imageAudit = useQuery({
+    queryKey: ["catalog-image-audit"],
+    queryFn: getCatalogImageAudit,
+    refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 4000 : false,
+  });
+  const runImageAudit = useMutation({
+    mutationFn: runCatalogImageAudit,
+    onSuccess: (data) => queryClient.setQueryData(["catalog-image-audit"], data),
+  });
+  const r2Audit = useQuery({
+    queryKey: ["r2-image-audit"],
+    queryFn: getR2ImageAudit,
+    refetchInterval: (query) => query.state.data?.estado === "en_progreso" ? 3000 : false,
+  });
+  const runR2Audit = useMutation({
+    mutationFn: runR2ImageAudit,
+    onSuccess: (data) => queryClient.setQueryData(["r2-image-audit"], data),
+  });
   const toggleDux = useMutation({
     mutationFn: setDuxStockMode,
     onSuccess: (data) => queryClient.setQueryData(["dux-configuration"], data),
@@ -268,6 +290,76 @@ export function AdminWordpressMigration() {
           {r2Execution.data?.estado === "completada" && <p className="mt-3 text-sm text-emerald-900">Migración terminada: {String(r2Execution.data.resultado?.copiadas ?? 0)} copiadas y {String(r2Execution.data.resultado?.fallidas ?? 0)} fallidas.</p>}
           {(r2Execution.data?.estado === "error" || runR2All.isError) && <p className="mt-3 text-sm text-red-800">{r2Execution.data?.error || runR2All.error?.message || "No se pudo iniciar la migración."}</p>}
         </div>
+      </section>
+
+      <section className="rounded-md border border-violet-200 bg-violet-50 p-5">
+        <p className="eyebrow">CONTROL DE PESO</p>
+        <h2 className="mt-1 text-xl font-bold">Analizar imágenes pesadas</h2>
+        <p className="mt-2 max-w-2xl text-sm text-neutral-700">
+          Revisa el tamaño real de las fotos para detectar cuáles conviene optimizar. No cambia productos, URLs ni archivos de R2.
+        </p>
+        <button
+          className="mt-4 rounded bg-violet-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40"
+          disabled={runR2Audit.isPending || r2Audit.data?.estado === "en_progreso"}
+          onClick={() => runR2Audit.mutate()}
+        >
+          {r2Audit.data?.estado === "en_progreso" ? "Analizando imágenes…" : "Analizar catálogo"}
+        </button>
+        {r2Audit.data?.estado === "en_progreso" && <p className="mt-3 text-sm text-violet-900">El análisis continúa en segundo plano. Podés dejar esta pantalla abierta para ver el informe.</p>}
+        {runR2Audit.isError && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">No se pudo iniciar el análisis: {runR2Audit.error.message}</p>}
+        {r2Audit.data?.estado === "error" && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">{r2Audit.data.error || "No se pudo completar el análisis."}</p>}
+        {r2Audit.data?.resultado && (() => {
+          const informe = r2Audit.data.resultado;
+          return <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded bg-white p-4"><small className="font-bold uppercase text-neutral-500">Fotos analizadas</small><strong className="mt-1 block text-2xl">{informe.imagenes_total}</strong></div>
+              <div className="rounded bg-amber-50 p-4"><small className="font-bold uppercase text-amber-800">Más de 1 MB</small><strong className="mt-1 block text-2xl">{informe.mayores_a_mb["1"] ?? 0}</strong></div>
+              <div className="rounded bg-emerald-50 p-4"><small className="font-bold uppercase text-emerald-800">Ahorro posible</small><strong className="mt-1 block text-2xl">{informe.ahorro_estimado_mb} MB</strong></div>
+            </div>
+            <p className="mt-4 text-sm text-neutral-700">Peso total: <strong>{informe.peso_total_mb} MB</strong>. En R2: <strong>{informe.urls_r2}</strong>; externas o servidas por backend: <strong>{informe.urls_externas_o_backend}</strong>; inaccesibles: <strong>{informe.imagenes_inaccesibles}</strong>.</p>
+            {informe.imagenes_pesadas.length > 0 && <div className="mt-4 overflow-hidden rounded border border-violet-100 bg-white">
+              <p className="border-b border-violet-100 px-4 py-3 text-sm font-bold text-violet-950">Las 10 fotos más pesadas detectadas</p>
+              <ul className="divide-y divide-neutral-100">
+                {informe.imagenes_pesadas.slice(0, 10).map((imagen, index) => <li key={`${imagen.producto_id}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"><span className="font-medium">{imagen.producto || `Producto #${imagen.producto_id}`}</span><span className="text-neutral-600">{imagen.peso_mb ?? (imagen.peso_bytes / 1024 / 1024).toFixed(2)} MB{imagen.ancho && imagen.alto ? ` · ${imagen.ancho}×${imagen.alto}` : ""}</span></li>)}
+              </ul>
+            </div>}
+          </>;
+        })()}
+      </section>
+
+      <section className="rounded-md border border-violet-200 bg-violet-50 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="eyebrow">CONTROL DE CONSUMO</p>
+            <h2 className="mt-1 text-xl font-bold">Auditoría de peso de imágenes</h2>
+            <p className="mt-2 max-w-2xl text-sm text-neutral-700">
+              Revisa el catálogo sin modificar productos, fotos ni R2. El análisis se ejecuta en segundo plano: podés salir de esta pantalla y volver para ver el informe.
+            </p>
+          </div>
+          <button
+            className="rounded bg-violet-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40"
+            disabled={runImageAudit.isPending || imageAudit.data?.estado === "en_progreso"}
+            onClick={() => {
+              if (window.confirm("¿Analizar el peso de las imágenes del catálogo? No se modificará ninguna foto ni URL.")) runImageAudit.mutate();
+            }}
+          >
+            {imageAudit.data?.estado === "en_progreso" ? "Analizando imágenes…" : "Analizar imágenes"}
+          </button>
+        </div>
+        {imageAudit.data?.estado === "en_progreso" && <p className="mt-4 rounded bg-violet-100 p-3 text-sm text-violet-950">El análisis está en curso. Se revisan las referencias y tamaños desde el backend, sin necesidad de usar la Shell de Render.</p>}
+        {(imageAudit.data?.estado === "error" || runImageAudit.isError) && <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">{imageAudit.data?.error || runImageAudit.error?.message || "No se pudo completar el análisis."}</p>}
+        {imageAudit.data?.estado === "completado" && imageAudit.data.resultado && (
+          <div className="mt-5 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded bg-white p-4"><small className="font-bold uppercase text-neutral-500">Imágenes revisadas</small><strong className="mt-1 block text-2xl">{imageAudit.data.resultado.imagenes_total}</strong></div>
+              <div className="rounded bg-white p-4"><small className="font-bold uppercase text-neutral-500">Más de 1 MB</small><strong className="mt-1 block text-2xl text-amber-700">{imageAudit.data.resultado.mayores_a_mb["1"] ?? 0}</strong></div>
+              <div className="rounded bg-white p-4"><small className="font-bold uppercase text-neutral-500">Peso conocido</small><strong className="mt-1 block text-2xl">{imageAudit.data.resultado.peso_total_mb} MB</strong></div>
+              <div className="rounded bg-white p-4"><small className="font-bold uppercase text-neutral-500">Ahorro estimado</small><strong className="mt-1 block text-2xl text-emerald-700">{imageAudit.data.resultado.ahorro_estimado_mb} MB</strong></div>
+            </div>
+            <p className="text-sm text-neutral-700">R2: <strong>{imageAudit.data.resultado.urls_r2}</strong> imágenes. Otras fuentes: <strong>{imageAudit.data.resultado.urls_externas_o_backend}</strong>. Sin acceso o sin respuesta: <strong>{imageAudit.data.resultado.imagenes_inaccesibles}</strong>.</p>
+            {imageAudit.data.resultado.imagenes_pesadas.length > 0 && <div className="overflow-x-auto rounded border border-violet-200 bg-white"><table className="min-w-full text-left text-sm"><thead className="bg-violet-50 text-xs uppercase text-violet-900"><tr><th className="px-3 py-2">Producto</th><th className="px-3 py-2">Peso</th><th className="px-3 py-2">ID</th></tr></thead><tbody>{imageAudit.data.resultado.imagenes_pesadas.slice(0, 30).map((imagen) => <tr key={`${imagen.producto_id}-${imagen.imagen_id}-${imagen.url}`} className="border-t border-neutral-100"><td className="px-3 py-2">{imagen.producto || "Sin nombre"}</td><td className="px-3 py-2 font-bold text-amber-700">{imagen.peso_mb} MB</td><td className="px-3 py-2 text-neutral-500">{imagen.producto_id}</td></tr>)}</tbody></table></div>}
+          </div>
+        )}
       </section>
 
       <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
