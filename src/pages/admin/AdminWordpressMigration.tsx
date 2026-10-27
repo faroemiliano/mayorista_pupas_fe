@@ -343,6 +343,12 @@ export function AdminWordpressMigration() {
             {r2Optimization.data?.estado === "en_progreso" && <p className="mt-3 text-sm text-emerald-900">Avance: {r2Optimization.data.progreso?.optimizadas ?? 0} optimizadas de {r2Optimization.data.progreso?.total ?? 0}; {r2Optimization.data.progreso?.fallidas ?? 0} fallidas.</p>}
             {r2Optimization.data?.estado === "completada" && r2Optimization.data.resultado && <p className="mt-3 rounded bg-emerald-100 p-3 text-sm text-emerald-900">Optimización terminada: <strong>{r2Optimization.data.resultado.optimizadas}</strong> fotos mejoradas, ahorro estimado real de <strong>{r2Optimization.data.resultado.ahorro_mb} MB</strong> y {r2Optimization.data.resultado.fallidas} fallidas. Los originales se conservaron en R2.</p>}
             {(r2Optimization.data?.estado === "error" || runR2Optimization.isError) && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">{r2Optimization.data?.error || runR2Optimization.error?.message || "No se pudo iniciar la optimización."}</p>}
+            {(r2Optimization.data?.errores?.length ?? 0) > 0 && <details className="mt-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+              <summary className="cursor-pointer font-bold">Ver motivos de las {r2Optimization.data?.errores?.length} fotos que no se optimizaron</summary>
+              <ul className="mt-3 list-disc space-y-1 pl-5 text-xs">
+                {r2Optimization.data?.errores?.map((error, index) => <li key={`${error.imagen_id ?? error.producto_id ?? index}-${index}`}>Producto #{error.producto_id ?? "sin identificar"}: {error.error}</li>)}
+              </ul>
+            </details>}
             {informe.imagenes_pesadas.length > 0 && <div className="mt-4 overflow-hidden rounded border border-violet-100 bg-white">
               <p className="border-b border-violet-100 px-4 py-3 text-sm font-bold text-violet-950">Las 10 fotos más pesadas detectadas</p>
               <ul className="divide-y divide-neutral-100">

@@ -490,6 +490,11 @@ export type R2ImageOptimizationExecution = {
     originales_conservados: boolean;
   } | null;
   error: string | null;
+  errores?: Array<{
+    imagen_id?: number | null;
+    producto_id?: number | null;
+    error: string;
+  }>;
 };
 
 export const getR2ImageOptimization = () =>
