@@ -66,7 +66,9 @@ export function HeroCarousel() {
   const puedeEditarPortada = user?.rol === 'admin' || user?.rol === 'admin_tecnico';
   const slides = heroSlides.map((slide) => ({
     ...slide,
-    mediaUrl: portadas.data?.imagenes[slide.id] || slide.mediaUrl,
+    // Esperamos la configuración antes de iniciar un fallback local. Evita
+    // pedir primero Vercel y luego R2 para el mismo espacio de portada.
+    mediaUrl: portadas.isPending ? undefined : portadas.data?.imagenes[slide.id],
   }));
 
   useEffect(() => {
@@ -128,7 +130,7 @@ export function HeroCarousel() {
                   onError={() => markFailed(slide.id)}
                 />
               )}
-            {(failed[slide.id] || slide.mediaType === "placeholder") && (
+            {(failed[slide.id] || slide.mediaType === "placeholder" || !slide.mediaUrl) && (
               <EmptyMedia
                 kind={slide.mediaType === "video" ? "video" : "foto"}
               />

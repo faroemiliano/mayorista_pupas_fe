@@ -1,0 +1,28 @@
+# Este agente de Meta recopila contenido para sistemas de IA; no es el agente
+# tradicional que genera las vistas previas de enlaces en Facebook/Instagram.
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+# Los AdsBot de Google no aplican el grupo global. Pueden revisar las páginas
+# públicas de destino, pero no las secciones privadas de la aplicación.
+User-agent: AdsBot-Google
+User-agent: AdsBot-Google-Mobile
+Disallow: /admin
+Disallow: /mi-cuenta
+Disallow: /restablecer-clave
+
+# Google, Bing, facebookexternalhit y los demás rastreadores legítimos pueden
+# acceder a la tienda pública y generar resultados o vistas previas.
+User-agent: *
+Disallow: /admin
+Disallow: /mi-cuenta
+Disallow: /restablecer-clave

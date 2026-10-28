@@ -44,7 +44,7 @@ export function useAuth() {
 }
 
 export function GoogleAccessButton() {
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'login'|'register'>('login')
   const [error, setError] = useState('')
@@ -109,7 +109,9 @@ export function GoogleAccessButton() {
     try {
       if (mode === 'login') {
         const result = await login(String(data.get('email')), password)
-        localStorage.setItem(KEY, result.access_token); window.location.reload()
+        localStorage.setItem(KEY, result.access_token)
+        await refreshUser()
+        setOpen(false)
       } else {
         const tiendaOnline = String(data.get('tienda_online_url') || '').trim()
         const result = await register({nombre:String(data.get('nombre')),apellido:String(data.get('apellido')),email:String(data.get('email')),telefono:String(data.get('telefono')),provincia:String(data.get('provincia')),localidad_partido:String(data.get('localidad_partido')),domicilio:null,canal_venta:String(data.get('canal_venta')),tienda_online_url:tiendaOnline||null,password,confirmar_password:confirmation})
@@ -123,7 +125,7 @@ export function GoogleAccessButton() {
     <button className="shrink-0 border border-black bg-black px-4 py-2.5 text-[9px] font-bold uppercase tracking-[.14em] text-white transition hover:bg-white hover:text-black" onClick={()=>setOpen(true)}>Ingresar</button>
     {open && <div className="fixed inset-0 z-[100] grid place-items-center bg-[#171717]/70 p-4 backdrop-blur-sm" onMouseDown={closeModal}>
       <form className="relative max-h-[94vh] w-full max-w-[560px] overflow-y-auto rounded-3xl bg-white shadow-2xl" onSubmit={submit} onMouseDown={event=>event.stopPropagation()}>
-        <div className="bg-black px-8 py-7 text-white"><button className="absolute right-5 top-4 text-3xl text-white/80" type="button" aria-label="Cerrar bienvenida" onClick={closeModal}>×</button><img className="h-14 w-44 object-contain invert" src="/brand/logo-pupas.jpg" alt="Pupas"/><h2 className="mt-3 font-serif text-3xl font-semibold">Bienvenidos a Pupas</h2><p className="mt-2 text-sm text-white/70">Ingresá o creá tu cuenta para acceder a precios y compras mayoristas. También podés cerrar esta ventana y recorrer la tienda.</p></div>
+        <div className="bg-black px-8 py-7 text-white"><button className="absolute right-5 top-4 text-3xl text-white/80" type="button" aria-label="Cerrar bienvenida" onClick={closeModal}>×</button><img className="h-14 w-44 object-contain invert" src="/brand/logo-pupas-optimized-e6e61928.jpg" alt="Pupas" width="600" height="315"/><h2 className="mt-3 font-serif text-3xl font-semibold">Bienvenidos a Pupas</h2><p className="mt-2 text-sm text-white/70">Ingresá o creá tu cuenta para acceder a precios y compras mayoristas. También podés cerrar esta ventana y recorrer la tienda.</p></div>
         <div className="space-y-4 px-8 py-7">
           {success ? <><div className="rounded-2xl bg-emerald-50 p-5 text-center"><div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-emerald-600 text-2xl text-white">✓</div><h3 className="font-bold text-emerald-900">Registro enviado</h3><p className="mt-2 text-sm text-emerald-800">{success}</p></div><button className="w-full rounded-xl bg-[#111111] p-3 text-white" type="button" onClick={()=>{setSuccess('');setMode('login')}}>Ir a iniciar sesión</button></> : <>
           <div className="grid grid-cols-2 border border-neutral-200 p-1"><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='login'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('login');setEmailMigrated(false);setResetSent(false);setError('')}}>Ingresar</button><button type="button" className={`px-4 py-3 text-xs font-extrabold uppercase tracking-wider ${mode==='register'?'bg-black text-white':'bg-white text-neutral-500'}`} onClick={()=>{setMode('register');setEmailMigrated(false);setResetSent(false);setError('')}}>Registrarme</button></div>

@@ -12,7 +12,7 @@ export function ResetPassword(){
     <div className="absolute -bottom-36 -right-24 size-96 rounded-full bg-[#e7d9cf]/70 blur-3xl" aria-hidden="true"/>
     <section className="relative w-full max-w-md overflow-hidden rounded-3xl border border-[#e4d9d0] bg-white shadow-[0_24px_80px_rgba(57,43,32,0.14)]">
       <header className="border-b border-neutral-100 px-8 pb-7 pt-8 text-center">
-        <Link to="/" aria-label="Volver a Pupas"><img className="mx-auto h-20 w-56 object-contain" src="/brand/logo-pupas.jpg" alt="Pupas"/></Link>
+        <Link to="/" aria-label="Volver a Pupas"><img className="mx-auto h-20 w-56 object-contain" src="/brand/logo-pupas-optimized-e6e61928.jpg" alt="Pupas" width="600" height="315"/></Link>
         <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[.28em] text-[#756351]">Tienda mayorista</p>
       </header>
       <div className="px-7 py-8 sm:px-9">

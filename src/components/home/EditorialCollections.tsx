@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProducts } from '../../api/catalog'
 import { productImageAsset } from '../../api/client'
@@ -14,36 +14,53 @@ const collections = [
   {
     title: 'Bikinis',
     keyword: 'bikini',
-    video: 'bikinis.mp4',
     background: 'bg-[#f3f3f1]',
     muted: 'text-neutral-500',
     copy: 'Diseños para una temporada que se vende antes de empezar.',
     imageKey: 'coleccion-bikinis',
-    provisional: ['/images/home/provisional/bikini-01.webp', '/images/home/provisional/bikini-02.webp'],
+    provisional: [
+      'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/1971/imagenes/8311.jpg',
+      'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/2098/imagenes/8640.jpg',
+    ],
     reverse: false,
   },
   {
     title: 'Pijamas',
     keyword: 'pijama',
-    video: 'pijamas.mp4',
     background: 'bg-[#e8dfd2] text-[#211d19]',
     muted: 'text-[#74695d]',
     copy: 'Comodidad, textura y modelos pensados para todo el año.',
     imageKey: 'coleccion-pijamas',
-    provisional: ['/images/home/provisional/pijama-01.webp', '/images/home/provisional/pijama-02.webp'],
+    provisional: [
+      'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/2004/imagenes/8434.jpg',
+      'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/2004/imagenes/8435.jpg',
+    ],
     reverse: true,
   },
 ] as const
 
-function VideoSlot({ file, title, dark }: { file: string; title: string; dark: boolean }) {
+function VideoSlot({ title, dark }: { title: string; dark: boolean }) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const input = useRef<HTMLInputElement>(null)
+  const container = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
+  const [nearViewport, setNearViewport] = useState(false)
   const videoId = `video-${title.toLowerCase()}`
   const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico'
   const portadas = useQuery({ queryKey: ['portadas-inicio'], queryFn: getPortadasInicio })
-  const videoUrl = portadas.data?.imagenes[videoId] || `/videos/home/collections/${file}`
+  const videoUrl = portadas.isPending ? null : portadas.data?.imagenes[videoId] || null
+  useEffect(() => {
+    const element = container.current
+    if (!element || nearViewport) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      setNearViewport(true)
+      observer.disconnect()
+    }, { rootMargin: '150px 0px' })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [nearViewport])
   const actualizarVideo = useMutation({
     mutationFn: async (video: File) => {
       if (video.type !== 'video/mp4') throw new Error('Elegí un video MP4.')
@@ -62,13 +79,13 @@ function VideoSlot({ file, title, dark }: { file: string; title: string; dark: b
       queryClient.invalidateQueries({ queryKey: ['portadas-inicio'] })
     },
   })
-  return <div className="relative mx-auto w-full max-w-135">
+  return <div ref={container} className="relative mx-auto w-full max-w-135">
     <div className={`absolute -left-4 -top-4 size-20 border-l border-t ${dark ? 'border-white/30' : 'border-black/25'}`}/>
     <div className="relative aspect-[9/16] overflow-hidden bg-black">
       <div className="absolute inset-0 grid place-items-center px-7 text-center text-neutral-500">
         <div><span className="mx-auto grid size-12 place-items-center rounded-full border border-current text-lg">▶</span><strong className="mt-4 block font-serif text-xl font-medium">Video de {title}</strong><small className="mt-2 block text-[9px] uppercase tracking-[.2em]">Campaña de la colección</small></div>
       </div>
-      {!failed && (
+      {!failed && nearViewport && videoUrl && (
         <video
           className="relative h-full w-full object-contain"
           src={videoUrl}
@@ -240,7 +257,7 @@ export function EditorialCollections({ onCategoryNavigate }: { onCategoryNavigat
           </div>
 
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(300px,40%)_minmax(0,60%)] lg:gap-16">
-            <div className={collection.reverse ? 'lg:order-2' : ''}><VideoSlot file={collection.video} title={collection.title} dark={dark}/></div>
+            <div className={collection.reverse ? 'lg:order-2' : ''}><VideoSlot title={collection.title} dark={dark}/></div>
             <div className={collection.reverse ? 'lg:order-1' : ''}>
               <div className="mb-5 flex items-center justify-between"><span className={`text-[9px] font-bold uppercase tracking-[.2em] ${collection.muted}`}>Novedades</span><button type="button" onClick={() => onCategoryNavigate(collection.keyword)} className={`border-b pb-1 text-[9px] font-bold uppercase tracking-[.16em] ${dark ? 'border-white text-white' : 'border-black text-black'}`}>Ver colección completa →</button></div>
               <CollectionProducts keyword={collection.keyword} imageKey={collection.imageKey} provisional={collection.provisional} title={collection.title}/>

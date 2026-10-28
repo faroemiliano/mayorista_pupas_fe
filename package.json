@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:cloudflare": "tsc -b && VITE_API_URL=https://pupas-mayorista-api.onrender.com vite build",
+    "cloudflare:dev": "npm run build:cloudflare && WRANGLER_LOG_PATH=.wrangler/logs/wrangler.log npx --yes wrangler@4.80.0 dev",
+    "cloudflare:deploy": "npm run build:cloudflare && WRANGLER_LOG_PATH=.wrangler/logs/wrangler.log npx --yes wrangler@4.80.0 deploy",
     "lint": "oxlint",
     "preview": "vite preview"
   },

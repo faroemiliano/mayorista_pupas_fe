@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "../layout/Brand";
 import { adminStyles } from "../../styles/tailwind";
 import { useQuery } from "@tanstack/react-query";
@@ -81,7 +81,7 @@ export function AdminLayout() {
               <p className="truncate text-xs font-semibold text-white/90">{user?.nombre} {user?.apellido}</p>
               <p className="mt-1 truncate text-[10px] text-white/40">{user?.email}</p>
             </div>
-            <a className="mt-2 flex items-center gap-2 rounded-xl px-3 py-3 text-xs font-semibold text-white/60 no-underline transition hover:bg-white/8 hover:text-white" href="/"><span aria-hidden="true">←</span> Volver a la tienda</a>
+            <Link className="mt-2 flex items-center gap-2 rounded-xl px-3 py-3 text-xs font-semibold text-white/60 no-underline transition hover:bg-white/8 hover:text-white" to="/"><span aria-hidden="true">←</span> Volver a la tienda</Link>
           </div>
         </div>
       </aside>

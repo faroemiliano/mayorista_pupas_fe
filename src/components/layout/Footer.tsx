@@ -1,15 +1,16 @@
 import { Brand } from './Brand'
 import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_LINK, whatsappUrl } from '../../config/contact'
+import { Link } from 'react-router-dom'
 
 export function Footer() {
   return <footer className="!block !bg-[#faf7f2] !p-0 !text-[#241d17]">
     <section className="grid min-h-72 place-items-center bg-[#faf7f2] px-6 text-center">
-      <div><p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#756351]">¿Tenés un negocio?</p><h2 className="mt-3 font-serif text-4xl">Comprá por mayor</h2><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6b5a4a]">Armá tu pedido online y sumá bikinis y pijamas a tu tienda.</p><a href="/catalogo" className="mt-6 inline-flex bg-[#5b493b] px-6 py-3 text-[9px] font-bold uppercase tracking-[.14em] text-white no-underline transition hover:bg-[#241d17]">Más información</a></div>
+      <div><p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#756351]">¿Tenés un negocio?</p><h2 className="mt-3 font-serif text-4xl">Comprá por mayor</h2><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6b5a4a]">Armá tu pedido online y sumá bikinis y pijamas a tu tienda.</p><Link to="/catalogo" className="mt-6 inline-flex bg-[#5b493b] px-6 py-3 text-[9px] font-bold uppercase tracking-[.14em] text-white no-underline transition hover:bg-[#241d17]">Más información</Link></div>
     </section>
     <div className="flex justify-center border-y border-[#cdb99f] bg-[#f3eadf] py-8"><Brand footer/></div>
     <div className="grid md:grid-cols-2">
       <a href="https://www.facebook.com/pupaokk" target="_blank" rel="noopener noreferrer" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Facebook de Pupas">
-        <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/facebook.webp" alt=""/>
+        <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/facebook-188bb7be.webp" alt="" width="960" height="1280" loading="lazy" decoding="async"/>
         <span className="absolute inset-0 backdrop-blur-[2px] [mask-image:radial-gradient(ellipse_at_center,transparent_52%,black_100%)]"/>
         <span className="absolute inset-0 bg-black/40 transition group-hover:bg-black/55"/>
         <span className="relative z-10 flex flex-col items-center gap-4">
@@ -18,7 +19,7 @@ export function Footer() {
         </span>
       </a>
       <a href="https://www.instagram.com/pupasokk" target="_blank" rel="noopener noreferrer" className="group relative grid min-h-48 overflow-hidden place-items-center text-white no-underline sm:min-h-64" aria-label="Visitar Instagram de Pupas">
-        <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/instagram.webp" alt=""/>
+        <img className="absolute inset-0 h-full w-full object-cover object-[center_76%] transition duration-700 group-hover:scale-105" src="/images/footer/instagram-18796a4b.webp" alt="" width="960" height="1280" loading="lazy" decoding="async"/>
         <span className="absolute inset-0 backdrop-blur-[2px] [mask-image:radial-gradient(ellipse_at_center,transparent_52%,black_100%)]"/>
         <span className="absolute inset-0 bg-black/40 transition group-hover:bg-black/55"/>
         <span className="relative z-10 flex flex-col items-center gap-4">
@@ -30,15 +31,15 @@ export function Footer() {
     <div className="!bg-[#cdb99f] px-6 py-10 !text-[#241d17]">
       <div className="mx-auto grid max-w-360 gap-9 text-center md:grid-cols-[1.2fr_1fr_1fr_1fr] md:text-left">
         <div className="flex justify-center md:justify-start"><Brand footer/></div>
-        <div><strong className="text-[9px] uppercase tracking-[.18em]">Ayuda</strong><a href="/como-comprar" className="mt-3 block text-xs text-[#5d4d40] no-underline hover:text-black">Cómo comprar</a><a href="/como-comprar" className="mt-2 block text-xs text-[#5d4d40] no-underline hover:text-black">Preguntas frecuentes</a></div>
-        <div><strong className="text-[9px] uppercase tracking-[.18em]">Mi cuenta</strong><a href="/mi-cuenta" className="mt-3 block text-xs text-[#5d4d40] no-underline hover:text-black">Ingresar</a></div>
+        <div><strong className="text-[9px] uppercase tracking-[.18em]">Ayuda</strong><Link to="/como-comprar" className="mt-3 block text-xs text-[#5d4d40] no-underline hover:text-black">Cómo comprar</Link><Link to="/como-comprar" className="mt-2 block text-xs text-[#5d4d40] no-underline hover:text-black">Preguntas frecuentes</Link></div>
+        <div><strong className="text-[9px] uppercase tracking-[.18em]">Mi cuenta</strong><Link to="/mi-cuenta" className="mt-3 block text-xs text-[#5d4d40] no-underline hover:text-black">Ingresar</Link></div>
         <div><strong className="text-[9px] uppercase tracking-[.18em]">Contacto</strong><p className="mt-3 text-xs text-[#5d4d40]">Atención mayorista online</p><a className="mt-2 block text-xs text-[#493b30] no-underline hover:text-black" href={`tel:${CONTACT_PHONE_LINK}`}>{CONTACT_PHONE_DISPLAY}</a><a className="mt-2 block text-xs text-[#5d4d40] no-underline hover:text-black" href={whatsappUrl('Hola, quisiera hacer una consulta mayorista.')} target="_blank" rel="noreferrer">Escribir por WhatsApp</a></div>
       </div>
       <div className="mx-auto mt-1 flex max-w-360 flex-col items-center gap-4 border-t border-black/15 pt-0 text-center text-[10px] text-[#6b5847]">
         <span className="-mt-2 bg-[#cdb99f] px-4">© 2026. Todos los derechos reservados.</span>
         <div className="flex items-center gap-3 text-left">
           <a href="https://www.farixio.com" target="_blank" rel="noreferrer" aria-label="Sitio web de Farixio" className="grid size-16 shrink-0 overflow-hidden rounded-full border border-black/15 bg-white transition hover:-translate-y-0.5 hover:shadow-md sm:size-20">
-            <img src="/brand/logo-farixio.png" alt="Farixio" className="size-full scale-125 object-cover" />
+            <img src="/brand/logo-farixio-small-8f3a2278.jpg" alt="Farixio" width="200" height="200" loading="lazy" decoding="async" className="size-full scale-125 object-cover" />
           </a>
           <div className="leading-tight">
             <small className="block text-[9px] uppercase tracking-[.14em] text-[#6b5847]">Diseño y desarrollo web</small>

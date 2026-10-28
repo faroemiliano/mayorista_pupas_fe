@@ -13,9 +13,9 @@ type Props = {
 }
 
 const styles = [
-  { label: 'Bikinis', keywords: ['bikini', 'malla', 'traje de baño'], fallback: '👙', fallbackImage: '/images/home/provisional/bikini-01.webp' },
-  { label: 'Pijamas', keywords: ['pijama', 'pijamas', 'sleep'], fallback: '🌙', fallbackImage: '/images/home/provisional/pijama-01.webp' },
-  { label: 'Lencería', keywords: ['lencería', 'lenceria', 'ropa interior', 'corpiño'], fallback: '♡', fallbackImage: '/images/home/lenceria-carousel.webp' },
+  { label: 'Bikinis', keywords: ['bikini', 'malla', 'traje de baño'], fallback: '👙', fallbackImage: 'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/1971/imagenes/8311.jpg' },
+  { label: 'Pijamas', keywords: ['pijama', 'pijamas', 'sleep'], fallback: '🌙', fallbackImage: 'https://imagenes.pupasmayorista.com.ar/pupas/catalogo/productos/2004/imagenes/8434.jpg' },
+  { label: 'Lencería', keywords: ['lencería', 'lenceria', 'ropa interior', 'corpiño'], fallback: '♡', fallbackImage: undefined },
 ]
 
 function productImage(product: Product | undefined) {

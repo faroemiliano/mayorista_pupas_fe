@@ -47,7 +47,7 @@ export function RouteLoadingOverlay() {
         <span className="absolute inset-1 rounded-full border border-amber-200 border-t-rose-300/90 animate-[spin_4s_linear_infinite]"/>
         <span className="absolute inset-4 rounded-full bg-gradient-to-br from-rose-100/90 via-amber-50/80 to-sky-100/90 blur-md"/>
         <div className="relative size-28 overflow-hidden rounded-full border-4 border-white bg-white shadow-[0_12px_34px_rgba(0,0,0,.16)] animate-[pulse_2.2s_ease-in-out_infinite]">
-          <img className="size-full scale-110 object-cover" src="/brand/logo-pupas-original.jpg" alt="Pupas"/>
+          <img className="size-full scale-110 object-cover" src="/brand/logo-pupas-original-21dce120.jpg" alt="Pupas"/>
         </div>
       </div>
     </div>

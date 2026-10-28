@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   Navigate,
   Route,
@@ -8,8 +8,6 @@ import {
   useParams,
 } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import { Catalog } from "./components/catalog/Catalog";
 import { CartDrawer } from "./components/cart/CartDrawer";
 import { Benefits } from "./components/home/Benefits";
 import { CustomerTestimonials } from "./components/home/CustomerTestimonials";
@@ -21,26 +19,32 @@ import { AnnouncementBar } from "./components/layout/AnnouncementBar";
 import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { WhatsAppFloat } from "./components/layout/WhatsAppFloat";
-import { AdminDashboard } from "./pages/admin/AdminDashboard";
-import { AdminPlaceholder } from "./pages/admin/AdminPlaceholder";
-import { AdminProducts } from "./pages/admin/AdminProducts";
-import { AdminOrders } from "./pages/admin/AdminOrders";
-import { AdminProductAnalytics } from "./pages/admin/AdminProductAnalytics";
-import { AdminTrafficAnalytics } from "./pages/admin/AdminTrafficAnalytics";
-import { AdminConfirmations } from "./pages/admin/AdminConfirmations";
-import { AdminClients } from "./pages/admin/AdminClients";
-import { MyAccount } from "./pages/MyAccount";
-import { ProductDetail } from "./pages/ProductDetail";
-import { AdminNotifications } from "./pages/admin/AdminNotifications";
-import { AdminSizeStock } from "./pages/admin/AdminSizeStock";
-import { HowToBuy } from "./pages/HowToBuy";
-import { AdminMaterials } from "./pages/admin/AdminMaterials";
 import { storeStyles } from "./styles/tailwind";
-import { ResetPassword } from "./pages/ResetPassword";
-import { AdminWordpressMigration } from "./pages/admin/AdminWordpressMigration";
-import { AdminReviews } from "./pages/admin/AdminReviews";
 import { RouteLoadingOverlay } from "./components/layout/RouteLoadingOverlay";
 import { trackPageView } from "./lib/googleAnalytics";
+
+// Las pantallas que no pertenecen al inicio se descargan sólo cuando el
+// visitante entra en ellas. En especial, el panel admin deja de formar parte
+// del bundle público que recibe cada visita a la tienda.
+const Catalog = lazy(() => import("./components/catalog/Catalog").then((module) => ({ default: module.Catalog })));
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then((module) => ({ default: module.AdminLayout })));
+const MyAccount = lazy(() => import("./pages/MyAccount").then((module) => ({ default: module.MyAccount })));
+const ProductDetail = lazy(() => import("./pages/ProductDetail").then((module) => ({ default: module.ProductDetail })));
+const HowToBuy = lazy(() => import("./pages/HowToBuy").then((module) => ({ default: module.HowToBuy })));
+const ResetPassword = lazy(() => import("./pages/ResetPassword").then((module) => ({ default: module.ResetPassword })));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
+const AdminPlaceholder = lazy(() => import("./pages/admin/AdminPlaceholder").then((module) => ({ default: module.AdminPlaceholder })));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts").then((module) => ({ default: module.AdminProducts })));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders").then((module) => ({ default: module.AdminOrders })));
+const AdminProductAnalytics = lazy(() => import("./pages/admin/AdminProductAnalytics").then((module) => ({ default: module.AdminProductAnalytics })));
+const AdminTrafficAnalytics = lazy(() => import("./pages/admin/AdminTrafficAnalytics").then((module) => ({ default: module.AdminTrafficAnalytics })));
+const AdminConfirmations = lazy(() => import("./pages/admin/AdminConfirmations").then((module) => ({ default: module.AdminConfirmations })));
+const AdminClients = lazy(() => import("./pages/admin/AdminClients").then((module) => ({ default: module.AdminClients })));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications").then((module) => ({ default: module.AdminNotifications })));
+const AdminSizeStock = lazy(() => import("./pages/admin/AdminSizeStock").then((module) => ({ default: module.AdminSizeStock })));
+const AdminMaterials = lazy(() => import("./pages/admin/AdminMaterials").then((module) => ({ default: module.AdminMaterials })));
+const AdminWordpressMigration = lazy(() => import("./pages/admin/AdminWordpressMigration").then((module) => ({ default: module.AdminWordpressMigration })));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews").then((module) => ({ default: module.AdminReviews })));
 
 function TrafficTracker() {
   const location = useLocation()
@@ -135,6 +139,7 @@ export default function App() {
   return <>
     <TrafficTracker />
     <RouteLoadingOverlay />
+    <Suspense fallback={<div className="grid min-h-60 place-items-center"><p>Cargando…</p></div>}>
     <Routes>
       <Route path="/restablecer-clave" element={<ResetPassword />} />
       <Route
@@ -181,5 +186,6 @@ export default function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   </>;
 }
