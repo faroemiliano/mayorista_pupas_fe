@@ -115,12 +115,58 @@ export const updateAdminProduct = (id: number, payload: ProductEditorPayload) =>
 export const uploadAdminProductImage = (
   id: number,
   payload: {
-    nombre: string;
-    media_type: string;
-    contenido_base64: string;
+    file: File;
     principal: boolean;
   },
-) => apiPost<{ id: number }>(`/api/admin/productos/${id}/imagenes`, payload);
+) => uploadAdminProductImageDirect(id, payload);
+
+type DirectImageUpload = {
+  clave: string;
+  upload_url: string;
+  imagen_url: string;
+};
+
+async function uploadAdminProductImageDirect(
+  id: number,
+  { file, principal }: { file: File; principal: boolean },
+) {
+  const preparation = await apiPost<DirectImageUpload>(
+    `/api/admin/productos/${id}/imagenes/carga-directa`,
+    { media_type: file.type, tamano: file.size },
+  );
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(preparation.upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "image/webp",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+        body: file,
+      });
+      if (!response.ok) throw new Error(`R2 respondió ${response.status}.`);
+      lastError = null;
+      break;
+    } catch (reason) {
+      lastError = reason instanceof Error ? reason : new Error("Falló la conexión con R2.");
+      if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));
+    }
+  }
+  if (lastError) throw new Error(`No se pudo subir la foto: ${lastError.message}`);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await apiPut<{ id: number; url: string; orden: number; principal: boolean }>(
+        `/api/admin/productos/${id}/imagenes/confirmar`,
+        { clave: preparation.clave, principal },
+      );
+    } catch (reason) {
+      lastError = reason instanceof Error ? reason : new Error("Falló la confirmación de la foto.");
+      if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)));
+    }
+  }
+  throw new Error(`La foto llegó a R2 pero no pudo confirmarse: ${lastError?.message || "error desconocido"}`);
+}
 export const deleteAdminProductImage = (productId: number, imageId: number) =>
   apiDelete(`/api/admin/productos/${productId}/imagenes/${imageId}`);
 export const setAdminProductMainImage = (productId: number, imageId: number) =>

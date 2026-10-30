@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { apiAsset } from "../../api/client";
 import {
   createAdminProduct,
@@ -10,6 +10,7 @@ import {
   type ProductEditorPayload,
 } from "../../api/admin";
 import type { CatalogFilters, Product } from "../../types/catalog";
+import { optimizeCatalogImage } from "../../utils/catalogImage";
 
 type Props = {
   product: Product | null;
@@ -25,7 +26,13 @@ type SizeRow = {
   agregar: number;
   restar: number;
 };
-type PendingImage = { file: File; preview: string; principal: boolean };
+type PendingImage = {
+  file: File;
+  preview: string;
+  principal: boolean;
+  status: "ready" | "uploading" | "error";
+  error?: string;
+};
 const input =
   "mt-1.5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-black focus:ring-2 focus:ring-neutral-200";
 const emptySize = (): SizeRow => ({
@@ -58,8 +65,11 @@ export function ProductEditorModal({
   );
   const [sizes, setSizes] = useState<SizeRow[]>(rowsFromProduct(product));
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [persistedProductId, setPersistedProductId] = useState<number | null>(null);
+  const [preparingImages, setPreparingImages] = useState(false);
   const [saving, setSaving] = useState(false),
     [error, setError] = useState("");
+  const previewUrls = useRef<string[]>([]);
   useEffect(() => {
     if (!product) return;
     getAdminProduct(product.id)
@@ -76,11 +86,7 @@ export function ProductEditorModal({
         ),
       );
   }, [product]);
-  useEffect(
-    () => () =>
-      pendingImages.forEach((item) => URL.revokeObjectURL(item.preview)),
-    [pendingImages],
-  );
+  useEffect(() => () => previewUrls.current.forEach(URL.revokeObjectURL), []);
   const subcategories =
     filters?.categorias.find((item) => String(item.id) === category)
       ?.subcategorias || [];
@@ -93,30 +99,33 @@ export function ProductEditorModal({
     (total, item) => total + item.reservado,
     0,
   );
-  const addFiles = (files: FileList | null) => {
+  const addFiles = async (files: FileList | null) => {
     if (!files) return;
-    const valid = [...files].filter(
-      (file) =>
-        ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
-          file.type,
-        ) && file.size <= 8 * 1024 * 1024,
-    );
-    setPendingImages((current) => [
-      ...current,
-      ...valid.map((file, index) => ({
-        file,
-        preview: URL.createObjectURL(file),
-        principal: !detail?.imagenes?.length && !current.length && index === 0,
-      })),
-    ]);
+    setError("");
+    setPreparingImages(true);
+    try {
+      for (const original of [...files]) {
+        try {
+          const file = await optimizeCatalogImage(original);
+          const preview = URL.createObjectURL(file);
+          previewUrls.current.push(preview);
+          setPendingImages((current) => [
+            ...current,
+            {
+              file,
+              preview,
+              principal: !detail?.imagenes?.length && !current.length,
+              status: "ready",
+            },
+          ]);
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "No se pudo preparar una foto.");
+        }
+      }
+    } finally {
+      setPreparingImages(false);
+    }
   };
-  const toBase64 = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -163,16 +172,30 @@ export function ProductEditorModal({
       visible_tienda: data.get("visible_tienda") === "on",
     };
     try {
-      const saved = detail
-        ? await updateAdminProduct(detail.id, payload)
+      const existingId = detail?.id ?? persistedProductId;
+      const saved = existingId
+        ? await updateAdminProduct(existingId, payload)
         : await createAdminProduct(payload);
+      if (!existingId) setPersistedProductId(saved.id);
       for (const image of pendingImages) {
-        await uploadAdminProductImage(saved.id, {
-          nombre: image.file.name,
-          media_type: image.file.type,
-          contenido_base64: await toBase64(image.file),
-          principal: image.principal,
-        });
+        setPendingImages((current) => current.map((item) =>
+          item.preview === image.preview ? { ...item, status: "uploading", error: undefined } : item
+        ));
+        try {
+          await uploadAdminProductImage(saved.id, {
+            file: image.file,
+            principal: image.principal,
+          });
+          URL.revokeObjectURL(image.preview);
+          previewUrls.current = previewUrls.current.filter((url) => url !== image.preview);
+          setPendingImages((current) => current.filter((item) => item.preview !== image.preview));
+        } catch (reason) {
+          const message = reason instanceof Error ? reason.message : "No se pudo subir la foto.";
+          setPendingImages((current) => current.map((item) =>
+            item.preview === image.preview ? { ...item, status: "error", error: message } : item
+          ));
+          throw new Error(`El producto quedó guardado, pero una foto falló. ${message} Presioná guardar para reintentar.`);
+        }
       }
       onSaved();
     } catch (reason) {
@@ -517,6 +540,11 @@ export function ProductEditorModal({
                         src={image.preview}
                         alt=""
                       />
+                      {image.status !== "ready" && (
+                        <span className={`absolute inset-x-1 top-1 rounded px-1 py-1 text-center text-[8px] font-bold ${image.status === "uploading" ? "bg-black/75 text-white" : "bg-red-700/90 text-white"}`}>
+                          {image.status === "uploading" ? "Subiendo a R2…" : "Error · se reintentará"}
+                        </span>
+                      )}
                       <button
                         type="button"
                         className="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-white text-sm shadow"
@@ -546,17 +574,21 @@ export function ProductEditorModal({
                   ))}
                 </div>
                 <label className="mt-3 block cursor-pointer rounded-lg border border-dashed border-neutral-400 p-4 text-center text-xs font-bold">
-                  + Subir fotografías
+                  {preparingImages ? "Optimizando fotografías…" : "+ Subir fotografías"}
                   <input
                     className="hidden"
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept="image/jpeg,image/png,image/webp"
                     multiple
-                    onChange={(event) => addFiles(event.target.files)}
+                    disabled={preparingImages || saving}
+                    onChange={(event) => {
+                      void addFiles(event.target.files);
+                      event.currentTarget.value = "";
+                    }}
                   />
                 </label>
                 <p className="mt-2 text-[10px] leading-4 text-neutral-400">
-                  JPG, PNG, WEBP o GIF. Máximo 8 MB por imagen.
+                  JPG, PNG o WEBP. Hasta 30 MB; se optimizan antes de subir a R2.
                 </p>
               </section>
               <section className="rounded-xl border border-neutral-200 bg-white p-5">
@@ -596,12 +628,14 @@ export function ProductEditorModal({
               Cancelar
             </button>
             <button
-              disabled={saving}
+              disabled={saving || preparingImages}
               className="rounded-lg bg-black px-6 py-3 text-xs font-bold text-white disabled:opacity-50"
             >
-              {saving
+              {preparingImages
+                ? "Optimizando fotos…"
+                : saving
                 ? "Guardando…"
-                : detail
+                : detail || persistedProductId
                   ? "Guardar cambios"
                   : "Crear producto"}
             </button>
