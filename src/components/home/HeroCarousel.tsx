@@ -63,7 +63,7 @@ export function HeroCarousel() {
     },
     onSettled: () => setEditingSlideId(null),
   });
-  const puedeEditarPortada = user?.rol === 'admin' || user?.rol === 'admin_tecnico';
+  const puedeEditarPortada = user?.rol === 'admin' || user?.rol === 'admin_tecnico' || user?.rol === 'admin_operativo';
   const slides = heroSlides.map((slide) => ({
     ...slide,
     // Esperamos la configuración antes de iniciar un fallback local. Evita

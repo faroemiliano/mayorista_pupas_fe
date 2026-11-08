@@ -47,7 +47,7 @@ function VideoSlot({ title, dark }: { title: string; dark: boolean }) {
   const [failed, setFailed] = useState(false)
   const [nearViewport, setNearViewport] = useState(false)
   const videoId = `video-${title.toLowerCase()}`
-  const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico'
+  const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico' || user?.rol === 'admin_operativo'
   const portadas = useQuery({ queryKey: ['portadas-inicio'], queryFn: getPortadasInicio })
   const videoUrl = portadas.isPending ? null : portadas.data?.imagenes[videoId] || null
   useEffect(() => {
@@ -188,7 +188,7 @@ function CollectionProducts({ keyword, imageKey, provisional, title }: { keyword
     },
     onSettled: () => setSlotPending(null),
   })
-  const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico'
+  const puedeEditar = user?.rol === 'admin' || user?.rol === 'admin_tecnico' || user?.rol === 'admin_operativo'
   const productosConImagen = products.data?.items.filter((product) => product.imagen_url || product.imagenes?.length) || []
   const slots = [1, 2].map((position) => `${imageKey}-${position}`)
   const seleccionarImagen = (slotId: string) => {
