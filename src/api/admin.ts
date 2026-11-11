@@ -229,6 +229,8 @@ export function getWebClients(
     page: number;
     limit: number;
     total_paginas: number;
+    total_clientes: number;
+    total_habilitados: number;
   }>(`/api/admin/usuarios/paginados?${params}`);
 }
 

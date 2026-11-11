@@ -130,7 +130,7 @@ export function AdminClients() {
           actualizados.
         </div>
       )}
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid gap-3 sm:grid-cols-3">
         <button
           type="button"
           onClick={() => {
@@ -143,12 +143,23 @@ export function AdminClients() {
             Registrados en la página
           </small>
           <strong className="mt-2 block text-3xl">
-            {webClients.data?.total ?? 0}
+            {webClients.data?.total_clientes ?? 0}
           </strong>
           <span className="mt-1 block text-xs opacity-70">
-            Cuentas con el filtro actual
+            Todas las cuentas de clientes
           </span>
         </button>
+        <article className="border border-emerald-200 bg-emerald-50 p-5 text-left text-emerald-950">
+          <small className="text-[9px] font-bold uppercase tracking-[.18em] opacity-60">
+            Activos en la nueva página
+          </small>
+          <strong className="mt-2 block text-3xl">
+            {webClients.data?.total_habilitados ?? 0}
+          </strong>
+          <span className="mt-1 block text-xs opacity-70">
+            Con todos sus datos migrados y acceso habilitado
+          </span>
+        </article>
         <button
           type="button"
           onClick={() => {
