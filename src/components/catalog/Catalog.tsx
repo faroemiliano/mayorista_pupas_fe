@@ -31,19 +31,31 @@ function PersonalProductRail({
     <section className="mt-10 border-y border-neutral-200 bg-white py-7">
       <div className="mb-6 flex items-end justify-between gap-5">
         <div>
-          <p className="text-[9px] font-semibold uppercase tracking-[.22em] text-neutral-500">{eyebrow}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[.22em] text-neutral-500">
+            {eyebrow}
+          </p>
           <h3 className="mt-2 font-serif text-3xl font-semibold">{title}</h3>
         </div>
-        <span className="hidden text-xs text-neutral-500 sm:block">{subtitle}</span>
+        <span className="hidden text-xs text-neutral-500 sm:block">
+          {subtitle}
+        </span>
       </div>
       <div className="grid auto-cols-[minmax(260px,320px)] grid-flow-col gap-3 overflow-x-auto pb-3">
-        {products.map((product) => <CompactProductCard key={product.id} product={product}/>)}
+        {products.map((product) => (
+          <CompactProductCard key={product.id} product={product} />
+        ))}
       </div>
     </section>
   );
 }
 
-export function Catalog({ search, submittedSearch, searchToken, onClearSearch, requestedCategory }: Props) {
+export function Catalog({
+  search,
+  submittedSearch,
+  searchToken,
+  onClearSearch,
+  requestedCategory,
+}: Props) {
   const [category, setCategory] = useState(""),
     [subcategory, setSubcategory] = useState(""),
     [brand, setBrand] = useState(""),
@@ -99,7 +111,10 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
       return;
     }
     const normalize = (value: string) =>
-      value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("es");
     const normalized = normalize(requestedCategory.name);
     const match = filters.data.categorias.find((item) =>
       normalize(item.nombre).includes(normalized),
@@ -109,7 +124,12 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     setSubcategory("");
     setPage(1);
     setMobileExpanded(true);
-  }, [requestedCategory.name, requestedCategory.token, filters.data, onClearSearch]);
+  }, [
+    requestedCategory.name,
+    requestedCategory.token,
+    filters.data,
+    onClearSearch,
+  ]);
 
   const showProducts = () => {
     setMobileExpanded(true);
@@ -120,9 +140,8 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
     );
   };
   const totalPages = products.data?.total_paginas ?? 0;
-  const firstVisiblePage = totalPages <= 4
-    ? 1
-    : Math.min(Math.max(1, page - 1), totalPages - 3);
+  const firstVisiblePage =
+    totalPages <= 4 ? 1 : Math.min(Math.max(1, page - 1), totalPages - 3);
   const visiblePages = Array.from(
     { length: Math.min(4, totalPages) },
     (_, index) => firstVisiblePage + index,
@@ -157,9 +176,29 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
             <div className="relative grid size-60 place-items-center rounded-full border border-[#806b58]/35 bg-[#f5f0e9]/50 shadow-[8px_10px_0_rgba(128,107,88,.10),18px_24px_32px_rgba(70,52,36,.12)] backdrop-blur-[2px] xl:size-72">
               <span className="absolute inset-3 rounded-full border border-[#806b58]/35" />
               <div className="relative -rotate-[4deg] text-center text-[#604e3d]/75">
-                <span className="block text-[8px] font-bold tracking-[.34em] xl:text-[9px]">PUPAS</span>
-                <div className="mt-2 flex items-center justify-center gap-2"><span className="text-[10px] text-[#b28a5a] xl:text-xs" aria-hidden="true">✦</span><strong className="font-serif text-2xl leading-[.95] tracking-[.08em] xl:text-3xl">DIRECTO</strong><span className="text-[10px] text-[#b28a5a] xl:text-xs" aria-hidden="true">✦</span></div>
-                <span className="mt-1 block text-[10px] font-bold tracking-[.2em] xl:text-xs">DE FÁBRICA</span>
+                <span className="block text-[8px] font-bold tracking-[.34em] xl:text-[9px]">
+                  PUPAS
+                </span>
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <span
+                    className="text-[10px] text-[#b28a5a] xl:text-xs"
+                    aria-hidden="true"
+                  >
+                    ✦
+                  </span>
+                  <strong className="font-serif text-2xl leading-[.95] tracking-[.08em] xl:text-3xl">
+                    DIRECTO
+                  </strong>
+                  <span
+                    className="text-[10px] text-[#b28a5a] xl:text-xs"
+                    aria-hidden="true"
+                  >
+                    ✦
+                  </span>
+                </div>
+                <span className="mt-1 block text-[10px] font-bold tracking-[.2em] xl:text-xs">
+                  DE FÁBRICA
+                </span>
               </div>
             </div>
           </div>
@@ -204,8 +243,22 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
           }}
         />
 
-        {user && tools.favorites.length > 0 && <PersonalProductRail eyebrow="TU SELECCIÓN" title="Mis favoritos" subtitle="Tus elegidos siempre a mano" products={tools.favorites}/>}
-        {user && tools.recent.length > 0 && <PersonalProductRail eyebrow="TU RECORRIDO" title="Vistos recientemente" subtitle="Retomá donde lo dejaste" products={tools.recent}/>}
+        {user && tools.favorites.length > 0 && (
+          <PersonalProductRail
+            eyebrow="TU SELECCIÓN"
+            title="Mis favoritos"
+            subtitle="Tus elegidos siempre a mano"
+            products={tools.favorites}
+          />
+        )}
+        {user && tools.recent.length > 0 && (
+          <PersonalProductRail
+            eyebrow="TU RECORRIDO"
+            title="Vistos recientemente"
+            subtitle="Retomá donde lo dejaste"
+            products={tools.recent}
+          />
+        )}
 
         {!mobileExpanded && (
           <button
@@ -233,7 +286,9 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
                 {submittedSearch
                   ? `Resultados para “${submittedSearch}”`
                   : category
-                    ? filters.data?.categorias.find((item) => String(item.id) === category)?.nombre || "Productos"
+                    ? filters.data?.categorias.find(
+                        (item) => String(item.id) === category,
+                      )?.nombre || "Productos"
                     : "Todos los productos"}
               </h3>
               <span className="mt-1 block text-sm text-neutral-500">
@@ -245,9 +300,7 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               <select
                 className="h-11 rounded-xl border border-[#e5e5e5] bg-white px-4 text-sm font-medium outline-none focus:border-[#525252]"
                 value={order}
-                onChange={(event) =>
-                  update(() => setOrder(event.target.value))
-                }
+                onChange={(event) => update(() => setOrder(event.target.value))}
               >
                 <option value="recientes">Más nuevos</option>
                 <option value="nombre_asc">Nombre A–Z</option>
@@ -319,9 +372,42 @@ export function Catalog({ search, submittedSearch, searchToken, onClearSearch, r
               >
                 ←
               </button>
-              {firstVisiblePage > 1 && <><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(1)}>1</button><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span></>}
-              {visiblePages.map((pageNumber) => <button key={pageNumber} aria-current={pageNumber === page ? 'page' : undefined} className={`grid size-10 place-items-center border text-sm font-bold transition ${pageNumber === page ? 'border-black bg-black text-white' : 'border-[#e5e5e5] bg-white hover:border-black'}`} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}
-              {visiblePages.at(-1)! < totalPages && <><span className="hidden px-1 text-sm text-neutral-400 sm:block">…</span><button className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid" onClick={() => setPage(totalPages)}>{totalPages}</button></>}
+              {firstVisiblePage > 1 && (
+                <>
+                  <button
+                    className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid"
+                    onClick={() => setPage(1)}
+                  >
+                    1
+                  </button>
+                  <span className="hidden px-1 text-sm text-neutral-400 sm:block">
+                    …
+                  </span>
+                </>
+              )}
+              {visiblePages.map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  aria-current={pageNumber === page ? "page" : undefined}
+                  className={`grid size-10 place-items-center border text-sm font-bold transition ${pageNumber === page ? "border-black bg-black text-white" : "border-[#e5e5e5] bg-white hover:border-black"}`}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+              {visiblePages.at(-1)! < totalPages && (
+                <>
+                  <span className="hidden px-1 text-sm text-neutral-400 sm:block">
+                    …
+                  </span>
+                  <button
+                    className="hidden size-10 place-items-center border border-[#e5e5e5] bg-white text-sm font-bold sm:grid"
+                    onClick={() => setPage(totalPages)}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
               <button
                 className="rounded-full border border-[#e5e5e5] bg-white px-4 py-2.5 text-sm font-bold disabled:opacity-40"
                 disabled={page >= totalPages}
