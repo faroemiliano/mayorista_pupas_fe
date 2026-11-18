@@ -6,6 +6,7 @@ import {
   getDuxConfiguration,
   getClientPurchaseBalance,
   getWebClients,
+  setClientTemporaryPassword,
   syncDuxClients,
 } from "../../api/admin";
 import { formatCurrency } from "../../utils/currency";
@@ -34,6 +35,120 @@ export function ClientPurchaseModal({ client, onClose }: { client: AuthUser; onC
   return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"><header className="flex items-start justify-between border-b border-neutral-200 p-6"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-neutral-400">HISTORIAL DE COMPRAS</p><h2 className="mt-1 text-2xl font-bold">{client.nombre} {client.apellido}</h2><p className="mt-1 text-sm text-neutral-500">{client.email}</p></div><button type="button" className="grid size-9 place-items-center rounded-full bg-neutral-100 text-2xl" onClick={onClose}>×</button></header><div className="space-y-6 p-6">{balance.isLoading ? <div className="admin-status"><span className="loader"/><p>Cargando balance…</p></div> : balance.isError ? <div className="rounded-xl bg-red-50 p-4 text-sm text-red-800">No se pudo cargar el balance. <button className="font-bold underline" onClick={() => balance.refetch()}>Reintentar</button></div> : balance.data && <>{cards("Balance acumulado", balance.data.acumulado)}<form className="rounded-xl border border-neutral-200 p-4" onSubmit={aplicarPeriodo}><div className="flex flex-wrap items-end gap-3"><label className="text-xs font-bold">Desde<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={desde} max={hasta || undefined} onChange={(event) => setDesde(event.target.value)}/></label><label className="text-xs font-bold">Hasta<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={hasta} min={desde || undefined} onChange={(event) => setHasta(event.target.value)}/></label><button className="rounded-lg bg-black px-4 py-2 text-xs font-bold text-white">Ver período</button>{(periodo.desde || periodo.hasta) && <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-bold" onClick={limpiarPeriodo}>Ver todo</button>}</div></form>{cards(periodo.desde || periodo.hasta ? "Compras en el período elegido" : "Compras en todo el historial", resumen)}<p className="text-xs leading-5 text-neutral-500">{balance.data.alcance}</p></>}</div></div></div>;
 }
 
+function ClientPasswordModal({
+  client,
+  onClose,
+  onUpdated,
+}: {
+  client: AuthUser;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const mutation = useMutation({
+    mutationFn: () =>
+      setClientTemporaryPassword(client.id, password, confirmation),
+    onSuccess: onUpdated,
+  });
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    mutation.mutate();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !mutation.isPending)
+          onClose();
+      }}
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+        <header className="flex items-start justify-between border-b border-neutral-200 p-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-neutral-400">
+              ACCESO DEL CLIENTE
+            </p>
+            <h2 className="mt-1 text-xl font-bold">Asignar contraseña temporal</h2>
+            <p className="mt-1 text-sm text-neutral-500">{client.email}</p>
+          </div>
+          <button
+            type="button"
+            className="grid size-9 place-items-center rounded-full bg-neutral-100 text-2xl"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
+            ×
+          </button>
+        </header>
+        <form className="space-y-4 p-6" onSubmit={submit}>
+          <p className="text-sm leading-6 text-neutral-600">
+            El cliente podrá ingresar con esta clave y cambiarla luego desde
+            Mi cuenta. Los enlaces de recuperación anteriores quedarán anulados.
+          </p>
+          <label className="block text-xs font-bold">
+            Contraseña temporal
+            <input
+              className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              type="password"
+              minLength={8}
+              maxLength={128}
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <label className="block text-xs font-bold">
+            Repetir contraseña
+            <input
+              className="mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+              type="password"
+              minLength={8}
+              maxLength={128}
+              required
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+            />
+          </label>
+          {mutation.isError && (
+            <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+              {mutation.error instanceof Error
+                ? mutation.error.message
+                : "No se pudo cambiar la contraseña."}
+            </p>
+          )}
+          {mutation.isSuccess && (
+            <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
+              Contraseña temporal actualizada correctamente.
+            </p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-bold"
+              onClick={onClose}
+              disabled={mutation.isPending}
+            >
+              {mutation.isSuccess ? "Cerrar" : "Cancelar"}
+            </button>
+            {!mutation.isSuccess && (
+              <button
+                className="rounded-lg bg-black px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                disabled={mutation.isPending || password !== confirmation}
+              >
+                {mutation.isPending ? "Guardando…" : "Guardar contraseña"}
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function AdminClients() {
   const queryClient = useQueryClient();
   const duxConfiguration = useQuery({
@@ -49,6 +164,7 @@ export function AdminClients() {
     "todos" | "pendiente" | "creada"
   >("pendiente");
   const [view, setView] = useState<"web" | "dux">("web");
+  const [passwordClient, setPasswordClient] = useState<AuthUser | null>(null);
   const clients = useQuery({
     queryKey: ["admin-dux-clients", page, submittedSearch],
     queryFn: () => getDuxClients(page, submittedSearch),
@@ -275,6 +391,7 @@ export function AdminClients() {
                       <th>Estado</th>
                       <th>Cambio de clave</th>
                       <th>Dux</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -340,6 +457,15 @@ export function AdminClients() {
                               Pendiente de vincular
                             </span>
                           )}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-2 text-xs font-bold hover:border-black"
+                            onClick={() => setPasswordClient(client)}
+                          >
+                            Cambiar contraseña
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -451,6 +577,15 @@ export function AdminClients() {
           </>
         )}
       </section>
+      {passwordClient && (
+        <ClientPasswordModal
+          client={passwordClient}
+          onClose={() => setPasswordClient(null)}
+          onUpdated={() =>
+            queryClient.invalidateQueries({ queryKey: ["admin-web-clients"] })
+          }
+        />
+      )}
     </div>
   );
 }

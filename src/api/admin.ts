@@ -234,6 +234,20 @@ export function getWebClients(
   }>(`/api/admin/usuarios/paginados?${params}`);
 }
 
+export function setClientTemporaryPassword(
+  clienteId: number,
+  passwordNueva: string,
+  confirmarPassword: string,
+) {
+  return apiPatch<{ mensaje: string; cliente_id: number }>(
+    `/api/admin/usuarios/${clienteId}/password-temporal`,
+    {
+      password_nueva: passwordNueva,
+      confirmar_password: confirmarPassword,
+    },
+  );
+}
+
 export type ClientPurchaseBalance = {
   cliente_id: number;
   cliente: string;
