@@ -13,9 +13,30 @@ function errorDetail(detail: unknown): string | null {
   return null
 }
 
-async function responseError(response: Response, fallback: string): Promise<Error> {
+export class ApiError extends Error {
+  readonly status: number
+  readonly detail: unknown
+
+  constructor(
+    message: string,
+    status: number,
+    detail: unknown,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.detail = detail
+  }
+}
+
+async function responseError(response: Response, fallback: string): Promise<ApiError> {
   const payload = await response.json().catch(() => null) as { detail?: unknown } | null
-  return new Error(errorDetail(payload?.detail) || `${fallback} (${response.status})`)
+  const detail = payload?.detail
+  return new ApiError(
+    errorDetail(detail) || `${fallback} (${response.status})`,
+    response.status,
+    detail,
+  )
 }
 
 function authHeaders(): Record<string,string> {

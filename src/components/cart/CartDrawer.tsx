@@ -1,15 +1,37 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { calculateCart } from "../../api/cart";
-import { productImageAsset } from "../../api/client";
+import { ApiError, productImageAsset } from "../../api/client";
 import { createOrder } from "../../api/orders";
 import { useCart } from "../../context/CartContext";
+import type { CartItem } from "../../types/cart";
 import type { Order, OrderCreateData } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { QuantityControl } from "./QuantityControl";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { whatsappUrl } from "../../config/contact";
+
+type UnavailableDetail = {
+  code: "PRODUCTO_NO_DISPONIBLE";
+  message: string;
+  producto_id: number;
+  talle: string | null;
+  disponible: number | string | null;
+};
+
+function getUnavailableDetail(error: unknown): UnavailableDetail | null {
+  if (
+    !(error instanceof ApiError) ||
+    typeof error.detail !== "object" ||
+    error.detail === null ||
+    !("code" in error.detail) ||
+    error.detail.code !== "PRODUCTO_NO_DISPONIBLE"
+  ) {
+    return null;
+  }
+  return error.detail as UnavailableDetail;
+}
 
 export function CartDrawer() {
   const cart = useCart();
@@ -26,7 +48,8 @@ export function CartDrawer() {
     retry: false,
   });
   const orderMutation = useMutation({
-    mutationFn: (data: OrderCreateData) => createOrder(data, cart.items),
+    mutationFn: ({ data, items }: { data: OrderCreateData; items: CartItem[] }) =>
+      createOrder(data, items),
     onSuccess: (order) => {
       setConfirmedOrder(order);
       cart.clearCart();
@@ -54,20 +77,63 @@ export function CartDrawer() {
     user.provincia &&
     user.localidad_partido,
   );
+  const calculationErrorDetail = getUnavailableDetail(calculation.error);
+  const calculationUnavailableItem = calculationErrorDetail
+    ? cart.items.find(
+        (item) =>
+          item.product.id === calculationErrorDetail.producto_id &&
+          (calculationErrorDetail.talle === null ||
+            item.talle === calculationErrorDetail.talle),
+      )
+    : null;
 
-  const confirmOrder = () => {
-    if (!user || !profileComplete) return;
-    orderMutation.mutate({
-      cliente_nombre: [user.nombre, user.apellido].filter(Boolean).join(' '),
+  const orderData = (): OrderCreateData | null => {
+    if (!user || !profileComplete) return null;
+    return {
+      cliente_nombre: [user.nombre, user.apellido].filter(Boolean).join(" "),
       cliente_telefono: user.telefono || "",
       cliente_email: user.email,
       provincia: user.provincia || "",
       localidad: user.localidad_partido || "",
-      direccion: user.domicilio?.trim().length && user.domicilio.trim().length >= 4
-        ? user.domicilio.trim()
-        : "No informado",
+      direccion:
+        user.domicilio?.trim().length && user.domicilio.trim().length >= 4
+          ? user.domicilio.trim()
+          : "No informado",
       observaciones: null,
-    });
+    };
+  };
+
+  const confirmOrder = (items: CartItem[] = cart.items) => {
+    const data = orderData();
+    if (!data || items.length === 0) return;
+    orderMutation.mutate({ data, items });
+  };
+
+  const errorDetail = getUnavailableDetail(orderMutation.error);
+  const unavailableItem = errorDetail
+    ? cart.items.find(
+        (item) =>
+          item.product.id === errorDetail.producto_id &&
+          (errorDetail.talle === null || item.talle === errorDetail.talle),
+      )
+    : null;
+  const remainingItems = errorDetail
+    ? cart.items.filter(
+        (item) =>
+          item.product.id !== errorDetail.producto_id ||
+          (errorDetail.talle !== null && item.talle !== errorDetail.talle),
+      )
+    : cart.items;
+  const continueWithoutUnavailable = () => {
+    if (!errorDetail || !unavailableItem || remainingItems.length === 0) return;
+    if (errorDetail.talle === null) {
+      cart.items
+        .filter((item) => item.product.id === errorDetail.producto_id)
+        .forEach((item) => cart.removeItem(item.product.id, item.talle));
+    } else {
+      cart.removeItem(errorDetail.producto_id, errorDetail.talle);
+    }
+    confirmOrder(remainingItems);
   };
 
   return (
@@ -342,9 +408,42 @@ export function CartDrawer() {
                 );
               })}
             </div>
-            {calculation.isError && (
+            {calculation.isError && calculationUnavailableItem ? (
+              <section className="m-5 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <strong className="block text-base">
+                  {calculationUnavailableItem.product.nombre} ya no está disponible
+                </strong>
+                <p className="mt-1">
+                  Podés quitarlo y continuar comprando los demás productos.
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 rounded-lg bg-black px-4 py-2 text-xs font-bold text-white"
+                  onClick={() => {
+                    if (calculationErrorDetail?.talle === null) {
+                      cart.items
+                        .filter(
+                          (item) =>
+                            item.product.id ===
+                            calculationErrorDetail.producto_id,
+                        )
+                        .forEach((item) =>
+                          cart.removeItem(item.product.id, item.talle),
+                        );
+                    } else if (calculationErrorDetail) {
+                      cart.removeItem(
+                        calculationErrorDetail.producto_id,
+                        calculationErrorDetail.talle,
+                      );
+                    }
+                  }}
+                >
+                  Quitar producto del carrito
+                </button>
+              </section>
+            ) : calculation.isError ? (
               <p className="cart-error">{calculation.error.message}</p>
-            )}
+            ) : null}
             <div className="cart-summary">
               <div>
                 <span>Productos diferentes</span>
@@ -514,14 +613,52 @@ export function CartDrawer() {
                   </div>
                 )}
               </section>
-              {orderMutation.isError && (
+              {orderMutation.isError && unavailableItem ? (
+                <section className="m-5 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                  <strong className="block text-base">
+                    {unavailableItem.product.nombre} ya no está disponible
+                  </strong>
+                  <p className="mt-1">
+                    {errorDetail?.talle
+                      ? `El talle ${errorDetail.talle} no tiene la cantidad solicitada.`
+                      : "No queda stock suficiente de este producto."}
+                  </p>
+                  {remainingItems.length > 0 ? (
+                    <div className="mt-4 grid gap-2">
+                      <button
+                        type="button"
+                        className="rounded-lg bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-50"
+                        disabled={orderMutation.isPending}
+                        onClick={continueWithoutUnavailable}
+                      >
+                        Quitar este producto y confirmar el resto
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-amber-400 px-4 py-2 text-xs font-bold"
+                        onClick={() => setStage("cart")}
+                      >
+                        Volver al carrito
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="mt-4 rounded-lg border border-amber-400 px-4 py-2 text-xs font-bold"
+                      onClick={() => setStage("cart")}
+                    >
+                      Volver al carrito
+                    </button>
+                  )}
+                </section>
+              ) : orderMutation.isError ? (
                 <p className="cart-error">{orderMutation.error.message}</p>
-              )}
+              ) : null}
               <button
                 className="checkout-button"
                 type="button"
                 disabled={!profileComplete || orderMutation.isPending}
-                onClick={confirmOrder}
+                onClick={() => confirmOrder()}
               >
                 {orderMutation.isPending
                   ? "Enviando pedido…"
