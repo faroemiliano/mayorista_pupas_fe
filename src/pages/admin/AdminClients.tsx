@@ -18,21 +18,80 @@ export function ClientPurchaseModal({ client, onClose }: { client: AuthUser; onC
   const [hasta, setHasta] = useState("");
   const [periodo, setPeriodo] = useState({ desde: "", hasta: "" });
   const balance = useQuery({
-    queryKey: ["client-purchase-balance", client.id, periodo.desde, periodo.hasta],
+    queryKey: ["client-purchase-detail", client.id, periodo.desde, periodo.hasta],
     queryFn: () => getClientPurchaseBalance(client.id, periodo.desde, periodo.hasta),
   });
   const resumen = balance.data?.periodo ?? { pedidos: 0, unidades: 0, importe: 0 };
-  const aplicarPeriodo = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setPeriodo({ desde, hasta });
+  const descargarCsv = () => {
+    if (!balance.data?.detalle_productos.length) return;
+    const seguro = (valor: string | number) => {
+      const texto = String(valor);
+      const protegido = /^[=+\-@]/.test(texto) ? `'${texto}` : texto;
+      return `"${protegido.replaceAll('"', '""')}"`;
+    };
+    const filas = balance.data.detalle_productos.map((item) => [
+      item.codigo ?? "", item.producto, item.talle, item.unidades,
+      item.unidades_tienda, item.unidades_wordpress, item.pedidos, item.importe,
+    ]);
+    const csv = [
+      ["Código", "Producto", "Talle", "Unidades totales", "Sitio nuevo", "WordPress", "Pedidos", "Importe"],
+      ...filas,
+    ].map((fila) => fila.map(seguro).join(";")).join("\n");
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `compras-${client.nombre}-${client.apellido || client.id}.csv`
+      .toLowerCase().replace(/[^a-z0-9.-]+/g, "-");
+    enlace.click();
+    URL.revokeObjectURL(url);
   };
-  const limpiarPeriodo = () => {
-    setDesde("");
-    setHasta("");
-    setPeriodo({ desde: "", hasta: "" });
-  };
-  const cards = (titulo: string, datos: { pedidos: number; unidades: number; importe: number }) => <section><h3 className="text-sm font-bold">{titulo}</h3><div className="mt-3 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Pedidos</small><strong className="mt-1 block text-2xl">{datos.pedidos}</strong></div><div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Productos</small><strong className="mt-1 block text-2xl">{datos.unidades}</strong></div><div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Gastado</small><strong className="mt-1 block text-2xl">{formatCurrency(datos.importe)}</strong></div></div></section>;
-  return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"><header className="flex items-start justify-between border-b border-neutral-200 p-6"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-neutral-400">HISTORIAL DE COMPRAS</p><h2 className="mt-1 text-2xl font-bold">{client.nombre} {client.apellido}</h2><p className="mt-1 text-sm text-neutral-500">{client.email}</p></div><button type="button" className="grid size-9 place-items-center rounded-full bg-neutral-100 text-2xl" onClick={onClose}>×</button></header><div className="space-y-6 p-6">{balance.isLoading ? <div className="admin-status"><span className="loader"/><p>Cargando balance…</p></div> : balance.isError ? <div className="rounded-xl bg-red-50 p-4 text-sm text-red-800">No se pudo cargar el balance. <button className="font-bold underline" onClick={() => balance.refetch()}>Reintentar</button></div> : balance.data && <>{cards("Balance acumulado", balance.data.acumulado)}<form className="rounded-xl border border-neutral-200 p-4" onSubmit={aplicarPeriodo}><div className="flex flex-wrap items-end gap-3"><label className="text-xs font-bold">Desde<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={desde} max={hasta || undefined} onChange={(event) => setDesde(event.target.value)}/></label><label className="text-xs font-bold">Hasta<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={hasta} min={desde || undefined} onChange={(event) => setHasta(event.target.value)}/></label><button className="rounded-lg bg-black px-4 py-2 text-xs font-bold text-white">Ver período</button>{(periodo.desde || periodo.hasta) && <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-bold" onClick={limpiarPeriodo}>Ver todo</button>}</div></form>{cards(periodo.desde || periodo.hasta ? "Compras en el período elegido" : "Compras en todo el historial", resumen)}<p className="text-xs leading-5 text-neutral-500">{balance.data.alcance}</p></>}</div></div></div>;
+
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <header className="flex items-start justify-between border-b border-neutral-200 p-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-neutral-400">PRODUCTOS COMPRADOS</p>
+            <h2 className="mt-1 text-2xl font-bold">{client.nombre} {client.apellido}</h2>
+            <p className="mt-1 text-sm text-neutral-500">{client.email}</p>
+          </div>
+          <button type="button" className="grid size-9 place-items-center rounded-full bg-neutral-100 text-2xl" onClick={onClose}>×</button>
+        </header>
+        <div className="space-y-6 overflow-y-auto p-6">
+          <form className="rounded-xl border border-neutral-200 p-4" onSubmit={(event) => { event.preventDefault(); setPeriodo({ desde, hasta }); }}>
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="text-xs font-bold">Desde<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={desde} max={hasta || undefined} onChange={(event) => setDesde(event.target.value)}/></label>
+              <label className="text-xs font-bold">Hasta<input className="mt-1 block rounded-lg border border-neutral-300 px-3 py-2 text-sm" type="date" value={hasta} min={desde || undefined} onChange={(event) => setHasta(event.target.value)}/></label>
+              <button className="rounded-lg bg-black px-4 py-2 text-xs font-bold text-white">Ver período</button>
+              {(periodo.desde || periodo.hasta) && <button type="button" className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-bold" onClick={() => { setDesde(""); setHasta(""); setPeriodo({ desde: "", hasta: "" }); }}>Ver todo</button>}
+            </div>
+          </form>
+          {balance.isLoading ? <div className="admin-status"><span className="loader"/><p>Cargando compras…</p></div> : balance.isError ? <div className="rounded-xl bg-red-50 p-4 text-sm text-red-800">No se pudo cargar el informe. <button className="font-bold underline" onClick={() => balance.refetch()}>Reintentar</button></div> : balance.data && <>
+            <section className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Pedidos</small><strong className="mt-1 block text-2xl">{resumen.pedidos}</strong></div>
+              <div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Unidades compradas</small><strong className="mt-1 block text-2xl">{resumen.unidades}</strong></div>
+              <div className="rounded-xl bg-neutral-100 p-4"><small className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">Importe</small><strong className="mt-1 block text-2xl">{formatCurrency(resumen.importe)}</strong></div>
+            </section>
+            <section>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div><h3 className="text-sm font-bold">Detalle por producto y talle</h3><p className="mt-1 text-xs text-neutral-500">Cada fila suma todas las unidades de ese producto y talle.</p></div>
+                <button type="button" onClick={descargarCsv} disabled={!balance.data.detalle_productos.length} className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-bold disabled:opacity-40">Descargar Excel (CSV)</button>
+              </div>
+              {balance.data.detalle_productos.length ? (
+                <div className="mt-3 overflow-x-auto rounded-xl border border-neutral-200">
+                  <table className="w-full min-w-[800px] text-sm">
+                    <thead className="bg-neutral-100 text-left text-[10px] uppercase tracking-wider text-neutral-500"><tr><th className="p-3">Producto</th><th className="p-3">Talle</th><th className="p-3 text-right">Total</th><th className="p-3 text-right">Sitio nuevo</th><th className="p-3 text-right">WordPress</th><th className="p-3 text-right">Pedidos</th><th className="p-3 text-right">Importe</th></tr></thead>
+                    <tbody>{balance.data.detalle_productos.map((item) => <tr key={`${item.producto_id ?? item.codigo ?? item.producto}-${item.talle}`} className="border-t border-neutral-200"><td className="p-3"><strong>{item.producto}</strong><small className="block text-neutral-500">Código {item.codigo || "sin código"}</small></td><td className="p-3 font-bold">{item.talle}</td><td className="p-3 text-right text-lg font-bold">{item.unidades}</td><td className="p-3 text-right">{item.unidades_tienda}</td><td className="p-3 text-right">{item.unidades_wordpress}</td><td className="p-3 text-right">{item.pedidos}</td><td className="p-3 text-right">{formatCurrency(item.importe)}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              ) : <p className="mt-3 rounded-xl bg-neutral-100 p-5 text-sm text-neutral-600">No hay productos comprados en este período.</p>}
+            </section>
+            <p className="text-xs leading-5 text-neutral-500">{balance.data.alcance}</p>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ClientPasswordModal({
@@ -164,6 +223,7 @@ export function AdminClients() {
     "todos" | "pendiente" | "creada"
   >("pendiente");
   const [view, setView] = useState<"web" | "dux">("web");
+  const [purchaseClient, setPurchaseClient] = useState<AuthUser | null>(null);
   const [passwordClient, setPasswordClient] = useState<AuthUser | null>(null);
   const clients = useQuery({
     queryKey: ["admin-dux-clients", page, submittedSearch],
@@ -459,13 +519,22 @@ export function AdminClients() {
                           )}
                         </td>
                         <td>
-                          <button
-                            type="button"
-                            className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-2 text-xs font-bold hover:border-black"
-                            onClick={() => setPasswordClient(client)}
-                          >
-                            Cambiar contraseña
-                          </button>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              type="button"
+                              className="whitespace-nowrap rounded-lg bg-black px-3 py-2 text-xs font-bold text-white"
+                              onClick={() => setPurchaseClient(client)}
+                            >
+                              Ver compras
+                            </button>
+                            <button
+                              type="button"
+                              className="whitespace-nowrap rounded-lg border border-neutral-300 px-3 py-2 text-xs font-bold hover:border-black"
+                              onClick={() => setPasswordClient(client)}
+                            >
+                              Cambiar contraseña
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -577,6 +646,12 @@ export function AdminClients() {
           </>
         )}
       </section>
+      {purchaseClient && (
+        <ClientPurchaseModal
+          client={purchaseClient}
+          onClose={() => setPurchaseClient(null)}
+        />
+      )}
       {passwordClient && (
         <ClientPasswordModal
           client={passwordClient}
