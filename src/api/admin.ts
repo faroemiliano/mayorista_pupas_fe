@@ -253,17 +253,6 @@ export type ClientPurchaseBalance = {
   cliente: string;
   acumulado: { pedidos: number; unidades: number; importe: number };
   periodo: { pedidos: number; unidades: number; importe: number };
-  detalle_productos: Array<{
-    producto_id: number | null;
-    codigo: string | null;
-    producto: string;
-    talle: string;
-    unidades: number;
-    pedidos: number;
-    importe: number;
-    unidades_tienda: number;
-    unidades_wordpress: number;
-  }>;
   ultima_compra: string | null;
   ultima_compra_anterior: string | null;
   fecha_desde: string | null;
