@@ -5,6 +5,7 @@ import type {
   AdminFiltersData,
   AdminProductsData,
   ProductAnalytics,
+  ProductBuyerReport,
   TrafficAnalytics,
 } from "../types/admin";
 import type {
@@ -198,6 +199,20 @@ export function getProductAnalytics(
   if (fechaDesde) params.set("fecha_desde", fechaDesde);
   if (fechaHasta) params.set("fecha_hasta", fechaHasta);
   return apiGet<ProductAnalytics>(`/api/admin/productos/analitica?${params}`);
+}
+
+export function getProductBuyers(
+  productId: number,
+  days: number | null,
+  fechaDesde = "",
+  fechaHasta = "",
+) {
+  const params = new URLSearchParams({ dias: String(days ?? 0) });
+  if (fechaDesde) params.set("fecha_desde", fechaDesde);
+  if (fechaHasta) params.set("fecha_hasta", fechaHasta);
+  return apiGet<ProductBuyerReport>(
+    `/api/admin/productos/ventas/${productId}/compradores?${params}`,
+  );
 }
 
 export function getTrafficAnalytics(days: 7 | 30, date = "") {

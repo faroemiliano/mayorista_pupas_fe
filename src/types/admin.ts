@@ -80,6 +80,26 @@ export type ProductAnalytics = {
   } | null
 }
 
+export type ProductBuyerReport = {
+  producto_id: number
+  codigo: string
+  producto: string
+  desde: string | null
+  hasta: string
+  resumen: { clientes: number; pedidos: number; unidades: number }
+  talles: Array<{ talle: string; unidades: number }>
+  compradores: Array<{
+    usuario_id: number | null
+    cliente: string
+    email: string | null
+    unidades: number
+    pedidos: number
+    talles: Array<{ talle: string; unidades: number }>
+    ultima_compra: string | null
+  }>
+  alcance: string
+}
+
 export type TrafficAnalytics = {
   dias: number
   fecha: string | null
