@@ -18,6 +18,7 @@ type UnavailableDetail = {
   producto_id: number;
   talle: string | null;
   disponible: number | string | null;
+  solicitada: number | null;
 };
 
 function getUnavailableDetail(error: unknown): UnavailableDetail | null {
@@ -86,6 +87,18 @@ export function CartDrawer() {
             item.talle === calculationErrorDetail.talle),
       )
     : null;
+  const calculationAvailable = calculationErrorDetail
+    ? Math.max(Math.floor(Number(calculationErrorDetail.disponible)), 0)
+    : 0;
+  const calculationRequested =
+    calculationErrorDetail?.solicitada ?? calculationUnavailableItem?.quantity ?? 0;
+  const canAdjustCalculation = Boolean(
+    calculationUnavailableItem &&
+      calculationErrorDetail?.talle !== null &&
+      Number.isFinite(calculationAvailable) &&
+      calculationAvailable > 0 &&
+      calculationAvailable < calculationRequested,
+  );
 
   const orderData = (): OrderCreateData | null => {
     if (!user || !profileComplete) return null;
@@ -124,6 +137,33 @@ export function CartDrawer() {
           (errorDetail.talle !== null && item.talle !== errorDetail.talle),
       )
     : cart.items;
+  const availableQuantity = errorDetail
+    ? Math.max(Math.floor(Number(errorDetail.disponible)), 0)
+    : 0;
+  const requestedQuantity =
+    errorDetail?.solicitada ?? unavailableItem?.quantity ?? 0;
+  const canBuyAvailable = Boolean(
+    unavailableItem &&
+      errorDetail?.talle !== null &&
+      Number.isFinite(availableQuantity) &&
+      availableQuantity > 0 &&
+      availableQuantity < requestedQuantity,
+  );
+  const continueWithAvailable = () => {
+    if (!errorDetail || !unavailableItem || !canBuyAvailable) return;
+    const adjustedItems = cart.items.map((item) =>
+      item.product.id === errorDetail.producto_id &&
+      item.talle === errorDetail.talle
+        ? { ...item, quantity: availableQuantity }
+        : item,
+    );
+    cart.updateQuantity(
+      errorDetail.producto_id,
+      errorDetail.talle as string,
+      availableQuantity,
+    );
+    confirmOrder(adjustedItems);
+  };
   const continueWithoutUnavailable = () => {
     if (!errorDetail || !unavailableItem || remainingItems.length === 0) return;
     if (errorDetail.talle === null) {
@@ -414,11 +454,28 @@ export function CartDrawer() {
                   {calculationUnavailableItem.product.nombre} ya no está disponible
                 </strong>
                 <p className="mt-1">
-                  Podés quitarlo y continuar comprando los demás productos.
+                  {calculationErrorDetail?.talle
+                    ? `Solicitaste ${calculationRequested} unidades del talle ${calculationErrorDetail.talle} y quedan ${calculationAvailable} disponibles.`
+                    : `Solicitaste ${calculationRequested} unidades y quedan ${calculationAvailable} disponibles.`}
                 </p>
+                {canAdjustCalculation && (
+                  <button
+                    type="button"
+                    className="mt-3 mr-2 rounded-lg bg-black px-4 py-2 text-xs font-bold text-white"
+                    onClick={() =>
+                      cart.updateQuantity(
+                        calculationErrorDetail!.producto_id,
+                        calculationErrorDetail!.talle as string,
+                        calculationAvailable,
+                      )
+                    }
+                  >
+                    Cambiar a {calculationAvailable} unidades
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="mt-3 rounded-lg bg-black px-4 py-2 text-xs font-bold text-white"
+                  className="mt-3 rounded-lg border border-amber-400 px-4 py-2 text-xs font-bold"
                   onClick={() => {
                     if (calculationErrorDetail?.talle === null) {
                       cart.items
@@ -620,14 +677,24 @@ export function CartDrawer() {
                   </strong>
                   <p className="mt-1">
                     {errorDetail?.talle
-                      ? `El talle ${errorDetail.talle} no tiene la cantidad solicitada.`
-                      : "No queda stock suficiente de este producto."}
+                      ? `Solicitaste ${requestedQuantity} unidades del talle ${errorDetail.talle} y quedan ${availableQuantity} disponibles.`
+                      : `Solicitaste ${requestedQuantity} unidades y quedan ${availableQuantity} disponibles.`}
                   </p>
+                  {canBuyAvailable && (
+                    <button
+                      type="button"
+                      className="mt-4 w-full rounded-lg bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-50"
+                      disabled={orderMutation.isPending}
+                      onClick={continueWithAvailable}
+                    >
+                      Comprar las {availableQuantity} disponibles y confirmar
+                    </button>
+                  )}
                   {remainingItems.length > 0 ? (
                     <div className="mt-4 grid gap-2">
                       <button
                         type="button"
-                        className="rounded-lg bg-black px-4 py-3 text-xs font-bold text-white disabled:opacity-50"
+                        className="rounded-lg border border-amber-400 px-4 py-3 text-xs font-bold disabled:opacity-50"
                         disabled={orderMutation.isPending}
                         onClick={continueWithoutUnavailable}
                       >
